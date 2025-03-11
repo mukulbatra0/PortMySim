@@ -507,4 +507,353 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--bg-dark);
     padding: 0.5rem 1rem;
     border-radius: 5px;
+}
+
+/* ========================= */
+/* DARK THEME STYLES         */
+/* ========================= */
+/* These styles were previously in dark-theme.css */
+
+:root {
+    /* Primary & Secondary Colors */
+    --primary-dark: #4ba3e3;    /* Lighter blue for primary elements */
+    --secondary-dark: #f5624d;  /* Coral/orange-red for secondary elements */
+    
+    /* Dark Theme Background Colors */
+    --bg-dark-1: #1a1a1d;       /* Main background - very dark gray with slight blue hint */
+    --bg-dark-2: #252529;       /* Cards, containers - dark gray */
+    --bg-dark-3: #303036;       /* Elevated elements - medium dark gray */
+    --bg-dark-4: #3a3a42;       /* Hover states - slightly lighter gray */
+    
+    /* Text Colors */
+    --text-light: #e8eaed;      /* Primary text - off-white */
+    --text-light-muted: #a0a0a5; /* Secondary text - light gray */
+    
+    /* Accent Colors */
+    --accent-dark: #5e60ce;     /* Purple for accents */
+    --success-dark: #48c78e;    /* Green for success */
+    --warning-dark: #ffe066;    /* Yellow for warnings */
+    --danger-dark: #f15bb5;     /* Pink for danger/errors */
+    
+    /* UI Element Colors */
+    --card-bg-dark: var(--bg-dark-2);
+    --input-bg-dark: var(--bg-dark-3);
+    --input-border-dark: var(--bg-dark-4);
+    
+    /* Additional Colors */
+    --off-white: #e8eaed;
+    --light-gray: #a0a0a5;
+    --medium-gray: #6c757d;
+    --dark-gray: #495057;
+}
+
+/* Apply Dark Theme Background & Text Colors */
+.bg-dark-1 {
+    background-color: var(--bg-dark-1);
+    color: var(--text-light);
+}
+
+/* Dark Theme Base Styles */
+body.bg-dark-1 {
+    background-color: var(--bg-dark-1);
+    color: var(--text-light);
+}
+
+/* Override container backgrounds */
+body.bg-dark-1 .container,
+body.bg-dark-1 section,
+body.bg-dark-1 main {
+    background-color: transparent;
+}
+
+/* Navigation */
+body.bg-dark-1 .navbar {
+    background-color: rgba(26, 26, 29, 0.9) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+}
+
+body.bg-dark-1 .nav-links a {
+    color: var(--text-light) !important;
+}
+
+body.bg-dark-1 .nav-links a:hover,
+body.bg-dark-1 .nav-links a.active {
+    color: var(--primary-dark) !important;
+}
+
+body.bg-dark-1 .menu-toggle span {
+    background-color: var(--text-light) !important;
+}
+
+/* Cards */
+body.bg-dark-1 .card {
+    background-color: var(--bg-dark-2) !important;
+    border: 1px solid var(--bg-dark-3) !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+body.bg-dark-1 .card:hover {
+    background-color: var(--bg-dark-3) !important;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Buttons */
+body.bg-dark-1 .btn {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+body.bg-dark-1 .btn-primary {
+    background-color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+}
+
+body.bg-dark-1 .btn-primary:hover {
+    background-color: #3e8ac7 !important; /* Slightly darker on hover */
+    border-color: #3e8ac7 !important;
+}
+
+body.bg-dark-1 .btn-secondary {
+    background-color: var(--secondary-dark) !important;
+    border-color: var(--secondary-dark) !important;
+}
+
+body.bg-dark-1 .btn-secondary:hover {
+    background-color: #e05142 !important; /* Slightly darker on hover */
+    border-color: #e05142 !important;
+}
+
+body.bg-dark-1 .btn-outline {
+    color: var(--primary-dark) !important;
+    border-color: var(--primary-dark) !important;
+}
+
+body.bg-dark-1 .btn-outline:hover {
+    background-color: rgba(75, 163, 227, 0.1) !important;
+}
+
+/* Forms */
+body.bg-dark-1 input[type="text"],
+body.bg-dark-1 input[type="email"],
+body.bg-dark-1 input[type="password"],
+body.bg-dark-1 input[type="number"],
+body.bg-dark-1 input[type="tel"],
+body.bg-dark-1 input[type="url"],
+body.bg-dark-1 textarea,
+body.bg-dark-1 select,
+body.bg-dark-1 .form-control {
+    background-color: var(--input-bg-dark) !important;
+    border: 1px solid var(--input-border-dark) !important;
+    color: var(--text-light) !important;
+}
+
+body.bg-dark-1 input::placeholder,
+body.bg-dark-1 textarea::placeholder {
+    color: var(--light-gray) !important;
+}
+
+body.bg-dark-1 label {
+    color: var(--text-light) !important;
+}
+
+/* Typography */
+body.bg-dark-1 h1, 
+body.bg-dark-1 h2, 
+body.bg-dark-1 h3, 
+body.bg-dark-1 h4, 
+body.bg-dark-1 h5, 
+body.bg-dark-1 h6 {
+    color: var(--text-light) !important;
+}
+
+body.bg-dark-1 p {
+    color: var(--text-light) !important;
+}
+
+body.bg-dark-1 a {
+    color: var(--primary-dark) !important;
+}
+
+body.bg-dark-1 a:hover {
+    color: #3e8ac7 !important;
+}
+
+/* Section backgrounds */
+body.bg-dark-1 .section {
+    background-color: var(--bg-dark-1) !important;
+}
+
+body.bg-dark-1 .section-alt {
+    background-color: var(--bg-dark-2) !important;
+}
+
+/* Header */
+body.bg-dark-1 .page-header {
+    background-color: var(--bg-dark-2) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Footer */
+body.bg-dark-1 .footer {
+    background-color: var(--bg-dark-2) !important;
+    color: var(--text-light) !important;
+}
+
+body.bg-dark-1 .footer a {
+    color: var(--text-light-muted) !important;
+}
+
+body.bg-dark-1 .footer a:hover {
+    color: var(--primary-dark) !important;
+}
+
+body.bg-dark-1 .footer-bottom {
+    background-color: var(--bg-dark-3) !important;
+}
+
+/* Lists */
+body.bg-dark-1 ul, 
+body.bg-dark-1 ol {
+    color: var(--text-light) !important;
+}
+
+body.bg-dark-1 li {
+    color: var(--text-light) !important;
+}
+
+/* Utility classes */
+.bg-dark-1 { background-color: var(--bg-dark-1) !important; }
+.bg-dark-2 { background-color: var(--bg-dark-2) !important; }
+.bg-dark-3 { background-color: var(--bg-dark-3) !important; }
+.bg-dark-4 { background-color: var(--bg-dark-4) !important; }
+
+.text-light { color: var(--text-light) !important; }
+.text-light-muted { color: var(--text-light-muted) !important; }
+.text-primary-dark { color: var(--primary-dark) !important; }
+.text-secondary-dark { color: var(--secondary-dark) !important; }
+
+/* Special elements */
+body.bg-dark-1 .icon {
+    color: var(--primary-dark) !important;
+}
+
+body.bg-dark-1 .social-icons a {
+    color: var(--text-light) !important;
+    background-color: var(--bg-dark-3) !important;
+}
+
+body.bg-dark-1 .social-icons a:hover {
+    background-color: var(--primary-dark) !important;
+    color: var(--white) !important;
+}
+
+/* Hero & Feature Sections */
+body.bg-dark-1 .hero-section {
+    background-color: var(--bg-dark-2) !important;
+}
+
+body.bg-dark-1 .feature-card {
+    background-color: var(--bg-dark-2) !important;
+    border: 1px solid var(--bg-dark-3) !important;
+}
+
+body.bg-dark-1 .feature-card:hover {
+    background-color: var(--bg-dark-3) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Pricing/Plans Section */
+body.bg-dark-1 .pricing-section,
+body.bg-dark-1 .plans-section {
+    background-color: var(--bg-dark-1) !important;
+}
+
+body.bg-dark-1 .pricing-card,
+body.bg-dark-1 .plan-card {
+    background-color: var(--bg-dark-2) !important;
+    border: 1px solid var(--bg-dark-3) !important;
+}
+
+body.bg-dark-1 .pricing-card:hover,
+body.bg-dark-1 .plan-card:hover {
+    background-color: var(--bg-dark-3) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+.pricing-card-price, .plan-price {
+    color: var(--primary-color) !important;
+}
+
+.pricing-card-price span, .plan-price span {
+    color: var(--light-gray) !important;
+}
+
+.pricing-card-features, .plan-features {
+    color: var(--light-gray) !important;
+}
+
+.pricing-card-features li:before, .plan-features li:before {
+    color: var(--primary-color) !important;
+}
+
+/* FAQ section */
+.faq-section {
+    background-color: var(--bg-dark-2) !important;
+}
+
+.faq-question {
+    background-color: var(--bg-dark-3) !important;
+    color: var(--off-white) !important;
+    border: 1px solid var(--dark-gray) !important;
+}
+
+.faq-question:hover {
+    background-color: var(--bg-dark-4) !important;
+}
+
+.faq-answer {
+    background-color: rgba(57, 62, 70, 0.5) !important;
+    color: var(--light-gray) !important;
+}
+
+/* Tabs */
+.nav-tabs,
+.tabs {
+    border-bottom-color: var(--dark-gray) !important;
+}
+
+.nav-tabs .nav-link.active,
+.tabs .tab.active {
+    background-color: var(--bg-dark-3) !important;
+    color: var(--primary-color) !important;
+    border-color: var(--dark-gray) !important;
+}
+
+/* Prevent specific light-themed elements from being affected if necessary */
+.no-dark-theme {
+    background-color: initial !important;
+    color: initial !important;
+}
+
+/* Add animation effects */
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
 } 

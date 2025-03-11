@@ -6,34 +6,43 @@
     <title>Sign Up - PortMySim</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="../CSS/navigation.css">
     <link rel="stylesheet" href="../CSS/common.css">
     <link rel="stylesheet" href="../CSS/auth.css">
-    <link rel="stylesheet" href="../CSS/support.css">
+    <link rel="stylesheet" href="../CSS/test-navbar.css">
+
 </head>
-<body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-left">
-                <a href="index.html" class="logo">
+<body class="bg-dark-1">
+    <nav class="nav">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="logo">
+                <a href="index.html">
                     <img src="../images/logo.png" alt="PortMySim Logo">
                 </a>
-                <div id="navLinks" class="nav-links">
-                    <a href="index.html">Home</a>
-                    <a href="how-it-works.html">How It Works</a>
-                    <a href="plans.html">Plans</a>
-                    <a href="about.html">About</a>
-                    <a href="contact.html">Contact</a>
+            </div>
+            
+            <!-- Main Navigation Links -->
+            <div class="nav-elements">
+                <ul class="nav-links">
+                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="how-it-works.html" class="nav-link">How It Works</a></li>
+                    <li class="nav-item"><a href="plans.html" class="nav-link">Plans</a></li>
+                    <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
+                    <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+                
+                <!-- Authentication Buttons -->
+                <div class="auth-btns">
+                    <a href="login.html" class="btn btn-login active">Login</a>
+                    <a href="signup.html" class="btn btn-signup">Sign Up</a>
                 </div>
             </div>
-            <button id="menuToggle" class="menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navLinks">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="auth-buttons">
-                <a href="login.html" class="btn btn-outline">Login</a>
-                <a href="signup.html" class="btn btn-primary active">Sign Up</a>
+            
+            <!-- Hamburger Menu for Mobile -->
+            <div class="hamburger">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
             </div>
         </div>
     </nav>
@@ -184,7 +193,7 @@
         </div>
     </footer>
     
-    <script src="../JS/common.js"></script>
-    <script src="../JS/auth.js"></script>
+    <!-- Main JS - Contains all consolidated JavaScript functionality -->
+    <script src="../JS/main.js"></script>
 </body>
 </html> 
