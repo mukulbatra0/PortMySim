@@ -1,0 +1,120 @@
+/* Common CSS for SIM Porting Website Pages */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+h1, h2 {
+    color: #007BFF;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+h2 {
+    border-bottom: 2px solid #007BFF;
+    padding-bottom: 5px;
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+p {
+    margin-bottom: 15px;
+}
+
+ul, ol {
+    margin-bottom: 15px;
+    padding-left: 20px;
+}
+
+ul li, ol li {
+    margin-bottom: 10px;
+}
+
+a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.container, .faq-container, .help-container, .refund-container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* FAQ Specific Styles */
+.faq-question {
+    font-weight: bold;
+    color: #007BFF;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.faq-answer {
+    margin-top: 10px;
+    display: none;
+    padding-left: 20px;
+    border-left: 2px solid #007BFF;
+}
+
+.faq-answer.show {
+    display: block;
+}
+
+/* Help Center Specific Styles */
+.contact-info {
+    background-color: #f1f1f1;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 20px;
+}
+
+.contact-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.contact-info ul li {
+    margin-bottom: 10px;
+}
+
+/* Refund Policy Specific Styles */
+.refund-container ol {
+    padding-left: 20px;
+}
+
+.refund-container ol li {
+    margin-bottom: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    .container, .faq-container, .help-container, .refund-container {
+        padding: 15px;
+    }
+}
