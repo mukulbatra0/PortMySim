@@ -1,11 +1,6 @@
 /* Modern Animated Navbar CSS - Dark Theme */
 
-/* Animation Properties */
-:root {
-    --transition-fast: 0.2s ease;
-    --transition-normal: 0.3s ease;
-    --transition-slow: 0.5s ease;
-}
+/* Note: Most CSS variables are now defined in common.css */
 
 /* Header & Navigation Structure */
 .header {
@@ -101,12 +96,12 @@
     height: 2px;
     bottom: 0;
     left: 0;
-    background-color: var(--primary-dark);
+    background-color: var(--primary-color);
     transition: width var(--transition-normal);
 }
 
 .nav-link:hover {
-    color: var(--primary-dark);
+    color: var(--primary-color);
 }
 
 .nav-link:hover::after,
@@ -115,7 +110,7 @@
 }
 
 .nav-link.active {
-    color: var(--primary-dark);
+    color: var(--primary-color);
     font-weight: 600;
 }
 
@@ -147,9 +142,9 @@
 }
 
 .btn-signup {
-    background-color: var(--primary-dark);
+    background-color: var(--primary-color);
     color: var(--white);
-    border: 1px solid var(--primary-dark);
+    border: 1px solid var(--primary-color);
 }
 
 .btn-login:hover {
@@ -159,7 +154,7 @@
 }
 
 .btn-signup:hover {
-    background-color: #3e8ac7;
+    background-color: var(--primary-dark);
     transform: translateY(-3px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
@@ -269,107 +264,5 @@
     .nav-elements {
         width: 270px;
         padding: 70px 20px 20px;
-    }
-}
-
-/* Animation for feature cards */
-.feature-card {
-    background-color: var(--bg-dark-2);
-    border-radius: var(--border-radius-lg);
-    padding: 25px;
-    box-shadow: var(--shadow-md);
-    transition: all var(--transition-normal);
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-    border: 1px solid rgba(91, 124, 153, 0.2);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    min-height: 250px;
-    display: flex;
-    flex-direction: column;
-}
-
-.feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(91, 124, 153, 0.1) 0%, rgba(26, 28, 34, 0.1) 100%);
-    z-index: -1;
-    transition: opacity var(--transition-normal);
-    opacity: 0;
-}
-
-.feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-    border-color: var(--primary-dark);
-}
-
-.feature-card:hover::before {
-    opacity: 1;
-}
-
-.feature-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-    background-color: var(--bg-dark-3);
-    transition: all var(--transition-normal);
-}
-
-.feature-card:hover .feature-icon {
-    transform: scale(1.1);
-    background-color: var(--bg-dark-4);
-}
-
-.feature-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-    font-weight: 600;
-    transition: color var(--transition-normal);
-}
-
-.feature-card:hover h3 {
-    color: var(--primary-dark);
-}
-
-.feature-card p {
-    color: var(--text-light-muted);
-    font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 20px;
-}
-
-.feature-card .feature-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--primary-dark);
-    text-decoration: none;
-    font-weight: 500;
-    margin-top: auto;
-    transition: all var(--transition-normal);
-}
-
-.feature-card:hover .feature-link {
-    color: var(--primary-dark);
-}
-
-.feature-card:hover .feature-link i {
-    transform: translateX(5px);
-}
-
-@media (max-width: 768px) {
-    .feature-card {
-        min-height: auto;
-        padding: 20px;
     }
 } 
