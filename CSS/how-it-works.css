@@ -910,4 +910,74 @@
         });
     });
 </script>
-*/ 
+*/
+
+.step .btn-primary {
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    color: var(--white);
+    padding: 1.2rem 2.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--border-radius-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 1rem;
+}
+
+.step .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+    transition: width 0.3s ease;
+    z-index: -1;
+}
+
+.step .btn-primary:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--glow-accent);
+    color: var(--white);
+}
+
+.step .btn-primary:hover::before {
+    width: 100%;
+}
+
+.step .btn-primary i {
+    margin-left: 0.8rem;
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.step .btn-primary:hover i {
+    transform: translateX(5px);
+}
+
+/* Add animation for button on step hover */
+.step:hover .btn-primary {
+    box-shadow: var(--glow-accent);
+    transform: translateY(-3px);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .step .btn-primary {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        width: 100%;
+    }
+}

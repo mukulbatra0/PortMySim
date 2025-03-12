@@ -160,12 +160,14 @@
     padding: 6rem 0;
     background-color: var(--bg-dark-2);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .how-it-works .section-title {
     position: relative;
     z-index: 2;
+    text-align: center;
+    margin-bottom: 3rem;
 }
 
 .how-it-works .section-title h2 {
@@ -185,7 +187,6 @@
     color: var(--text-light-muted);
 }
 
-/* Add subtle background pattern */
 .how-it-works::before {
     content: '';
     position: absolute;
@@ -195,7 +196,7 @@
     height: 100%;
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     opacity: 0.5;
-    z-index: 0;
+    z-index: 1;
 }
 
 .steps-container {
@@ -204,45 +205,90 @@
     gap: 6rem;
     margin-top: 5rem;
     position: relative;
-    z-index: 1;
+    z-index: 2;
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
-    padding: 0 1rem;
-}
-
-/* Add connecting line between steps */
-.steps-container::before {
-    content: '';
-    position: absolute;
-    top: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    height: calc(100% - 80px);
-    background: linear-gradient(180deg, 
-        var(--primary-color) 0%,
-        var(--accent-color) 100%);
-    opacity: 0.3;
+    padding: 0 2rem;
 }
 
 .step {
     display: flex;
     align-items: center;
     gap: 6rem;
-    opacity: 0;
-    transform: translateY(30px);
+    opacity: 1;
+    transform: translateY(0);
     transition: all 0.6s ease-out;
-    background: rgba(var(--bg-dark-3-rgb), 0.5);
+    background: rgba(var(--bg-dark-3-rgb), 0.95);
     border-radius: 20px;
     padding: 3rem;
     border: 1px solid rgba(var(--primary-rgb), 0.1);
     box-shadow: var(--shadow-md);
+    position: relative;
+    z-index: 3;
 }
 
-.step.in-view {
-    opacity: 1;
-    transform: translateY(0);
+.step-content {
+    flex: 1;
+    position: relative;
+    min-width: 300px;
+    z-index: 3;
+}
+
+.step-image {
+    flex: 1;
+    max-width: 500px;
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    aspect-ratio: 16/9;
+    z-index: 3;
+}
+
+.step-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 20px;
+    display: block;
+}
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg,
+        var(--primary-color),
+        var(--accent-color));
+    color: var(--white);
+    border-radius: 50%;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3);
+    position: relative;
+    z-index: 4;
+}
+
+.step-content h3 {
+    color: var(--text-light);
+    font-size: 2.2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+    position: relative;
+    z-index: 3;
+}
+
+.step-content p {
+    color: var(--text-light-muted);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    opacity: 0.9;
+    position: relative;
+    z-index: 3;
 }
 
 .step:hover {
@@ -253,15 +299,6 @@
 
 .step:nth-child(even) {
     flex-direction: row-reverse;
-}
-
-.step-image {
-    flex: 1;
-    max-width: 500px;
-    position: relative;
-    border-radius: 20px;
-    overflow: hidden;
-    aspect-ratio: 16/9;
 }
 
 .step-image::before {
@@ -283,71 +320,8 @@
     opacity: 1;
 }
 
-.step-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 20px;
-    box-shadow: var(--shadow-lg);
-    transform: scale(1);
-    transition: transform 0.5s ease;
-}
-
 .step:hover .step-image img {
     transform: scale(1.05);
-}
-
-.step-content {
-    flex: 1;
-    position: relative;
-    min-width: 300px;
-}
-
-.step-number {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg,
-        var(--primary-color),
-        var(--accent-color));
-    color: var(--white);
-    border-radius: 50%;
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin-bottom: 2rem;
-    box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.3);
-    position: relative;
-    z-index: 1;
-    transition: transform 0.3s ease;
-}
-
-.step:hover .step-number {
-    transform: scale(1.1);
-    box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.4);
-}
-
-.step-content h3 {
-    font-size: 2.2rem;
-    margin-bottom: 1.5rem;
-    color: var(--text-light);
-    background: linear-gradient(90deg,
-        var(--primary-color),
-        var(--accent-color));
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-    font-weight: 700;
-}
-
-.step-content p {
-    color: var(--text-light-muted);
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
-    line-height: 1.8;
-    opacity: 0.9;
 }
 
 .step .btn-primary {
@@ -542,7 +516,6 @@
     overflow: hidden;
 }
 
-/* Add background pattern for consistency */
 .cta-section::before {
     content: '';
     position: absolute;
@@ -587,26 +560,27 @@
     flex-wrap: wrap;
 }
 
-/* Primary CTA Button */
+/* CTA Button Styles */
 .cta-section .btn-primary {
     background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
     color: var(--white);
-    padding: 1.2rem 3rem;
-    font-size: 1.2rem;
+    padding: 1.2rem 2.5rem;
+    font-size: 1.1rem;
     font-weight: 600;
-    transform: translateY(0);
-    transition: all 0.3s ease;
     border: none;
-    box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-    border-radius: 50px;
+    border-radius: var(--border-radius-full);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    text-transform: uppercase;
+    letter-spacing: 1px;
     min-width: 200px;
 }
 
@@ -624,33 +598,31 @@
 
 .cta-section .btn-primary:hover {
     transform: translateY(-5px);
+    box-shadow: var(--glow-accent);
     color: var(--white);
-    box-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.5);
 }
 
 .cta-section .btn-primary:hover::before {
     width: 100%;
 }
 
-/* Outline CTA Button */
 .cta-section .btn-outline-white {
-    padding: 1.2rem 3rem;
-    font-size: 1.2rem;
+    padding: 1.2rem 2.5rem;
+    font-size: 1.1rem;
     font-weight: 500;
     border: 2px solid var(--white);
     background: transparent;
     color: var(--white);
-    transform: translateY(0);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-    border-radius: 50px;
+    border-radius: var(--border-radius-full);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
     min-width: 200px;
 }
 
@@ -661,7 +633,7 @@
     left: 0;
     width: 0;
     height: 100%;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
     transition: width 0.3s ease;
     z-index: -1;
 }
@@ -669,14 +641,14 @@
 .cta-section .btn-outline-white:hover {
     transform: translateY(-5px);
     border-color: var(--white);
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    box-shadow: var(--glow-white);
 }
 
 .cta-section .btn-outline-white:hover::before {
     width: 100%;
 }
 
-/* Add icon styles for CTA buttons */
+/* Icon styles for CTA buttons */
 .cta-section .btn-primary i,
 .cta-section .btn-outline-white i {
     margin-left: 0.8rem;
@@ -694,38 +666,27 @@
     .cta-section {
         padding: 4rem 1.5rem;
     }
-    
+
     .cta-content h2 {
         font-size: 2.2rem;
     }
-    
+
     .cta-content p {
         font-size: 1.1rem;
         margin-bottom: 2rem;
     }
-    
+
     .cta-buttons {
         flex-direction: column;
         gap: 1rem;
     }
-    
+
     .cta-section .btn-primary,
     .cta-section .btn-outline-white {
         width: 100%;
         min-width: unset;
         padding: 1rem 2rem;
-        font-size: 1.1rem;
-    }
-}
-
-@media (max-width: 576px) {
-    .cta-content h2 {
-        font-size: 1.8rem;
-    }
-    
-    .cta-content p {
         font-size: 1rem;
-        margin-bottom: 1.8rem;
     }
 }
 

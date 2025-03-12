@@ -518,25 +518,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Also call it when new content might be loaded
     window.addEventListener('load', enhanceAllCards);
-    
-    // Intersection Observer for How It Works section
-    const stepsObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-                // Unobserve after animation is triggered
-                stepsObserver.unobserve(entry.target);
-            }
-        });
-    }, {
-        threshold: 0.2,
-        rootMargin: '0px 0px -100px 0px'
-    });
-    
-    // Observe all steps
-    document.querySelectorAll('.step').forEach(step => {
-        stepsObserver.observe(step);
-    });
 });
 
 /**
