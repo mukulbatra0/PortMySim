@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../CSS/common.css">
     <link rel="stylesheet" href="../CSS/how-it-works.css">
-    <link rel="stylesheet" href="../CSS/test-navbar.css">
+    
     <!-- Dark Theme CSS is now part of common.css -->
 </head>
 <body class="bg-dark-1">
@@ -48,24 +48,32 @@
             </div>
         </nav>
     </header>
-    
-    <!-- Page Header -->
-    <header class="page-header">
-        <div class="container">
-            <h1>How PortXpress Works</h1>
-            <p>Your guide to seamless SIM porting</p>
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">Your Guide to Seamless SIM Porting</h1>
+            <p class="hero-text">PortMySim simplifies the entire process of switching between mobile operators while keeping your number. Follow our easy steps to experience hassle-free porting.</p>
+            <div class="hero-buttons">
+                <a href="signup.html" class="hero-btn primary">Get Started <i class="fas fa-arrow-right"></i></a>
+                <a href="#timeline-section" class="hero-btn secondary">Learn More</a>
+            </div>
         </div>
-    </header>
+    </section>
     
-    <!-- Process Section -->
-    <section class="process-section">
+    <!-- Timeline Section -->
+    <section class="timeline-section" id="timeline-section">
         <div class="container">
-            <div class="process-timeline">
+            <div class="section-header animated">
+                <h2>Our Simple Process</h2>
+                <p>Four easy steps to seamlessly port your mobile number</p>
+            </div>
+            
+            <div class="timeline-container">
                 <div class="timeline-item">
-                    <div class="timeline-number">1</div>
                     <div class="timeline-content">
-                        <h3>Sign Up & Enter Details</h3>
-                        <p>Create your account and provide your current network details, including your phone number and plan information.</p>
+                        <span class="timeline-date">Step 1</span>
+                        <h3 class="timeline-title">Sign Up & Enter Details</h3>
+                        <p class="timeline-text">Create your account and provide your current network details, including your phone number and plan information.</p>
                         <ul class="timeline-features">
                             <li><i class="fas fa-check"></i> Quick registration process</li>
                             <li><i class="fas fa-check"></i> Secure information handling</li>
@@ -75,10 +83,10 @@
                 </div>
                 
                 <div class="timeline-item">
-                    <div class="timeline-number">2</div>
                     <div class="timeline-content">
-                        <h3>Compare Available Plans</h3>
-                        <p>Browse and compare plans from different operators to find the best match for your needs.</p>
+                        <span class="timeline-date">Step 2</span>
+                        <h3 class="timeline-title">Compare Available Plans</h3>
+                        <p class="timeline-text">Browse and compare plans from different operators to find the best match for your needs.</p>
                         <ul class="timeline-features">
                             <li><i class="fas fa-check"></i> Real-time plan comparison</li>
                             <li><i class="fas fa-check"></i> Detailed feature analysis</li>
@@ -88,10 +96,10 @@
                 </div>
                 
                 <div class="timeline-item">
-                    <div class="timeline-number">3</div>
                     <div class="timeline-content">
-                        <h3>Schedule Your Port</h3>
-                        <p>Choose the perfect time to port your number, aligned with your current plan's expiry.</p>
+                        <span class="timeline-date">Step 3</span>
+                        <h3 class="timeline-title">Schedule Your Port</h3>
+                        <p class="timeline-text">Choose the perfect time to port your number, aligned with your current plan's expiry.</p>
                         <ul class="timeline-features">
                             <li><i class="fas fa-check"></i> Flexible scheduling</li>
                             <li><i class="fas fa-check"></i> Smart timing recommendations</li>
@@ -101,10 +109,10 @@
                 </div>
                 
                 <div class="timeline-item">
-                    <div class="timeline-number">4</div>
                     <div class="timeline-content">
-                        <h3>Track Progress</h3>
-                        <p>Monitor your porting status in real-time and receive updates at every step.</p>
+                        <span class="timeline-date">Step 4</span>
+                        <h3 class="timeline-title">Track Progress</h3>
+                        <p class="timeline-text">Monitor your porting status in real-time and receive updates at every step.</p>
                         <ul class="timeline-features">
                             <li><i class="fas fa-check"></i> Real-time status updates</li>
                             <li><i class="fas fa-check"></i> SMS & email notifications</li>
@@ -116,46 +124,10 @@
         </div>
     </section>
     
-    <!-- Features Section -->
-    <section class="features-section">
-        <div class="container">
-            <div class="section-header">
-                <h2>Key Features</h2>
-                <p>What makes PortXpress the smart choice for SIM porting</p>
-            </div>
-            
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <h3>Smart Timing</h3>
-                    <p>Our intelligent system suggests the optimal time to port your number based on your current plan's expiry.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-chart-bar"></i>
-                    </div>
-                    <h3>Plan Analysis</h3>
-                    <p>Compare plans across operators with detailed insights into benefits, coverage, and value for money.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-bell"></i>
-                    </div>
-                    <h3>Smart Notifications</h3>
-                    <p>Stay informed with timely alerts about your porting status, upcoming actions, and important deadlines.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-    
     <!-- Requirements Section -->
     <section class="requirements-section">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header animated">
                 <h2>Porting Requirements</h2>
                 <p>What you need to get started</p>
             </div>
@@ -199,7 +171,7 @@
     <!-- FAQ Section -->
     <section class="faq-section">
         <div class="container">
-            <div class="section-header">
+            <div class="section-header animated">
                 <h2>Common Questions</h2>
                 <p>Find answers to frequently asked questions about the porting process</p>
             </div>
@@ -239,11 +211,13 @@
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Port Your Number?</h2>
-            <p>Start your seamless porting journey with PortXpress today</p>
-            <div class="cta-buttons">
-                <a href="signup.html" class="btn-white">Get Started</a>
-                <a href="contact.html" class="btn-outline-white">Contact Support</a>
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to Port Your Number?</h2>
+                <p class="cta-text">Start your seamless porting journey with PortMySim today</p>
+                <div class="cta-buttons">
+                    <a href="signup.html" class="cta-btn">Get Started</a>
+                    <a href="contact.html" class="cta-btn" style="margin-left: 1rem;">Contact Support</a>
+                </div>
             </div>
         </div>
     </section>
@@ -290,5 +264,325 @@
     
     <!-- Main JS - Contains all consolidated JavaScript functionality -->
     <script src="../JS/main.js"></script>
+    
+    <!-- Optimized Animation Script - Faster Performance -->
+    <script>
+        // Immediately run instead of waiting for DOMContentLoaded
+        (function() {
+            // Set all elements to visible immediately to prevent delay
+            document.querySelectorAll('.timeline-item, .requirement-card, .faq-item, .section-header, .cta-content, .animated, .banner-content, .hero-content, .hero-buttons')
+                .forEach(function(el) {
+                    el.classList.add('in-view');
+                    
+                    // Remove animation delay attributes that could cause lag
+                    if (el.style.animationDelay) {
+                        el.style.animationDelay = '0s';
+                    }
+                });
+            
+            // Set current year in footer
+            if (document.getElementById('currentYear')) {
+                document.getElementById('currentYear').textContent = new Date().getFullYear();
+            }
+            
+            // Use requestAnimationFrame for better performance
+            requestAnimationFrame(function() {
+                // Set up passive scroll event for better performance on scroll animations
+                const observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('in-view');
+                        }
+                    });
+                }, {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -10% 0px' // Trigger a bit earlier
+                });
+
+                // Observe all animated elements
+                document.querySelectorAll('.timeline-item, .requirement-card, .faq-item, .section-header, .cta-content, .animated')
+                    .forEach(function(el) {
+                        observer.observe(el);
+                    });
+                
+                // FAQ Accordion functionality - optimized
+                document.querySelectorAll('.faq-question').forEach(function(question) {
+                    question.addEventListener('click', function() {
+                        const answer = this.nextElementSibling;
+                        const isActive = this.classList.contains('active');
+                        
+                        // Close all FAQs first
+                        document.querySelectorAll('.faq-question.active').forEach(function(q) {
+                            q.classList.remove('active');
+                            q.nextElementSibling.classList.remove('active');
+                        });
+                        
+                        // Open clicked FAQ if it wasn't already open
+                        if (!isActive) {
+                            this.classList.add('active');
+                            answer.classList.add('active');
+                        }
+                    });
+                });
+            });
+        })();
+    </script>
+    
+    <!-- Preload Animation Performance Fix -->
+    <style>
+        /* Force GPU acceleration for smoother animations */
+        .timeline-item, .requirement-card, .faq-item, .section-header, 
+        .cta-content, .animated, .page-banner, .hero-section {
+            will-change: transform, opacity;
+            transform: translateZ(0);
+        }
+        
+        /* Reduce animation duration for faster initial load */
+        @media (prefers-reduced-motion: no-preference) {
+            .fadeIn, .slideInLeft, .slideInRight, 
+            .banner-title, .breadcrumb, .hero-content {
+                animation-duration: 0.5s !important;
+            }
+        }
+        
+        /* Fix card animation lag */
+        .requirement-card, .timeline-item {
+            /* Simplify animations to reduce lag */
+            animation: none !important;
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out, border-color 0.3s ease-out !important;
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+        
+        /* Home-style card hover effects */
+        .requirement-card {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .requirement-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+        
+        .requirement-card:hover::before {
+            opacity: 1;
+        }
+        
+        .requirement-card:hover, .timeline-item:hover .timeline-content {
+            transform: translateY(-8px) !important;
+            box-shadow: var(--shadow-lg) !important;
+            border-color: var(--primary-color) !important;
+        }
+        
+        /* Updated circle element with 35% radius and home-style animations */
+        .requirement-icon {
+            width: 80px !important;
+            height: 80px !important;
+            border-radius: 35% !important;
+            background-color: var(--bg-dark-2) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin-bottom: 1.5rem !important;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+            position: relative;
+            z-index: 1;
+            animation: floatIcon 4s ease-in-out infinite !important;
+        }
+        
+        /* Add floating animation like home cards */
+        @keyframes floatIcon {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+        
+        .requirement-card:hover .requirement-icon {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%) !important;
+            color: var(--white) !important;
+            transform: translateY(-5px) rotate(10deg) !important;
+            box-shadow: var(--glow-primary) !important;
+            border-radius: 35% !important;
+        }
+        
+        /* Add glow effect on hover like home cards */
+        .requirement-card:hover .requirement-icon::after {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            border-radius: 35%;
+            z-index: -1;
+            opacity: 0.3;
+            animation: pulse 2s infinite;
+        }
+        
+        /* Special fix for the timeline dots to prevent lag */
+        .timeline-item::before {
+            animation: none !important;
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out !important;
+        }
+        
+        /* Ensure content is always visible */
+        .timeline-item.in-view::after,
+        .timeline-item.in-view::before,
+        .timeline-item.in-view .timeline-content,
+        .requirement-card.in-view h3,
+        .requirement-card.in-view p {
+            opacity: 1 !important;
+            transform: none !important;
+        }
+        
+        /* Pulse animation for hover effects */
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.05); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.5; }
+        }
+        
+        /* Override staggered animations that cause lag */
+        .requirement-card:nth-child(n).in-view,
+        .timeline-item:nth-child(n).in-view,
+        .faq-item:nth-child(n).in-view {
+            animation-delay: 0s !important;
+        }
+        
+        /* Navbar-style button styling for all buttons on the page */
+        /* Base button styles */
+        .hero-btn, .cta-btn {
+            font-family: 'Poppins', sans-serif !important;
+            font-weight: 600 !important;
+            font-size: var(--font-size-sm) !important;
+            padding: 0.75rem 1.5rem !important;
+            border-radius: var(--border-radius-full) !important;
+            position: relative !important;
+            overflow: hidden !important;
+            z-index: 1 !important;
+            transition: all 0.35s ease !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            letter-spacing: 0.5px !important;
+        }
+        
+        /* Primary Button Style (like btn-signup) */
+        .hero-btn.primary, .cta-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%) !important;
+            color: var(--white) !important;
+            border: none !important;
+            box-shadow: var(--glow-primary) !important;
+        }
+        
+        /* Secondary Button Style (like btn-login) */
+        .hero-btn.secondary {
+            background-color: transparent !important;
+            color: var(--white) !important;
+            border: 2px solid rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        /* Button Hover Effects with ::before sliding animation */
+        .hero-btn.primary::before, .cta-btn::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%) !important;
+            transition: left 0.35s ease !important;
+            z-index: -1 !important;
+        }
+        
+        .hero-btn.secondary::before {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            background-color: var(--white) !important;
+            transition: left 0.35s ease !important;
+            z-index: -1 !important;
+        }
+        
+        /* Hover State */
+        .hero-btn:hover, .cta-btn:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 7px 15px rgba(240, 182, 127, 0.4) !important;
+        }
+        
+        .hero-btn.primary:hover::before, 
+        .cta-btn:hover::before,
+        .hero-btn.secondary:hover::before {
+            left: 0 !important;
+        }
+        
+        .hero-btn.secondary:hover {
+            color: var(--primary-color) !important;
+        }
+        
+        /* Active/Focus State */
+        .hero-btn:active, .cta-btn:active,
+        .hero-btn:focus, .cta-btn:focus {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 3px 10px rgba(240, 182, 127, 0.3) !important;
+        }
+        
+        /* Add spacing between buttons */
+        .hero-buttons {
+            display: flex !important;
+            gap: 1rem !important;
+            justify-content: center !important;
+            margin-top: 2rem !important;
+        }
+        
+        .cta-buttons {
+            display: flex !important;
+            gap: 1rem !important;
+            justify-content: center !important;
+            margin-top: 1.5rem !important;
+        }
+        
+        /* Make all CTA buttons match */
+        .cta-btn {
+            margin-left: 0 !important;
+        }
+        
+        /* Icon styling inside buttons */
+        .hero-btn i, .cta-btn i {
+            margin-left: 0.5rem !important;
+            transition: transform 0.2s ease !important;
+        }
+        
+        .hero-btn:hover i, .cta-btn:hover i {
+            transform: translateX(3px) !important;
+        }
+    </style>
+    
+    <!-- Enable floating animation immediately -->
+    <script>
+        // Apply floating animation to requirement icons immediately
+        document.addEventListener('DOMContentLoaded', function() {
+            // Apply animations to all requirement icons
+            document.querySelectorAll('.requirement-icon').forEach(function(icon, index) {
+                // Add slight delay offset between icons for visual interest
+                const delay = index * 0.2;
+                icon.style.animationDelay = delay + 's';
+            });
+        });
+    </script>
 </body>
 </html> 
