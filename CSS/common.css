@@ -73,7 +73,8 @@
     --spacing-xl: 2rem;          /* 32px */
     --spacing-2xl: 2.5rem;       /* 40px */
     --spacing-3xl: 3rem;         /* 48px */
-    --navbar-height: 80px;
+    --navbar-height: 80px;       /* Fixed navbar height */
+    --logo-height: 100px;         /* New variable for logo height */
     
     /* Borders */
     --border-radius-sm: 0.25rem;  /* 4px */
@@ -164,25 +165,27 @@ img {
     left: 0;
     width: 100%;
     z-index: 1000;
-    transition: all var(--transition-normal);
     background-color: rgba(26, 28, 34, 0.95);
     box-shadow: var(--shadow-sm);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    height: var(--navbar-height);
+    display: flex;
+    align-items: center;
+    transition: all var(--transition-normal);
 }
 
 .header.scrolled {
     background-color: rgba(26, 28, 34, 0.98);
     box-shadow: var(--shadow-md);
+    height: 70px;
 }
 
 .nav {
-    padding: var(--spacing-md) 0;
-    transition: padding var(--transition-normal);
-}
-
-.header.scrolled .nav {
-    padding: var(--spacing-sm) 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .nav-container {
@@ -192,17 +195,24 @@ img {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 var(--spacing-md);
+    width: 100%;
 }
 
+/* Logo styling */
 .logo {
     display: flex;
-    align-items: center;
+    align-items: left;
+    justify-content: left;
+    overflow: visible;
 }
 
 .logo img {
-    height: 40px;
+    height: var(--logo-height);
+    width: auto;
+    max-width: none;
+    object-fit: contain;
     transition: transform var(--transition-normal);
-    filter: brightness(1.2);
+    filter: brightness(2);
 }
 
 .logo img:hover {
@@ -360,8 +370,21 @@ img {
     width: 100%;
     height: 2px;
     margin: 5px auto;
-    background-color: var(--primary-dark);
+    background-color: var(--primary-color);
     transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+
+/* Active state for hamburger */
+.hamburger.active .bar:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger.active .bar:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active .bar:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 /* Footer Styles */
@@ -571,14 +594,22 @@ img {
 
 /* Media Queries - Combined and Organized */
 @media (max-width: 768px) {
+    :root {
+        --navbar-height: 70px;   /* Smaller navbar on tablets */
+        --logo-height: 100px;     /* Smaller logo on tablets */
+    }
+    
     body {
-        padding-top: 70px;
+        padding-top: var(--navbar-height);
     }
     
     .hamburger {
         display: block;
-        flex-direction: column;
-        justify-content: space-between;
+        margin-left: auto;
+    }
+    
+    .header.scrolled {
+        height: 60px;
     }
     
     .nav-elements {
@@ -589,10 +620,12 @@ img {
         height: 100vh;
         background-color: var(--bg-dark-2);
         flex-direction: column;
-        justify-content: center;
-        padding: 2rem;
+        justify-content: flex-start;
+        padding-top: var(--navbar-height);
+        padding: 6rem 2rem 2rem;
         transition: right 0.3s ease;
         z-index: 999;
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
     }
     
     .nav-elements.active {
@@ -603,10 +636,20 @@ img {
         flex-direction: column;
         margin-right: 0;
         margin-bottom: 2rem;
+        width: 100%;
     }
     
     .nav-item {
-        margin: 0.5rem 0;
+        margin: 0.8rem 0;
+        width: 100%;
+        text-align: center;
+    }
+    
+    .nav-link {
+        display: block;
+        padding: 0.8rem;
+        font-size: 1.1rem;
+        width: 100%;
     }
     
     .auth-btns {
@@ -624,6 +667,11 @@ img {
         width: 100%;
     }
     
+    /* Add this for body scroll lock when menu is open */
+    body.menu-open {
+        overflow: hidden;
+    }
+    
     .footer-content {
         grid-template-columns: 1fr 1fr;
     }
@@ -636,5 +684,12 @@ img {
 @media (max-width: 576px) {
     .footer-content {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --navbar-height: 60px;   /* Even smaller navbar on mobile */
+        --logo-height: 48px;     /* Even smaller logo on mobile */
     }
 } 
