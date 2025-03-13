@@ -692,47 +692,62 @@ function reinitializeAllEffects() {
 
 // Special handling for hero button animations
 function initializeHeroButtons() {
-    console.log("Initializing hero buttons");
+    console.log("Initializing hero buttons with CTA-style hover effects");
     const heroButtons = document.querySelectorAll('.hero-buttons .hero-btn');
     
     heroButtons.forEach(button => {
         // Clear any existing inline styles that might interfere
         button.style.removeProperty('transform');
         button.style.removeProperty('box-shadow');
+        button.style.removeProperty('transition');
         
-        // Force the transform to be translateY(0) to prevent movement
+        // Set a smooth transition for all hover effects
+        button.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        
+        // Set initial transform state
         button.style.transform = 'translateY(0)';
         
-        // Don't override CSS animations with inline styles
-        // No need to reset animation - let CSS handle it
-        
-        // Set up hover effects - only change box-shadow on hover, not position
+        // Set up enhanced hover effects similar to CTA buttons
         button.addEventListener('mouseenter', function() {
-            // Don't set transform - we don't want the button to move
+            // Apply CTA-like hover effect with translateY movement
+            this.style.transform = 'translateY(-5px)';
+            
             if (this.classList.contains('primary')) {
-                this.style.boxShadow = '0 8px 25px rgba(var(--primary-rgb), 0.6)';
+                // Use the glow-accent variable for primary buttons
+                this.style.boxShadow = 'var(--glow-accent)';
             } else if (this.classList.contains('secondary')) {
-                this.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
-                this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.2)';
+                // Enhanced effect for secondary buttons
+                this.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.3)';
+                this.style.borderColor = 'rgba(255, 255, 255, 0.9)';
             }
             
-            // Ensure transform remains at translateY(0)
-            this.style.transform = 'translateY(0)';
+            // Create a pseudo-element effect similar to CTA buttons
+            // This is simulated since we can't directly modify ::before with JS
+            this.style.backgroundImage = 'linear-gradient(90deg, var(--accent-color), var(--primary-color))';
+            this.style.backgroundSize = '200% auto';
             
-            // Animate icon if present
+            // Animate icon if present - enhanced movement
             const icon = this.querySelector('i');
             if (icon) {
-                icon.style.transform = 'translateX(5px)';
+                icon.style.transform = 'translateX(8px)';
+                icon.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
             }
         });
         
         // Reset on mouse leave
         button.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
             this.style.boxShadow = '';
             this.style.backgroundColor = '';
+            this.style.borderColor = '';
             
-            // Keep transform at translateY(0)
-            this.style.transform = 'translateY(0)';
+            // Reset background to original
+            if (this.classList.contains('primary')) {
+                this.style.backgroundImage = 'linear-gradient(135deg, var(--primary-color), var(--accent-color))';
+            } else {
+                this.style.backgroundImage = '';
+            }
             
             // Reset icon
             const icon = this.querySelector('i');
@@ -744,6 +759,18 @@ function initializeHeroButtons() {
         // Add ripple effect
         button.removeEventListener('click', createRippleEffect);
         button.addEventListener('click', createRippleEffect);
+        
+        // Add special glow pulse effect on click
+        button.addEventListener('click', function() {
+            // Add a temporary enhanced glow effect on click
+            const originalBoxShadow = this.style.boxShadow;
+            this.style.boxShadow = 'var(--glow-accent), 0 0 20px rgba(var(--primary-rgb), 0.8)';
+            
+            // Reset after animation
+            setTimeout(() => {
+                this.style.boxShadow = originalBoxShadow;
+            }, 300);
+        });
     });
 }
 

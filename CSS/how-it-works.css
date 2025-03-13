@@ -76,7 +76,7 @@
     width: 100%;
 }
 
-/* Hero Button Styles - OPTIMIZED */
+/* Hero Button Styles - OPTIMIZED with CTA-like Hover Effects */
 .hero-btn {
     font-family: 'Poppins', sans-serif;
     font-weight: 600;
@@ -91,14 +91,15 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+    transition: box-shadow 0.3s ease, background-color 0.3s ease, color 0.3s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     text-decoration: none;
     min-width: 160px;
     text-align: center;
     transform: translateY(0);
+    will-change: transform, box-shadow;
 }
 
-/* Primary Hero Button - FIXED */
+/* Primary Hero Button - ENHANCED with CTA-like effects */
 .hero-btn.primary {
     background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
     color: var(--white);
@@ -106,6 +107,20 @@
     border: none;
     /* Single animation only - to avoid conflicts */
     animation: buttonGlow 3s infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-btn.primary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+    transition: width 0.3s ease;
+    z-index: -1;
 }
 
 .hero-btn.primary:hover {
@@ -114,29 +129,52 @@
     color: var(--white);
 }
 
-/* Secondary Hero Button - FIXED */
+.hero-btn.primary:hover::before {
+    width: 100%;
+}
+
+/* Secondary Hero Button - ENHANCED with CTA-like effects */
 .hero-btn.secondary {
     background-color: transparent;
     color: var(--white);
     border: 2px solid rgba(255, 255, 255, 0.8);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-btn.secondary::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: width 0.3s ease;
+    z-index: -1;
 }
 
 .hero-btn.secondary:hover {
     transform: translateY(-5px);
-    box-shadow: var(--glow-accent);
-    color: var(--white);
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.9);
 }
 
-/* Icon in hero button */
+.hero-btn.secondary:hover::before {
+    width: 100%;
+}
+
+/* Icon in hero button - ENHANCED animation */
 .hero-btn i {
     margin-left: 0.5rem;
     font-size: 1rem;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .hero-btn:hover i {
-    transform: translateX(5px);
+    transform: translateX(8px);
 }
 
 /* Button Animation - FIXED */
