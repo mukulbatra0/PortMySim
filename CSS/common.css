@@ -4,17 +4,23 @@
     --primary-color: #F0B67F;       /* Warm Orange */
     --primary-light: #FCD0A1;       /* Light Orange */
     --primary-dark: #D89A61;        /* Dark Orange */
+    --primary-rgb: 240, 182, 127;   /* RGB values for Warm Orange */
     
     /* Secondary Colors */
     --secondary-color: #5B7C99;     /* Muted Blue */
     --secondary-light: #7A97B0;     /* Light Blue */
     --secondary-dark: #426380;      /* Dark Blue */
+    --secondary-rgb: 91, 124, 153;  /* RGB values for Muted Blue */
     
     /* Background Colors */
     --bg-dark-1: #1A1C22;           /* Nearly Black */
     --bg-dark-2: #222831;           /* Dark Slate */
     --bg-dark-3: #2D333B;           /* Medium Slate */
     --bg-dark-4: #393E46;           /* Light Slate */
+    --bg-dark-1-rgb: 26, 28, 34;    /* RGB values for Nearly Black */
+    --bg-dark-2-rgb: 34, 40, 49;    /* RGB values for Dark Slate */
+    --bg-dark-3-rgb: 45, 51, 59;    /* RGB values for Medium Slate */
+    --bg-dark-4-rgb: 57, 62, 70;    /* RGB values for Light Slate */
     
     /* Text and Neutral Colors */
     --white: #ffffff;
@@ -31,6 +37,7 @@
     --accent-color: #6C5CE7;        /* Vibrant Purple */
     --accent-light: #A29BFE;        /* Light Purple */
     --accent-dark: #4834D4;         /* Dark Purple */
+    --accent-rgb: 108, 92, 231;     /* RGB values for Vibrant Purple */
     --success-color: #00B894;       /* Mint */
     --warning-color: #FDCB6E;       /* Yellow */
     --danger-color: #FF7675;        /* Coral */

@@ -17,37 +17,38 @@ if (typeof window._mainJsInitialized === 'undefined') {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Basic initialization
+    document.body.classList.add('js-loaded');
+    
     // Common elements
     const header = document.querySelector('.header') || document.querySelector('header');
-    const nav = document.querySelector('.nav') || document.querySelector('nav');
     const hamburger = document.querySelector('.hamburger') || document.querySelector('.menu-toggle');
     const navElements = document.querySelector('.nav-elements') || document.querySelector('.nav-links');
     const navLinks = document.querySelectorAll('.nav-link') || document.querySelectorAll('.nav-links a');
     const body = document.body;
     
-    // Set active navigation link based on current page
+    // Disable navigation animations - NEW FUNCTION
+    disableNavbarAnimations();
+    
+    // Fix for animation visibility issues - ensure all elements are visible
+    forceVisibilityForAllElements();
+    
+    // Explicitly reinitialize button animations
+    reinitializeButtonAnimations();
+    
+    // Set active navigation link
     setActiveLink();
     
-    // Initialize AOS (Animate on Scroll) if available
-    if (typeof AOS !== 'undefined' && !window._mainJsInitialized.aos) {
-        AOS.init({
-            duration: 800,
-            easing: 'ease-out',
-            once: true,
-            offset: 50,
-            delay: 100
-        });
-        window._mainJsInitialized.aos = true;
-    }
+    // Fix testimonial card animations on home page
+    fixTestimonialCardAnimations();
     
-    // Mobile Menu Toggle
-    if (hamburger && navElements && !window._mainJsInitialized.hamburger) {
+    // Handle mobile menu toggle
+    if (hamburger && navElements) {
         hamburger.addEventListener('click', function() {
             hamburger.classList.toggle('active');
             navElements.classList.toggle('active');
-            body.classList.toggle('menu-open'); // Prevent scrolling when menu is open
+            body.classList.toggle('menu-open');
             
-            // Accessibility
             const expanded = hamburger.getAttribute('aria-expanded') === 'true' || false;
             hamburger.setAttribute('aria-expanded', !expanded);
         });
@@ -75,472 +76,763 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        
-        window._mainJsInitialized.hamburger = true;
     }
     
-    // Mobile auth buttons handling
-    const authButtons = document.querySelector('.auth-buttons');
-    if (hamburger && authButtons && window.innerWidth <= 992) {
-        // Move auth buttons to mobile menu
-        const mobileAuthButtons = authButtons.cloneNode(true);
-        mobileAuthButtons.classList.add('mobile-auth-buttons');
-        navElements?.appendChild(mobileAuthButtons);
-    }
-    
-    // Feature cards animation (if exists)
-    const featureCards = document.querySelectorAll('.feature-card');
-    if (featureCards.length > 0 && !window._mainJsInitialized.animations) {
-        featureCards.forEach(card => {
-            // Hover effect
-            card.addEventListener('mouseenter', function() {
-                this.classList.add('hover');
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.classList.remove('hover');
-            });
-            
-            // Click ripple effect
-            card.addEventListener('click', function(e) {
-                // Create ripple element
-                const ripple = document.createElement('span');
-                ripple.classList.add('ripple-effect');
-                this.appendChild(ripple);
-                
-                // Position the ripple
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                ripple.style.width = ripple.style.height = `${size}px`;
-                ripple.style.left = `${e.clientX - rect.left - size/2}px`;
-                ripple.style.top = `${e.clientY - rect.top - size/2}px`;
-                
-                // Remove ripple after animation completes
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
-            });
-        });
+    // Fixed header on scroll - Updated to avoid animations
+    let scrollPos = 0;
+    window.addEventListener('scroll', function() {
+        const currentScrollPos = window.scrollY;
         
-        window._mainJsInitialized.animations = true;
-    }
-    
-    // Header scroll effect
-    if (header && !window._mainJsInitialized.scrollHandlers) {
-        let lastScrollTop = 0;
-        let scrollTimer;
-        
-        const scrollHandler = () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
-            // Add 'scrolled' class when scrolled down
-            if (scrollTop > 50) {
-                header.classList.add('scrolled');
+        if (header) {
+            if (currentScrollPos > 10) {
+                // Add fixed class without animation
+                header.style.transition = 'none';
+                header.classList.add('fixed');
             } else {
-                header.classList.remove('scrolled');
+                // Remove fixed class without animation
+                header.style.transition = 'none';
+                header.classList.remove('fixed');
             }
-            
-            // Show/hide navbar based on scroll direction
-            if (scrollTop > lastScrollTop && scrollTop > 100) {
-                // Scrolling down
-                header.classList.add('nav-hidden');
-            } else {
-                // Scrolling up
-                header.classList.remove('nav-hidden');
-            }
-            
-            lastScrollTop = scrollTop;
-        };
-        
-        // Throttle scroll event for better performance
-        window.addEventListener('scroll', function() {
-            if (!scrollTimer) {
-                scrollTimer = setTimeout(function() {
-                    scrollHandler();
-                    scrollTimer = null;
-                }, 10);
-            }
-        });
-        
-        window._mainJsInitialized.scrollHandlers = true;
-    }
-    
-    // Smooth scroll for anchor links
-    const anchorLinks = document.querySelectorAll('a[href^="#"]:not([href="#"])');
-    anchorLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            
-            if (targetElement) {
-                const headerOffset = document.querySelector('header')?.offsetHeight || 0;
-                const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = targetPosition - headerOffset;
-                
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-    
-    // Ripple effect for buttons
-    function addRippleEffect() {
-        const buttons = document.querySelectorAll('.btn, .btn-primary, .btn-secondary, .btn-outline, .feature-card, .social-icon');
-        
-        buttons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                const ripple = document.createElement('span');
-                ripple.classList.add('ripple');
-                this.appendChild(ripple);
-                
-                // Position the ripple
-                const rect = this.getBoundingClientRect();
-                const size = Math.max(rect.width, rect.height);
-                ripple.style.width = ripple.style.height = `${size}px`;
-                ripple.style.left = `${e.clientX - rect.left - size/2}px`;
-                ripple.style.top = `${e.clientY - rect.top - size/2}px`;
-                
-                // Remove ripple after animation completes
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
-            });
-        });
-        
-        window._mainJsInitialized.ripple = true;
-    }
-    
-    if (!window._mainJsInitialized.ripple) {
-        addRippleEffect();
-    }
-    
-    // Update current year in footer
-    const yearElement = document.getElementById('currentYear');
-    if (yearElement) {
-        yearElement.innerText = new Date().getFullYear();
-    }
-    
-    // Handle window resize
-    let resizeTimer;
-    window.addEventListener('resize', function() {
-        // Throttle resize event
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(function() {
-            if (hamburger && authButtons) {
-                // Re-handle auth buttons on resize
-                const mobileAuthButtons = document.querySelector('.mobile-auth-buttons');
-                
-                if (window.innerWidth <= 992) {
-                    if (!mobileAuthButtons) {
-                        const newMobileAuthButtons = authButtons.cloneNode(true);
-                        newMobileAuthButtons.classList.add('mobile-auth-buttons');
-                        navElements?.appendChild(newMobileAuthButtons);
-                    }
-                } else {
-                    if (mobileAuthButtons) {
-                        mobileAuthButtons.remove();
-                    }
-                }
-            }
-        }, 250);
-    });
-    
-    // Create ResizeObserver for dynamic content
-    if ('ResizeObserver' in window) {
-        const resizeObserver = new ResizeObserver(entries => {
-            for (const entry of entries) {
-                // Handle resize of specific elements if needed
-            }
-        });
-        
-        // Observe main content
-        const mainContent = document.querySelector('main') || document.querySelector('.main-content');
-        if (mainContent) {
-            resizeObserver.observe(mainContent);
         }
-    }
-    
-    // Toggle password visibility for password fields
-    const passwordToggles = document.querySelectorAll('.password-toggle');
-    passwordToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            const passwordField = this.previousElementSibling;
-            const icon = this.querySelector('i');
-            
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
+        
+        scrollPos = currentScrollPos;
     });
     
-    // Form validation
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            let valid = true;
-            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
-            
-            inputs.forEach(input => {
-                const errorElement = input.parentElement.nextElementSibling;
-                if (!input.value.trim()) {
-                    e.preventDefault();
-                    valid = false;
-                    input.classList.add('error');
-                    if (errorElement && errorElement.classList.contains('error-message')) {
-                        errorElement.textContent = 'This field is required';
-                    }
-                } else {
-                    input.classList.remove('error');
-                    if (errorElement && errorElement.classList.contains('error-message')) {
-                        errorElement.textContent = '';
-                    }
-                    
-                    // Email validation
-                    if (input.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.value)) {
-                        e.preventDefault();
-                        valid = false;
-                        input.classList.add('error');
-                        if (errorElement && errorElement.classList.contains('error-message')) {
-                            errorElement.textContent = 'Please enter a valid email address';
-                        }
-                    }
-                    
-                    // Phone validation
-                    if (input.type === 'tel' && !/^[0-9+\s-]{10,15}$/.test(input.value)) {
-                        e.preventDefault();
-                        valid = false;
-                        input.classList.add('error');
-                        if (errorElement && errorElement.classList.contains('error-message')) {
-                            errorElement.textContent = 'Please enter a valid phone number';
-                        }
-                    }
-                }
-            });
-            
-            // Password match validation for signup form
-            if (form.id === 'signupForm') {
-                const password = document.getElementById('password');
-                const confirmPassword = document.getElementById('confirm-password');
-                const errorElement = confirmPassword.parentElement.nextElementSibling;
-                
-                if (password && confirmPassword && password.value !== confirmPassword.value) {
-                    e.preventDefault();
-                    valid = false;
-                    confirmPassword.classList.add('error');
-                    if (errorElement && errorElement.classList.contains('error-message')) {
-                        errorElement.textContent = 'Passwords do not match';
-                    }
-                }
-            }
-            
-            return valid;
-        });
-    });
+    // Footer year
+    updateFooterYear();
     
-    // FAQ toggle functionality
-    const faqQuestions = document.querySelectorAll('.faq-question');
-    faqQuestions.forEach(question => {
-        question.addEventListener('click', function() {
-            const answer = this.nextElementSibling;
-            answer.classList.toggle('show');
+    // Apply animations only if user doesn't prefer reduced motion
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        // Apply consistent animations across all pages
+        initUnifiedAnimationSystem();
+        
+        // Add BSNL-style cursor tilt effect for cards
+        initCardTiltEffect();
+        
+        // Re-run animations on dynamic content
+        document.addEventListener('contentLoaded', function() {
+            initUnifiedAnimationSystem();
+            initCardTiltEffect();
         });
-    });
-    
-    // Pricing toggle (if exists)
-    const pricingToggle = document.querySelector('.pricing-toggle');
-    if (pricingToggle) {
-        const monthlyLabel = document.querySelector('.monthly-label');
-        const yearlyLabel = document.querySelector('.yearly-label');
-        const monthlyPrices = document.querySelectorAll('.monthly-price');
-        const yearlyPrices = document.querySelectorAll('.yearly-price');
-        
-        pricingToggle.addEventListener('change', function() {
-            if (this.checked) {
-                // Yearly pricing
-                monthlyLabel?.classList.remove('active');
-                yearlyLabel?.classList.add('active');
-                monthlyPrices.forEach(price => price.style.display = 'none');
-                yearlyPrices.forEach(price => price.style.display = 'block');
-            } else {
-                // Monthly pricing
-                monthlyLabel?.classList.add('active');
-                yearlyLabel?.classList.remove('active');
-                monthlyPrices.forEach(price => price.style.display = 'block');
-                yearlyPrices.forEach(price => price.style.display = 'none');
-            }
-        });
-    }
-    
-    // Enhanced Card Animations
-    function enhanceAllCards() {
-        // Debug information for troubleshooting
-        console.log('Running enhanceAllCards function');
-        
-        // Select all types of cards in the project
-        const allCards = document.querySelectorAll(
-            '.feature-card, .testimonial-card, .achievement-card, .requirement-card, ' + 
-            '.operator-plan-card, .recommendation-card, .team-member, .faq-item, ' +
-            '.timeline-item, .mission-item, .plan-card, .pricing-card, .auth-form-container, ' +
-            '.card, .info-card, .service-card, .blog-card, .faq-question, .stat-item, ' +
-            '.plan, .product-card, .contact-info'
-        );
-        
-        console.log('Found', allCards.length, 'cards to enhance');
-        
-        // Check if cards are visible
-        allCards.forEach((card, index) => {
-            const computedStyle = window.getComputedStyle(card);
-            const isVisible = computedStyle.display !== 'none' && 
-                            computedStyle.visibility !== 'hidden' && 
-                            computedStyle.opacity !== '0';
-                            
-            console.log(`Card ${index}: ${card.className} is ${isVisible ? 'visible' : 'not visible'}`, 
-                      'Display:', computedStyle.display, 
-                      'Visibility:', computedStyle.visibility, 
-                      'Opacity:', computedStyle.opacity);
-                      
-            // Make sure card is visible
-            if (computedStyle.display === 'none') {
-                card.style.display = 'block';
-            }
-            
-            // Skip if card already has animation
-            if (card.dataset.animated === 'true') return;
-            card.dataset.animated = 'true';
-            
-            // Add class for animation readiness
-            card.classList.add('ripple');
-            
-            // Make sure card has position relative for proper effect positioning
-            if (getComputedStyle(card).position === 'static') {
-                card.style.position = 'relative';
-            }
-            
-            // Make sure card has overflow hidden for ripple effects
-            if (getComputedStyle(card).overflow === 'visible') {
-                card.style.overflow = 'hidden';
-            }
-            
-            // Add subtle floating animation on hover
-            let floating = false;
-            let floatingInterval;
-            
-            card.addEventListener('mouseenter', function() {
-                if (!floating && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                    floating = true;
-                    let position = 0;
-                    let direction = 1;
-                    
-                    // Store original transition
-                    const originalTransition = this.style.transition;
-                    this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
-                    
-                    floatingInterval = setInterval(() => {
-                        position += 0.3 * direction;
-                        
-                        if (position >= 3) {
-                            direction = -1;
-                        } else if (position <= 0) {
-                            direction = 1;
-                        }
-                        
-                        this.style.transform = `translateY(${position}px)`;
-                    }, 50);
-                    
-                    // Enhanced shadow effect
-                    const originalBoxShadow = getComputedStyle(this).boxShadow;
-                    if (originalBoxShadow === 'none' || !originalBoxShadow) {
-                        this.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.2)';
-                    } else {
-                        this.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.3)';
-                    }
-                }
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                floating = false;
-                clearInterval(floatingInterval);
-                this.style.transform = '';
-                
-                // Reset box-shadow to original
-                const computedStyle = getComputedStyle(this);
-                const originalBoxShadow = computedStyle.getPropertyValue('--original-box-shadow') || 
-                                         computedStyle.boxShadow;
-                this.style.boxShadow = originalBoxShadow;
-            });
-            
-            // Add ripple effect on click
-            card.addEventListener('click', function(e) {
-                // Don't add ripple for buttons inside cards or interactive elements
-                if (e.target.closest('a, button, input, select, .btn, .form-control, .auth-form-container, form')) {
-                    return;
-                }
-                
-                const x = e.clientX - this.getBoundingClientRect().left;
-                const y = e.clientY - this.getBoundingClientRect().top;
-                
-                const ripple = document.createElement('span');
-                ripple.classList.add('ripple-effect');
-                
-                // Size based on card's largest dimension
-                const size = Math.max(this.offsetWidth, this.offsetHeight) * 2;
-                ripple.style.width = ripple.style.height = `${size}px`;
-                
-                // Position the ripple
-                ripple.style.left = `${x - size/2}px`;
-                ripple.style.top = `${y - size/2}px`;
-                
-                this.appendChild(ripple);
-                
-                // Remove ripple after animation completes
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
-            });
-        });
-    }
-    
-    // Call the function to enhance all cards when DOM is fully loaded
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', enhanceAllCards);
     } else {
-        enhanceAllCards();
+        // For users who prefer reduced motion, make everything visible immediately
+        document.querySelectorAll('.animate-on-scroll, .animate-pop-up').forEach(el => {
+            el.style.opacity = '1';
+            el.classList.add('visible');
+        });
     }
     
-    // Also call it when new content might be loaded
-    window.addEventListener('load', enhanceAllCards);
+    // Add ripple effect to buttons
+    document.querySelectorAll('.btn-primary, .btn-secondary, .btn-outline-white, .btn-login, .btn-signup')
+        .forEach(button => {
+            button.addEventListener('click', createRippleEffect);
+        });
+    
+    // Initialize mobile navigation
+    initMobileNavigation();
+    
+    // Initialize hero buttons specifically
+    initializeHeroButtons();
 });
 
-/**
- * Set active link based on current page
- */
+// Helper Functions
 function setActiveLink() {
-    const currentPage = window.location.pathname.split('/').pop();
-    const navLinks = document.querySelectorAll('.nav-link') || document.querySelectorAll('.nav-links a');
+    const currentLocation = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-link');
     
     navLinks.forEach(link => {
-        const linkHref = link.getAttribute('href');
-        
-        // Check if this is the current page
-        if (
-            (currentPage === '' && linkHref === 'index.html') ||
-            (currentPage === linkHref) ||
-            (linkHref !== 'index.html' && currentPage.includes(linkHref.split('.html')[0]))
-        ) {
+        const linkPath = link.getAttribute('href');
+        if ((currentLocation.includes(linkPath) && linkPath !== 'index.html') || 
+            (currentLocation.endsWith('/') && linkPath === 'index.html') ||
+            (currentLocation.endsWith('HTML/') && linkPath === 'index.html')) {
             link.classList.add('active');
-            link.setAttribute('aria-current', 'page');
-        } else {
-            link.classList.remove('active');
-            link.removeAttribute('aria-current');
         }
     });
+}
+
+function updateFooterYear() {
+    const yearElement = document.querySelector('.current-year');
+    if (yearElement) {
+        yearElement.textContent = new Date().getFullYear();
+    }
+}
+
+function createRippleEffect(e) {
+    // First remove any existing ripples
+    this.querySelectorAll('.ripple-effect').forEach(ripple => ripple.remove());
+    
+    const button = this;
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple-effect');
+    
+    // Determine button type to adjust ripple color
+    if (button.classList.contains('primary') || button.classList.contains('btn-primary')) {
+        ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+    } else if (button.classList.contains('secondary')) {
+        ripple.style.backgroundColor = 'rgba(var(--primary-rgb, 240, 182, 127), 0.3)';
+    } else {
+        ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+    }
+    
+    button.appendChild(ripple);
+    
+    const rect = button.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 2.5; // Larger size for better effect
+    ripple.style.width = ripple.style.height = `${size}px`;
+    
+    // Get cursor position relative to the button
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    // Position ripple from click point
+    ripple.style.left = `${x - size/2}px`;
+    ripple.style.top = `${y - size/2}px`;
+    
+    // Add a subtle glow effect to the button on click
+    const originalBoxShadow = button.style.boxShadow;
+    if (button.classList.contains('primary') || button.classList.contains('btn-primary')) {
+        button.style.boxShadow = 'var(--glow-primary)';
+    } else {
+        button.style.boxShadow = 'var(--shadow-lg)';
+    }
+    
+    // Reset the box shadow after the ripple animation completes
+    setTimeout(() => {
+        button.style.boxShadow = originalBoxShadow;
+        ripple.remove();
+    }, 600);
+    
+    // Don't interrupt the button's natural effect
+    return true;
+}
+
+// Reinitialize button animations
+function reinitializeButtonAnimations() {
+    console.log("Reinitializing button animations");
+    
+    // Clear any inline styles that might interfere
+    document.querySelectorAll('.hero-btn, .btn-primary, .cta-btn, .btn-login, .btn-signup').forEach(button => {
+        // Remove inline transform that might be blocking animations
+        button.style.removeProperty('transform');
+        
+        // Make sure hover animations work properly
+        button.addEventListener('mouseenter', function() {
+            // Skip transform for hero buttons to prevent movement
+            if (!this.classList.contains('hero-btn')) {
+                this.style.transform = 'translateY(-5px)';
+            }
+            
+            this.style.boxShadow = '0 7px 15px rgba(var(--primary-rgb, 240, 182, 127), 0.4)';
+            
+            // Add icon animation if present
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.style.transform = 'translateX(5px)';
+            }
+        });
+        
+        button.addEventListener('mouseleave', function() {
+            this.style.transform = '';
+            this.style.boxShadow = '';
+            
+            // Reset icon animation
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.style.transform = '';
+            }
+        });
+        
+        // Add ripple effect
+        button.removeEventListener('click', createRippleEffect); // Remove old listener to prevent duplicates
+        button.addEventListener('click', createRippleEffect);
+    });
+    
+    // Special handling for How It Works page hero buttons
+    const heroButtons = document.querySelectorAll('.hero-buttons .hero-btn, .cta-buttons .cta-btn');
+    heroButtons.forEach(button => {
+        if (button.classList.contains('primary')) {
+            // Restart pulse animation
+            button.style.animation = 'none';
+            setTimeout(() => {
+                button.style.animation = 'pulse 2s infinite';
+            }, 10);
+        }
+        
+        // Add special hover effect for primary buttons in hero section
+        if (button.classList.contains('primary') && button.closest('.hero-section')) {
+            button.addEventListener('mouseenter', function() {
+                this.style.boxShadow = 'var(--glow-primary)';
+            });
+        }
+        
+        // Add special hover effect for CTA buttons
+        if (button.closest('.cta-section')) {
+            button.addEventListener('mouseenter', function() {
+                this.style.boxShadow = 'var(--glow-accent)';
+            });
+        }
+    });
+    
+    // Ensure animations are smooth by adding will-change
+    document.querySelectorAll('.hero-btn, .btn-primary, .cta-btn').forEach(button => {
+        button.style.willChange = 'transform, box-shadow';
+    });
+}
+
+// Force all elements with animation classes to be visible
+function forceVisibilityForAllElements() {
+    // Make all animated elements visible immediately
+    document.querySelectorAll('.animate-pop-up, .animate-on-scroll, .section-header, .timeline-item, .requirement-card, .faq-item, .cta-content').forEach(el => {
+        // Skip resetting transform for buttons to preserve their animations
+        const isButton = el.classList.contains('hero-btn') || 
+                         el.classList.contains('btn-primary') || 
+                         el.classList.contains('cta-btn') || 
+                         el.classList.contains('btn-login') || 
+                         el.classList.contains('btn-signup') || 
+                         el.classList.contains('btn-secondary');
+        
+        // Skip navbar elements with the no-animation flag
+        if (el.getAttribute('data-no-animation') === 'true') {
+            el.style.opacity = '1';
+            el.style.transform = 'none';
+            return;
+        }
+        
+        el.style.opacity = '1';
+        el.classList.add('visible');
+        el.classList.add('in-view');
+        el.classList.add('animated');
+        
+        // Only reset transform for non-button elements
+        if (!isButton) {
+            el.style.transform = 'none';
+        }
+    });
+    
+    // Make sure FAQ answers are visible if they should be
+    document.querySelectorAll('.faq-question').forEach(question => {
+        question.addEventListener('click', function() {
+            const answer = this.nextElementSibling;
+            answer.classList.toggle('active');
+            this.classList.toggle('active');
+        });
+    });
+    
+    // Initialize FAQ accordion - open first one by default for visibility
+    initFaqAccordion();
+}
+
+// Initialize FAQ Accordion functionality
+function initFaqAccordion() {
+    console.log("Initializing FAQ accordion");
+    
+    // Automatically open the first FAQ for visibility
+    const firstQuestion = document.querySelector('.faq-question');
+    if (firstQuestion) {
+        setTimeout(() => {
+            const answer = firstQuestion.nextElementSibling;
+            firstQuestion.classList.add('active');
+            answer.classList.add('active');
+            console.log("Opened first FAQ item for visibility");
+        }, 500);
+    }
+}
+
+// Unified Animation System for consistent animations across all pages
+function initUnifiedAnimationSystem() {
+    // Apply pop-up animations to elements that should have them
+    applyPopUpAnimations();
+    
+    // Set up scroll-based animations
+    initScrollAnimations();
+    
+    // Add a class to indicate animations are enabled
+    document.documentElement.classList.add('animations-enabled');
+}
+
+// Apply pop-up animations to elements that should have them
+function applyPopUpAnimations() {
+    // Target elements for pop-up animations with consistent delays
+    const animationGroups = [
+        // Navigation elements
+        { selector: '.logo, .nav-links .nav-item', baseDelay: 100, stagger: 50 },
+        
+        // Hero section
+        { selector: '.hero-text h1, .hero-text p', baseDelay: 200, stagger: 100 },
+        { selector: '.hero-buttons .btn-primary, .hero-buttons .btn-outline-white', baseDelay: 400, stagger: 100 },
+        { selector: '.hero-image', baseDelay: 300, stagger: 0 },
+        
+        // Section titles
+        { selector: '.section-title h2, .section-title p', baseDelay: 100, stagger: 100 },
+        
+        // Feature cards
+        { selector: '.feature-card', baseDelay: 100, stagger: 100, limit: 6 },
+        
+        // How It Works steps - maintain the same animation pattern
+        { selector: '.step', baseDelay: 100, stagger: 100, limit: 3 },
+        
+        // Testimonials
+        { selector: '.testimonial-card', baseDelay: 100, stagger: 100, limit: 3 },
+        
+        // CTA section
+        { selector: '.cta-content h2, .cta-content p', baseDelay: 100, stagger: 100 },
+        { selector: '.cta-buttons .btn-primary, .cta-buttons .btn-outline-white', baseDelay: 300, stagger: 100 },
+        
+        // Footer sections
+        { selector: '.footer-section', baseDelay: 100, stagger: 50 }
+    ];
+    
+    // Process each animation group
+    animationGroups.forEach(group => {
+        const elements = document.querySelectorAll(group.selector);
+        const limit = group.limit || elements.length;
+        
+        elements.forEach((el, index) => {
+            if (index >= limit) return;
+            
+            // Don't re-apply to elements that already have animation classes
+            if (!el.classList.contains('animate-pop-up') && !el.classList.contains('animate-on-scroll')) {
+                // Choose animation type based on element
+                const isHeroOrVisible = el.closest('.hero-section') || 
+                                       el.getBoundingClientRect().top < window.innerHeight * 0.5;
+                
+                if (isHeroOrVisible) {
+                    // Immediate pop-up animation for hero and visible elements
+                    el.classList.add('animate-pop-up');
+                    const delay = group.baseDelay + (index * group.stagger);
+                    el.classList.add(`delay-${Math.floor(delay / 100) * 100}`);
+                } else {
+                    // Scroll-based animation for elements below the fold
+                    el.classList.add('animate-on-scroll');
+                    el.style.animationDelay = `${(group.baseDelay + (index * group.stagger)) / 1000}s`;
+                }
+            }
+        });
+    });
+    
+    // Process explicit pop-up animations
+    const popUpElements = document.querySelectorAll('.animate-pop-up:not(.animated)');
+    
+    popUpElements.forEach((element, index) => {
+        // Add animated class to prevent re-animation
+        element.classList.add('animated');
+        
+        // Get delay from class or set based on index
+        let delay = 0;
+        if (element.classList.contains('delay-100')) delay = 100;
+        else if (element.classList.contains('delay-200')) delay = 200;
+        else if (element.classList.contains('delay-300')) delay = 300;
+        else if (element.classList.contains('delay-400')) delay = 400;
+        else if (element.classList.contains('delay-500')) delay = 500;
+        else delay = index * 100; // Default staggered delay
+        
+        setTimeout(() => {
+            element.style.opacity = '1';
+            element.style.transform = 'scale(1) translateY(0)';
+        }, delay);
+    });
+}
+
+// Initialize scroll-based animations
+function initScrollAnimations() {
+    const animateElements = document.querySelectorAll('.animate-on-scroll:not(.visible)');
+    if (!animateElements.length) return;
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                // Small delay for smoother appearance when multiple elements enter viewport
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, 50);
+                
+                observer.unobserve(entry.target); // Stop observing once animated
+            }
+        });
+    }, {
+        rootMargin: '0px 0px -10% 0px',
+        threshold: 0.15
+    });
+    
+    animateElements.forEach(element => {
+        observer.observe(element);
+    });
+    
+    // Fallback to ensure all elements are visible after 5 seconds
+    // This ensures no content stays hidden if there are any issues
+    setTimeout(() => {
+        document.querySelectorAll('.animate-on-scroll:not(.visible)').forEach(el => {
+            el.classList.add('visible');
+        });
+    }, 5000);
+}
+
+// BSNL-style cursor tilt effect for cards
+function initCardTiltEffect() {
+    // Include How It Works page specific elements
+    const cards = document.querySelectorAll(
+        '.feature-card, .testimonial-card, .step, .timeline-item, .requirement-card, .faq-item'
+    );
+    
+    cards.forEach(card => {
+        // Skip applying effect on mobile devices
+        if (window.innerWidth <= 992) return;
+        
+        // Remove existing listeners if re-initializing
+        card.removeEventListener('mousemove', handleCardTilt);
+        card.removeEventListener('mouseleave', resetCardTilt);
+        
+        // Add event listeners for the tilt effect
+        card.addEventListener('mousemove', handleCardTilt);
+        card.addEventListener('mouseleave', resetCardTilt);
+    });
+}
+
+function handleCardTilt(e) {
+    const card = this;
+    
+    // Skip processing if card has the disable-tilt attribute
+    if (card.getAttribute('data-disable-tilt') === 'true') return;
+    
+    // Skip processing if card has become detached from DOM
+    if (!card.isConnected) return;
+    
+    const cardRect = card.getBoundingClientRect();
+    const cardWidth = cardRect.width;
+    const cardHeight = cardRect.height;
+    
+    // Calculate cursor position relative to the card
+    const mouseX = e.clientX - cardRect.left;
+    const mouseY = e.clientY - cardRect.top;
+    
+    // Calculate rotation based on cursor position
+    // Convert position to percentage (-50 to 50)
+    const rotateY = ((mouseX / cardWidth) - 0.5) * 20;
+    const rotateX = ((mouseY / cardHeight) - 0.5) * -20;
+    
+    // Apply the 3D rotation and other effects
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+    
+    // Add a subtle highlight effect based on mouse position
+    const glowX = (mouseX / cardWidth) * 100;
+    const glowY = (mouseY / cardHeight) * 100;
+    
+    // Apply a radial gradient to simulate light reflection
+    if (card.classList.contains('feature-card') || card.classList.contains('timeline-item') || card.classList.contains('requirement-card')) {
+        card.style.background = `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(var(--bg-dark-3-rgb), 1) 0%, rgba(var(--bg-dark-3-rgb), 0.95) 50%, rgba(var(--bg-dark-3-rgb), 0.9) 100%)`;
+    } else if (card.classList.contains('testimonial-card') || card.classList.contains('faq-item')) {
+        card.style.background = `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(var(--bg-dark-3-rgb), 1) 0%, rgba(var(--bg-dark-3-rgb), 0.95) 50%, rgba(var(--bg-dark-3-rgb), 0.9) 100%)`;
+    }
+    
+    // Add box shadow based on cursor position to enhance 3D effect
+    const shadowX = (mouseX / cardWidth - 0.5) * 20;
+    const shadowY = (mouseY / cardHeight - 0.5) * 20;
+    card.style.boxShadow = `${shadowX}px ${shadowY}px 30px rgba(0, 0, 0, 0.4)`;
+    
+    // Handle special elements on How It Works page
+    if (card.classList.contains('timeline-item')) {
+        const timelineContent = card.querySelector('.timeline-content');
+        if (timelineContent) {
+            timelineContent.style.transform = `translateZ(20px)`;
+        }
+        
+        const timelineDate = card.querySelector('.timeline-date');
+        if (timelineDate) {
+            timelineDate.style.transform = `translateZ(30px) translateY(${rotateX/2}px)`;
+        }
+    }
+    
+    if (card.classList.contains('requirement-card')) {
+        const icon = card.querySelector('.requirement-icon');
+        if (icon) {
+            icon.style.transform = `translateX(${rotateY/2}px) translateY(${rotateX/2}px) scale(1.1)`;
+        }
+    }
+    
+    if (card.classList.contains('faq-item')) {
+        const question = card.querySelector('.faq-question');
+        if (question) {
+            question.style.transform = `translateZ(10px)`;
+        }
+    }
+    
+    // If the card has an icon, make it follow the cursor slightly
+    const icon = card.querySelector('.feature-icon');
+    if (icon) {
+        icon.style.transform = `translateX(${rotateY/2}px) translateY(${rotateX/2}px) scale(1.1)`;
+    }
+    
+    // Apply a glow effect to links or buttons inside the card
+    const buttons = card.querySelectorAll('.btn-primary, .hero-btn, .cta-btn');
+    buttons.forEach(button => {
+        button.style.boxShadow = '0 0 15px rgba(var(--primary-rgb), 0.5)';
+        button.style.transform = 'translateZ(20px)';
+    });
+}
+
+function resetCardTilt(e) {
+    const card = this;
+    
+    // Reset all transforms and effects with a smooth transition
+    card.style.transform = '';
+    card.style.background = '';
+    card.style.boxShadow = '';
+    
+    // Reset timeline specific elements
+    if (card.classList.contains('timeline-item')) {
+        const timelineContent = card.querySelector('.timeline-content');
+        if (timelineContent) {
+            timelineContent.style.transform = '';
+        }
+        
+        const timelineDate = card.querySelector('.timeline-date');
+        if (timelineDate) {
+            timelineDate.style.transform = '';
+        }
+    }
+    
+    // Reset requirement card elements
+    if (card.classList.contains('requirement-card')) {
+        const icon = card.querySelector('.requirement-icon');
+        if (icon) {
+            icon.style.transform = '';
+        }
+    }
+    
+    // Reset FAQ items
+    if (card.classList.contains('faq-item')) {
+        const question = card.querySelector('.faq-question');
+        if (question) {
+            question.style.transform = '';
+        }
+    }
+    
+    // Reset icon position
+    const icon = card.querySelector('.feature-icon');
+    if (icon) {
+        icon.style.transform = '';
+    }
+    
+    // Reset button glow
+    const buttons = card.querySelectorAll('.btn-primary, .hero-btn, .cta-btn');
+    buttons.forEach(button => {
+        button.style.boxShadow = '';
+        button.style.transform = '';
+    });
+}
+
+// Mobile Navigation Toggle - No animations
+function initMobileNavigation() {
+    const hamburger = document.querySelector('.hamburger');
+    const navElements = document.querySelector('.nav-elements');
+    
+    if (hamburger && navElements) {
+        // Disable transitions/animations
+        hamburger.style.transition = 'none';
+        navElements.style.transition = 'none';
+        
+        hamburger.addEventListener('click', function() {
+            // Toggle without animations
+            hamburger.style.transition = 'none';
+            navElements.style.transition = 'none';
+            
+            hamburger.classList.toggle('active');
+            navElements.classList.toggle('active');
+            
+            // Prevent body scrolling when menu is open
+            document.body.classList.toggle('nav-open');
+            
+            console.log('Mobile navigation toggled without animations');
+        });
+        
+        // Close mobile menu when clicking on a nav link
+        const navLinks = document.querySelectorAll('.nav-item a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                // Remove without animations
+                hamburger.style.transition = 'none';
+                navElements.style.transition = 'none';
+                
+                hamburger.classList.remove('active');
+                navElements.classList.remove('active');
+                document.body.classList.remove('nav-open');
+            });
+        });
+        
+        console.log('Mobile navigation initialized without animations');
+    } else {
+        console.warn('Mobile navigation elements not found');
+    }
+}
+
+// Update the existing reinitializer function to include all effects
+function reinitializeAllEffects() {
+    // Reset visibility for animation elements
+    forceVisibilityForAllElements();
+    
+    // Reset button animations
+    reinitializeButtonAnimations();
+    
+    // Initialize mobile navigation
+    initMobileNavigation();
+    
+    // Initialize hero buttons
+    initializeHeroButtons();
+    
+    // Initialize card effects if not on mobile
+    if (window.innerWidth > 992) {
+        initCardTiltEffect();
+    }
+    
+    // Initialize FAQ accordion
+    initFaqAccordion();
+    
+    console.log('All effects reinitialized');
+}
+
+// Special handling for hero button animations
+function initializeHeroButtons() {
+    console.log("Initializing hero buttons");
+    const heroButtons = document.querySelectorAll('.hero-buttons .hero-btn');
+    
+    heroButtons.forEach(button => {
+        // Clear any existing inline styles that might interfere
+        button.style.removeProperty('transform');
+        button.style.removeProperty('box-shadow');
+        
+        // Force the transform to be translateY(0) to prevent movement
+        button.style.transform = 'translateY(0)';
+        
+        // Don't override CSS animations with inline styles
+        // No need to reset animation - let CSS handle it
+        
+        // Set up hover effects - only change box-shadow on hover, not position
+        button.addEventListener('mouseenter', function() {
+            // Don't set transform - we don't want the button to move
+            if (this.classList.contains('primary')) {
+                this.style.boxShadow = '0 8px 25px rgba(var(--primary-rgb), 0.6)';
+            } else if (this.classList.contains('secondary')) {
+                this.style.backgroundColor = 'rgba(255, 255, 255, 0.12)';
+                this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.2)';
+            }
+            
+            // Ensure transform remains at translateY(0)
+            this.style.transform = 'translateY(0)';
+            
+            // Animate icon if present
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.style.transform = 'translateX(5px)';
+            }
+        });
+        
+        // Reset on mouse leave
+        button.addEventListener('mouseleave', function() {
+            this.style.boxShadow = '';
+            this.style.backgroundColor = '';
+            
+            // Keep transform at translateY(0)
+            this.style.transform = 'translateY(0)';
+            
+            // Reset icon
+            const icon = this.querySelector('i');
+            if (icon) {
+                icon.style.transform = '';
+            }
+        });
+        
+        // Add ripple effect
+        button.removeEventListener('click', createRippleEffect);
+        button.addEventListener('click', createRippleEffect);
+    });
+}
+
+// NEW FUNCTION to disable navbar animations
+function disableNavbarAnimations() {
+    console.log("Disabling navbar animations");
+    
+    // Remove animation classes from navigation elements
+    const navElements = document.querySelectorAll('.header, header, .nav-elements, .nav-links, .nav-item, .logo, .hamburger, .btn-login, .btn-signup, .nav-link');
+    
+    navElements.forEach(el => {
+        // Remove any animation classes
+        el.classList.remove('animate-pop-up', 'animate-on-scroll', 'animated', 'visible', 'in-view');
+        
+        // Remove any animation or transform styles
+        el.style.animation = 'none';
+        el.style.transform = 'none';
+        el.style.opacity = '1';
+        el.style.visibility = 'visible';
+        
+        // Remove any delay classes
+        el.classList.remove('delay-100', 'delay-200', 'delay-300', 'delay-400', 'delay-500');
+        
+        // Remove any animation-related event listeners (cannot directly do this, but can prevent them from having effect)
+        el.setAttribute('data-no-animation', 'true');
+    });
+}
+
+// Add this new function to fix testimonial card animations
+function fixTestimonialCardAnimations() {
+    console.log("Fixing testimonial card animations with 3D effects");
+    
+    // Get all testimonial cards in the "What Our Users Say" section
+    const testimonialCards = document.querySelectorAll('.testimonial-card');
+    
+    if (!testimonialCards.length) {
+        console.log("No testimonial cards found on page");
+        return;
+    }
+    
+    // Remove any problematic animation or transform styles
+    testimonialCards.forEach(card => {
+        // Remove animation classes that might be causing conflicts
+        card.classList.remove('animate-pop-up', 'animate-on-scroll', 'animated', 'visible', 'in-view');
+        
+        // Apply proper 3D styles
+        card.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+        card.style.transform = 'translateY(0) rotateY(0)';
+        card.style.opacity = '1';
+        card.style.visibility = 'visible';
+        
+        // Enable proper 3D transforms
+        card.style.transformStyle = 'preserve-3d';
+        card.style.backfaceVisibility = 'hidden';
+        card.style.perspective = '1000px';
+        
+        // Reset any animations that might be running
+        card.style.animation = 'none';
+        
+        // Set an initial box-shadow that looks good without animation
+        card.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+        
+        // Remove data-disable-tilt attribute to allow 3D tilt effects
+        card.removeAttribute('data-disable-tilt');
+        
+        // Remove event listeners for mouse interactions (can't directly remove unknown listeners)
+        card.replaceWith(card.cloneNode(true));
+    });
+    
+    // Re-add enhanced 3D hover effect
+    const freshCards = document.querySelectorAll('.testimonial-card');
+    freshCards.forEach(card => {
+        // Enable controlled tilt effect
+        card.addEventListener('mouseenter', function() {
+            // Apply a controlled 3D transform
+            const isEven = Array.from(freshCards).indexOf(this) % 2 === 0;
+            const rotateDirection = isEven ? 3 : -3; // Alternate rotation direction
+            
+            this.style.transform = `translateY(-10px) rotateY(${rotateDirection}deg)`;
+            this.style.boxShadow = '0 15px 35px rgba(0, 0, 0, 0.2)';
+            this.style.borderColor = 'var(--primary-color)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) rotateY(0)';
+            this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.1)';
+            this.style.borderColor = 'var(--bg-dark-4)';
+        });
+    });
+    
+    console.log("Fixed testimonial card animations with 3D effects");
 } 
