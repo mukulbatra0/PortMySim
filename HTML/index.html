@@ -8,11 +8,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../CSS/common.css">
     <link rel="stylesheet" href="../CSS/home.css">
+    <link rel="stylesheet" href="../CSS/loader.css">
     <link rel="icon" href="../images/logo.png" sizes="32x32" type="image/png" >
     <!-- Dark Theme CSS is now part of common.css -->
-
 </head>
 <body class="bg-dark-1">
+    <!-- Loader will be added via JavaScript -->
+    
     <header class="header">
         <nav class="nav">
             <div class="nav-container">
@@ -55,14 +57,14 @@
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text animate-pop-up">
-                    <h1 class="animate-pop-up delay-100">Simplify Your Mobile Number Portability</h1>
-                    <p class="animate-pop-up delay-200">PortMySim makes it easy to switch between mobile operators while keeping your number. Compare plans, complete paperwork, and track your porting status all in one place.</p>
-                    <div class="hero-buttons">
-                        <a href="signup.html" class="btn-primary animate-pop-up delay-300">Get Started</a>
-                        <a href="how-it-works.html" class="btn-outline-white animate-pop-up delay-400">How It Works</a>
+                    <h1 class="content-transition" data-animation="slide-up" data-delay="0.2s">Simplify Your Mobile Number Portability</h1>
+                    <p class="content-transition" data-animation="slide-up" data-delay="0.4s">PortMySim makes it easy to switch between mobile operators while keeping your number. Compare plans, complete paperwork, and track your porting status all in one place.</p>
+                    <div class="hero-buttons content-transition" data-animation="fade-in" data-delay="0.6s">
+                        <a href="signup.html" class="btn-primary" data-transition="slide">Get Started</a>
+                        <a href="how-it-works.html" class="btn-outline-white" data-transition="fade">How It Works</a>
                     </div>
                 </div>
-                <div class="hero-image animate-pop-up delay-200">
+                <div class="hero-image content-transition" data-animation="slide-left" data-delay="0.3s">
                     <img src="../images/hero-image.jpg" alt="Mobile Number Portability">
                 </div>
             </div>
@@ -73,11 +75,11 @@
     <section id="features" class="features-section">
         <div class="container">
             <div class="section-title">
-                <h2 class="animate-pop-up delay-100">Why Choose PortMySim</h2>
-                <p class="animate-pop-up delay-200">We make the porting process simple, transparent, and hassle-free</p>
+                <h2 class="content-transition" data-animation="slide-up">Why Choose PortMySim</h2>
+                <p class="content-transition" data-animation="slide-up" data-delay="0.2s">We make the porting process simple, transparent, and hassle-free</p>
             </div>
             <div class="features-grid">
-                <div class="feature-card animate-pop-up delay-100">
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.3s">
                     <div class="feature-icon">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
@@ -85,7 +87,7 @@
                     <p>Switch between mobile operators seamlessly while keeping your existing number with our streamlined process.</p>
                 </div>
                 
-                <div class="feature-card animate-pop-up delay-200">
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.4s">
                     <div class="feature-icon">
                         <i class="fas fa-search"></i>
                     </div>
@@ -93,7 +95,7 @@
                     <p>Compare plans from different operators to find the best deal that suits your needs and budget.</p>
                 </div>
                 
-                <div class="feature-card animate-pop-up delay-300">
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.5s">
                     <div class="feature-icon">
                         <i class="fas fa-file-alt"></i>
                     </div>
@@ -101,7 +103,7 @@
                     <p>Complete all the necessary paperwork online without visiting any store or standing in queues.</p>
                 </div>
                 
-                <div class="feature-card animate-pop-up delay-100">
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.6s">
                     <div class="feature-icon">
                         <i class="fas fa-chart-line"></i>
                     </div>
@@ -109,7 +111,7 @@
                     <p>Track your porting status in real-time and get updates at every stage of the process.</p>
                 </div>
                 
-                <div class="feature-card animate-pop-up delay-200">
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.7s">
                     <div class="feature-icon">
                         <i class="fas fa-headset"></i>
                     </div>
@@ -117,7 +119,7 @@
                     <p>Our dedicated support team is available round the clock to assist you with any queries.</p>
                 </div>
                 
-                <div class="feature-card animate-pop-up delay-300">
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.8s">
                     <div class="feature-icon">
                         <i class="fas fa-shield-alt"></i>
                     </div>
@@ -237,11 +239,11 @@
     <section id="cta" class="cta-section">
         <div class="container">
             <div class="cta-content">
-                <h2 class="animate-pop-up delay-100">Ready to Switch Your Mobile Operator?</h2>
-                <p class="animate-pop-up delay-200">Join thousands of satisfied users who have simplified their mobile number porting process with PortMySim.</p>
-                <div class="cta-buttons">
-                    <a href="signup.html" class="btn-primary animate-pop-up delay-300">Get Started <i class="fas fa-arrow-right"></i></a>
-                    <a href="contact.html" class="btn-outline-white animate-pop-up delay-400">Contact Us <i class="fas fa-envelope"></i></a>
+                <h2 class="content-transition" data-animation="slide-up">Ready to Switch Your Mobile Operator?</h2>
+                <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Join thousands of satisfied users who have simplified their mobile number porting process with PortMySim.</p>
+                <div class="cta-buttons content-transition" data-animation="fade-in" data-delay="0.4s">
+                    <a href="signup.html" class="btn-primary" data-transition="zoom">Get Started <i class="fas fa-arrow-right"></i></a>
+                    <a href="contact.html" class="btn-outline-white" data-transition="slide">Contact Us <i class="fas fa-envelope"></i></a>
                 </div>
             </div>
         </div>
@@ -289,5 +291,7 @@
     
     <!-- Main JS - Contains all consolidated JavaScript functionality -->
     <script src="../JS/main.js"></script>
+    <script src="../JS/loader.js"></script>
+    <script src="../JS/transitions.js"></script>
 </body>
 </html> 

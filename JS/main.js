@@ -6,21 +6,22 @@
 
 // Global flags to prevent duplicate initialization
 if (typeof window._mainJsInitialized === "undefined") {
-  window._mainJsInitialized = {
-    aos: false,
-    hamburger: false,
-    animations: false,
-    scrollHandlers: false,
-    ripple: false,
-    darkTheme: false,
-  };
+    window._mainJsInitialized = {
+        aos: false,
+        hamburger: false,
+        animations: false,
+        scrollHandlers: false,
+        ripple: false,
+        darkTheme: false,
+        operatorPlanAnimations: false, // New flag for operator plan animations
+    };
 }
 
 document.addEventListener("DOMContentLoaded", function () {
   // Basic initialization
   document.body.classList.add("js-loaded");
 
-  // Common elements
+    // Common elements
   const header =
     document.querySelector(".header") || document.querySelector("header");
   const hamburger =
@@ -32,7 +33,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const navLinks =
     document.querySelectorAll(".nav-link") ||
     document.querySelectorAll(".nav-links a");
-  const body = document.body;
+    const body = document.body;
+    
+  // Initialize custom dropdown menus (NEW)
+  initCustomDropdowns();
+    
+  // Initialize operator plan animations (replaces dropdown menu functionality)
+  initOperatorPlanAnimations();
 
   // Disable navigation animations - NEW FUNCTION
   disableNavbarAnimations();
@@ -44,8 +51,8 @@ document.addEventListener("DOMContentLoaded", function () {
   reinitializeButtonAnimations();
 
   // Set active navigation link
-  setActiveLink();
-
+    setActiveLink();
+    
   // Fix testimonial card animations on home page
   fixTestimonialCardAnimations();
 
@@ -59,9 +66,9 @@ document.addEventListener("DOMContentLoaded", function () {
       const expanded =
         hamburger.getAttribute("aria-expanded") === "true" || false;
       hamburger.setAttribute("aria-expanded", !expanded);
-    });
-
-    // Close menu when clicking outside
+        });
+        
+        // Close menu when clicking outside
     document.addEventListener("click", function (event) {
       const isClickInside =
         navElements.contains(event.target) || hamburger.contains(event.target);
@@ -71,20 +78,20 @@ document.addEventListener("DOMContentLoaded", function () {
         navElements.classList.remove("active");
         body.classList.remove("menu-open");
         hamburger.setAttribute("aria-expanded", "false");
-      }
-    });
-
-    // Close menu when clicking on mobile nav links
+            }
+        });
+        
+        // Close menu when clicking on mobile nav links
     navLinks.forEach((link) => {
       link.addEventListener("click", function () {
-        if (window.innerWidth <= 992) {
+                if (window.innerWidth <= 992) {
           hamburger.classList.remove("active");
           navElements.classList.remove("active");
           body.classList.remove("menu-open");
           hamburger.setAttribute("aria-expanded", "false");
-        }
-      });
-    });
+                }
+            });
+        });
   }
 
   // Fixed header on scroll - Updated to avoid animations
@@ -147,7 +154,127 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize hero buttons specifically
   initializeHeroButtons();
+
+  // Initialize recommendation card animations
+  initRecommendationCardAnimations();
 });
+
+// NEW FUNCTION: Initialize custom dropdown menus
+function initCustomDropdowns() {
+  console.log("Initializing custom dropdowns with slower animations");
+  
+  // Find all filter-select elements
+  const selectElements = document.querySelectorAll('.filter-select');
+  
+  selectElements.forEach((select) => {
+    // Skip if already converted or if the browser doesn't support customElements
+    if (select.dataset.customized || !window.customElements) return;
+    
+    // Create parent container div
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-dropdown';
+    
+    // Create the selected display element
+    const selectedDisplay = document.createElement('div');
+    selectedDisplay.className = 'custom-dropdown-selected';
+    selectedDisplay.textContent = select.options[select.selectedIndex]?.text || 'Select an option';
+    
+    // Create dropdown list
+    const dropdownList = document.createElement('div');
+    dropdownList.className = 'custom-dropdown-list';
+    
+    // Hide the original select
+    select.style.display = 'none';
+    select.dataset.customized = 'true';
+    
+    // Insert new elements before the select
+    select.parentNode.insertBefore(dropdown, select);
+    dropdown.appendChild(selectedDisplay);
+    dropdown.appendChild(dropdownList);
+    dropdown.appendChild(select); // Move select into our container
+    
+    // Create dropdown items from options
+    Array.from(select.options).forEach((option, index) => {
+      const item = document.createElement('div');
+      item.className = 'custom-dropdown-item';
+      if (index === select.selectedIndex) {
+        item.classList.add('selected');
+      }
+      item.textContent = option.text;
+      item.dataset.value = option.value;
+      dropdownList.appendChild(item);
+      
+      // Handle item click
+      item.addEventListener('click', function() {
+        // Update selected value in original select
+        select.value = this.dataset.value;
+        select.dispatchEvent(new Event('change'));
+        
+        // Update displayed text
+        selectedDisplay.textContent = this.textContent;
+        
+        // Update selected style
+        dropdown.querySelectorAll('.custom-dropdown-item').forEach(i => {
+          i.classList.remove('selected');
+        });
+        this.classList.add('selected');
+        
+        // Close dropdown with a slight delay for smoother animation
+        setTimeout(() => {
+          dropdown.classList.remove('open');
+        }, 100);
+        
+        // Trigger any ripple/pulse effects
+        if (select.classList.contains('filter-select')) {
+          applyFilterSelectEffects(select);
+        }
+      });
+    });
+    
+    // Add click listener to toggle dropdown
+    selectedDisplay.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.classList.toggle('open');
+      
+      // Close other open dropdowns
+      document.querySelectorAll('.custom-dropdown.open').forEach(otherDropdown => {
+        if (otherDropdown !== dropdown) {
+          otherDropdown.classList.remove('open');
+        }
+      });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target)) {
+        dropdown.classList.remove('open');
+      }
+    });
+  });
+  
+  console.log("Custom dropdowns initialized with slower animations");
+}
+
+// Helper function to apply filter select effects
+function applyFilterSelectEffects(select) {
+  // Add animation effects similar to the original behavior
+  select.classList.add('sparkle-effect');
+  setTimeout(() => {
+    select.classList.remove('sparkle-effect');
+  }, 1500); // Longer animation duration
+  
+  // Propagate the effect to parent group
+  const filterGroup = select.closest('.filter-group');
+  if (filterGroup) {
+    const label = filterGroup.querySelector('.filter-label');
+    if (label) {
+      label.style.animation = 'pulse 3s ease'; // Longer pulse animation
+      setTimeout(() => {
+        label.style.animation = '';
+      }, 3000); // Longer reset time
+    }
+  }
+}
 
 // Helper Functions
 function setActiveLink() {
@@ -198,7 +325,7 @@ function createRippleEffect(e) {
 
   const rect = button.getBoundingClientRect();
   const size = Math.max(rect.width, rect.height) * 2.5; // Larger size for better effect
-  ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.width = ripple.style.height = `${size}px`;
 
   // Get cursor position relative to the button
   const x = e.clientX - rect.left;
@@ -220,10 +347,10 @@ function createRippleEffect(e) {
   }
 
   // Reset the box shadow after the ripple animation completes
-  setTimeout(() => {
+                setTimeout(() => {
     button.style.boxShadow = originalBoxShadow;
-    ripple.remove();
-  }, 600);
+                    ripple.remove();
+                }, 600);
 
   // Don't interrupt the button's natural effect
   return true;
@@ -302,9 +429,9 @@ function reinitializeButtonAnimations() {
     if (button.closest(".cta-section")) {
       button.addEventListener("mouseenter", function () {
         this.style.boxShadow = "var(--glow-accent)";
-      });
-    }
-  });
+                });
+            }
+        });
 
   // Ensure animations are smooth by adding will-change
   document
@@ -355,9 +482,9 @@ function forceVisibilityForAllElements() {
       const answer = this.nextElementSibling;
       answer.classList.toggle("active");
       this.classList.toggle("active");
-    });
-  });
-
+            });
+        });
+        
   // Initialize FAQ accordion - open first one by default for visibility
   initFaqAccordion();
 }
@@ -461,7 +588,7 @@ function applyPopUpAnimations() {
           el.classList.add("animate-pop-up");
           const delay = group.baseDelay + index * group.stagger;
           el.classList.add(`delay-${Math.floor(delay / 100) * 100}`);
-        } else {
+                } else {
           // Scroll-based animation for elements below the fold
           el.classList.add("animate-on-scroll");
           el.style.animationDelay = `${
@@ -705,13 +832,13 @@ function resetCardTilt(e) {
   });
 }
 
-// Mobile Navigation Toggle - No animations
+// Mobile Navigation Toggle - Enhanced with better animations
 function initMobileNavigation() {
   const hamburger = document.querySelector(".hamburger");
   const navElements = document.querySelector(".nav-elements");
 
   if (hamburger && navElements) {
-    console.log("Found hamburger and navElements, initializing mobile navigation");
+    console.log("Found hamburger and navElements, initializing mobile navigation with slower animations");
     
     // Clear any previous click listeners to avoid conflicts
     const newHamburger = hamburger.cloneNode(true);
@@ -722,8 +849,50 @@ function initMobileNavigation() {
       
       console.log("Hamburger clicked, toggling menu");
       newHamburger.classList.toggle("active");
-      navElements.classList.toggle("active");
-      document.body.classList.toggle("menu-open");
+      
+      // Add a small delay before showing the nav elements to make animation more noticeable
+      if (!navElements.classList.contains("active")) {
+        // Opening the menu
+        navElements.classList.add("active");
+        document.body.classList.add("menu-open");
+        
+        // Reset animation on nav items to ensure they animate every time
+        const navItems = navElements.querySelectorAll(".nav-item");
+        navItems.forEach(item => {
+          // Briefly remove transitions
+          item.style.transition = 'none';
+          item.style.opacity = '0';
+          item.style.transform = 'translateX(30px)'; // More pronounced starting position
+          
+          // Force reflow
+          void item.offsetWidth;
+          
+          // Re-enable transitions
+          item.style.transition = '';
+        });
+        
+        // Reset animation on auth buttons
+        const authBtns = navElements.querySelector(".auth-btns");
+        if (authBtns) {
+          authBtns.style.transition = 'none';
+          authBtns.style.opacity = '0';
+          authBtns.style.transform = 'translateY(30px)'; // More pronounced starting position
+          
+          // Force reflow
+          void authBtns.offsetWidth;
+          
+          // Re-enable transitions
+          authBtns.style.transition = '';
+        }
+      } else {
+        // Closing the menu - add a delay to allow for exit animation
+        document.body.classList.remove("menu-open");
+        
+        // Delay removing the active class to allow for exit animation
+        setTimeout(() => {
+          navElements.classList.remove("active");
+        }, 150); // Longer delay before removing active class
+      }
     });
 
     // Close menu when clicking outside
@@ -735,8 +904,12 @@ function initMobileNavigation() {
       if (!isClickInside && navElements.classList.contains("active")) {
         console.log("Click outside, closing menu");
         newHamburger.classList.remove("active");
-        navElements.classList.remove("active");
         document.body.classList.remove("menu-open");
+        
+        // Delay removing the active class to allow for exit animation
+        setTimeout(() => {
+          navElements.classList.remove("active");
+        }, 150); // Longer delay for smoother animation
       }
     });
 
@@ -747,23 +920,31 @@ function initMobileNavigation() {
         if (window.innerWidth <= 768) {
           console.log("Nav link clicked, closing menu");
           newHamburger.classList.remove("active");
-          navElements.classList.remove("active");
           document.body.classList.remove("menu-open");
+          
+          // Delay removing the active class to allow for exit animation
+          setTimeout(() => {
+            navElements.classList.remove("active");
+          }, 150); // Longer delay for smoother animation
         }
       });
     });
-
+    
     // Close menu on ESC key
     document.addEventListener("keydown", function(e) {
       if (e.key === "Escape" && navElements.classList.contains("active")) {
         console.log("ESC pressed, closing menu");
         newHamburger.classList.remove("active");
-        navElements.classList.remove("active");
         document.body.classList.remove("menu-open");
+        
+        // Delay removing the active class to allow for exit animation
+        setTimeout(() => {
+          navElements.classList.remove("active");
+        }, 150); // Longer delay for smoother animation
       }
     });
 
-    console.log("Mobile navigation initialized successfully");
+    console.log("Enhanced mobile navigation initialized with slower animations");
   } else {
     console.warn("Mobile navigation elements not found. Hamburger:", hamburger, "Nav elements:", navElements);
   }
@@ -853,7 +1034,7 @@ function initializeHeroButtons() {
       if (this.classList.contains("primary")) {
         this.style.backgroundImage =
           "linear-gradient(135deg, var(--primary-color), var(--accent-color))";
-      } else {
+                    } else {
         this.style.backgroundImage = "";
       }
 
@@ -877,7 +1058,7 @@ function initializeHeroButtons() {
 
       // Reset after animation
       setTimeout(() => {
-        this.style.boxShadow = originalBoxShadow;
+                this.style.boxShadow = originalBoxShadow;
       }, 300);
     });
   });
@@ -931,9 +1112,9 @@ function fixTestimonialCardAnimations() {
 
   if (!testimonialCards.length) {
     console.log("No testimonial cards found on page");
-    return;
-  }
-
+                    return;
+                }
+                
   // Remove any problematic animation or transform styles
   testimonialCards.forEach((card) => {
     // Remove animation classes that might be causing conflicts
@@ -987,8 +1168,385 @@ function fixTestimonialCardAnimations() {
       this.style.transform = "translateY(0) rotateY(0)";
       this.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.1)";
       this.style.borderColor = "var(--bg-dark-4)";
-    });
-  });
+            });
+        });
 
   console.log("Fixed testimonial card animations with 3D effects");
+}
+
+// Initialize operator plan animations with BSNL-inspired effects
+function initOperatorPlanAnimations() {
+  if (window._mainJsInitialized.operatorPlanAnimations) return; // Prevent duplicate initialization
+  
+  console.log("Initializing operator plan animations");
+  
+  // Add hover animations to filter groups
+  const filterGroups = document.querySelectorAll('.filter-group');
+  
+  filterGroups.forEach((group, index) => {
+    // Add staggered hover effects for filters
+    group.style.transitionDelay = `${0.05 * index}s`;
+    
+    group.addEventListener('mouseenter', function() {
+      // Add a subtle pulse effect to the label
+      const label = this.querySelector('.filter-label');
+      if (label) {
+        label.style.animation = 'pulse 2s ease infinite';
+      }
+      
+      // Add a glowing effect to the select
+      const select = this.querySelector('.filter-select');
+      if (select) {
+        select.style.boxShadow = '0 0 10px rgba(var(--primary-rgb), 0.3)';
+      }
+    });
+    
+    group.addEventListener('mouseleave', function() {
+      // Remove the pulse effect
+      const label = this.querySelector('.filter-label');
+      if (label) {
+        label.style.animation = '';
+      }
+      
+      // Remove the glowing effect
+      const select = this.querySelector('.filter-select');
+      if (select) {
+        select.style.boxShadow = '';
+      }
+    });
+    
+    // Add a ripple effect to selects on click
+    const select = group.querySelector('.filter-select');
+    if (select) {
+      select.addEventListener('click', function() {
+        this.classList.add('sparkle-effect');
+        setTimeout(() => {
+          this.classList.remove('sparkle-effect');
+        }, 1000);
+      });
+    }
+  });
+  
+  // Enhanced animations for operator plan cards
+  const planCards = document.querySelectorAll('.operator-plan-card');
+  
+  // Image handling for plan cards
+  planCards.forEach((card) => {
+    // Handle background image errors
+    const bgImage = card.querySelector('.plan-background');
+    if (bgImage) {
+      bgImage.onerror = function() {
+        // If background image fails to load, use a fallback or hide it
+        this.style.display = 'none';
+        // Add a subtle gradient background instead
+        card.style.backgroundImage = 'linear-gradient(135deg, rgba(var(--primary-rgb), 0.1) 0%, rgba(var(--accent-rgb), 0.05) 100%)';
+      };
+    }
+    
+    // Handle thumbnail image errors
+    const thumbnailImg = card.querySelector('.plan-thumbnail img');
+    if (thumbnailImg) {
+      thumbnailImg.onerror = function() {
+        // If thumbnail fails to load, show a placeholder or hide the container
+        const thumbnailContainer = this.closest('.plan-thumbnail');
+        if (thumbnailContainer) {
+          // Create a placeholder with operator name
+          const operatorName = card.querySelector('.plan-name')?.textContent || 'Mobile Plan';
+          thumbnailContainer.innerHTML = `
+            <div class="thumbnail-placeholder">
+              <i class="fas fa-signal"></i>
+              <span>${operatorName}</span>
+            </div>
+          `;
+          // Style the placeholder
+          const placeholder = thumbnailContainer.querySelector('.thumbnail-placeholder');
+          if (placeholder) {
+            placeholder.style.display = 'flex';
+            placeholder.style.alignItems = 'center';
+            placeholder.style.justifyContent = 'center';
+            placeholder.style.flexDirection = 'column';
+            placeholder.style.height = '100%';
+            placeholder.style.color = 'var(--primary-color)';
+            placeholder.style.fontSize = '2rem';
+            placeholder.style.background = 'rgba(var(--bg-dark-3-rgb), 0.5)';
+          }
+        }
+      };
+    }
+  });
+  
+  planCards.forEach((card, index) => {
+    // Apply staggered hover effects
+    card.addEventListener('mouseenter', function() {
+      // Don't use animation property to avoid conflicts
+      this.style.transform = 'translateY(-15px)';
+      this.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(240, 182, 127, 0.1)';
+      
+      // Highlight the logo
+      const logo = this.querySelector('.operator-logo img');
+      if (logo) {
+        logo.style.filter = 'brightness(1.2)';
+      }
+      
+      // Add a pulse effect to the network type badge
+      const networkType = this.querySelector('.network-type');
+      if (networkType) {
+        networkType.style.transform = 'translateX(-5px)';
+      }
+      
+      // Make the benefits checkmarks more vibrant
+      const benefitItems = this.querySelectorAll('.plan-benefits li');
+      benefitItems.forEach((item, i) => {
+        item.style.transform = 'translateX(5px)';
+        item.style.transitionDelay = `${0.05 * (i + 1)}s`;
+      });
+      
+      // Add a subtle glow to the button
+      const button = this.querySelector('.btn-select-plan');
+      if (button) {
+        button.style.boxShadow = '0 0 20px rgba(var(--primary-rgb), 0.4)';
+        button.style.transform = 'translateY(-5px) scale(1.05)';
+      }
+      
+      // Enhance thumbnail on hover
+      const thumbnail = this.querySelector('.plan-thumbnail img');
+      if (thumbnail) {
+        thumbnail.style.transform = 'scale(1.05)';
+        thumbnail.style.filter = 'brightness(1.1) contrast(1.1)';
+      }
+    });
+    
+    card.addEventListener('mouseleave', function() {
+      // Reset all transformations
+      this.style.transform = '';
+      this.style.boxShadow = '';
+      
+      // Reset the logo
+      const logo = this.querySelector('.operator-logo img');
+      if (logo) {
+        logo.style.filter = '';
+      }
+      
+      // Reset network type
+      const networkType = this.querySelector('.network-type');
+      if (networkType) {
+        networkType.style.transform = '';
+      }
+      
+      // Reset the benefits
+      const benefitItems = this.querySelectorAll('.plan-benefits li');
+      benefitItems.forEach(item => {
+        item.style.transform = '';
+        item.style.transitionDelay = '';
+      });
+      
+      // Reset button
+      const button = this.querySelector('.btn-select-plan');
+      if (button) {
+        button.style.boxShadow = '';
+        button.style.transform = '';
+      }
+      
+      // Reset thumbnail
+      const thumbnail = this.querySelector('.plan-thumbnail img');
+      if (thumbnail) {
+        thumbnail.style.transform = '';
+        thumbnail.style.filter = '';
+      }
+    });
+    
+    // Simplified 3D effect on mousemove - only applied if device supports hover
+    if (window.matchMedia("(hover: hover)").matches) {
+      card.addEventListener('mousemove', function(e) {
+        // Only apply 3D effect if not on mobile
+        if (window.innerWidth <= 768) return;
+        
+        try {
+          // Calculate mouse position relative to the card
+          const rect = this.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          // Calculate rotation based on mouse position (more subtle effect)
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          const rotateY = ((x - centerX) / centerX) * 3; // max 3 degrees
+          const rotateX = ((centerY - y) / centerY) * 3; // max 3 degrees
+          
+          // Apply the rotation - simpler transform to avoid conflicts
+          this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-15px)`;
+        } catch (error) {
+          // Fallback in case of any calculation errors
+          console.log('Error with 3D effect:', error);
+          this.style.transform = 'translateY(-15px)';
+        }
+      });
+    }
+    
+    // Reset the 3D effect on mouse leave - simplified
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+      this.style.backgroundImage = '';
+    });
+    
+    // Remove the special effect for the Select Plan button to avoid conflicts
+    const selectButton = card.querySelector('.btn-select-plan');
+    if (selectButton) {
+      selectButton.removeEventListener('mouseenter', null);
+      selectButton.removeEventListener('mouseleave', null);
+    }
+  });
+  
+  console.log("Operator plan animations initialized successfully");
+  window._mainJsInitialized.operatorPlanAnimations = true;
+}
+
+// Initialize recommendation card animations
+function initRecommendationCardAnimations() {
+  console.log("Initializing recommendation card animations");
+  
+  const cards = document.querySelectorAll('.recommendation-card');
+  if (!cards.length) {
+    console.log("No recommendation cards found on page");
+    return;
+  }
+  
+  cards.forEach((card) => {
+    // Remove existing animation attributions to avoid conflicts
+    card.classList.remove('content-transition');
+    card.removeAttribute('data-animation');
+    card.removeAttribute('data-delay');
+    
+    // Add 3D tilt effect on mousemove
+    card.addEventListener('mousemove', function(e) {
+      // Only apply 3D effect if not on mobile
+      if (window.innerWidth <= 768) return;
+      
+      try {
+        // Calculate mouse position relative to the card
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Calculate rotation based on mouse position (more subtle effect)
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateY = ((x - centerX) / centerX) * 5; // max 5 degrees
+        const rotateX = ((centerY - y) / centerY) * 5; // max 5 degrees
+        
+        // Apply the rotation with a smooth transition
+        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-15px) scale(1.02)`;
+        
+        // Apply highlight effect based on mouse position
+        const glowX = (x / rect.width) * 100;
+        const glowY = (y / rect.height) * 100;
+        this.style.backgroundImage = `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(var(--bg-dark-4-rgb), 1) 0%, rgba(var(--bg-dark-3-rgb), 1) 80%)`;
+        
+        // Enhance the box shadow based on mouse position
+        const shadowX = (x / rect.width - 0.5) * 15;
+        const shadowY = (y / rect.height - 0.5) * 15;
+        this.style.boxShadow = `
+          ${shadowX}px ${shadowY}px 30px rgba(0, 0, 0, 0.3),
+          0 0 30px rgba(var(--primary-rgb), 0.15)
+        `;
+        
+        // Move header icon to follow cursor slightly
+        const icon = this.querySelector('.recommendation-header i');
+        if (icon) {
+          icon.style.transform = `translate(${rotateY}px, ${-rotateX}px) scale(1.2) rotate(${rotateY}deg)`;
+        }
+        
+        // Apply lifted effect to header
+        const header = this.querySelector('.recommendation-header');
+        if (header) {
+          header.style.transform = `translateZ(20px)`;
+        }
+        
+        // Create staggered lift effect on list items
+        const listItems = this.querySelectorAll('.recommendation-content ul li');
+        listItems.forEach((item, index) => {
+          item.style.transform = `translateX(${5 + rotateY}px) translateZ(${10 + index * 2}px)`;
+        });
+      } catch (error) {
+        // Fallback in case of any calculation errors
+        console.warn('Error with recommendation card 3D effect:', error);
+        this.style.transform = 'translateY(-15px)';
+      }
+    });
+    
+    // Reset the 3D effect on mouse leave with a smooth transition
+    card.addEventListener('mouseleave', function() {
+      // Smooth transition back to normal state
+      this.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      this.style.transform = '';
+      this.style.boxShadow = '';
+      this.style.backgroundImage = '';
+      
+      // Reset header icon
+      const icon = this.querySelector('.recommendation-header i');
+      if (icon) {
+        icon.style.transform = '';
+      }
+      
+      // Reset header
+      const header = this.querySelector('.recommendation-header');
+      if (header) {
+        header.style.transform = '';
+      }
+      
+      // Reset list items
+      const listItems = this.querySelectorAll('.recommendation-content ul li');
+      listItems.forEach((item) => {
+        item.style.transform = '';
+      });
+      
+      // Remove transition property after animation completes
+      setTimeout(() => {
+        this.style.transition = '';
+      }, 800);
+    });
+    
+    // Apply initial floating animation
+    applyFloatingAnimation(card);
+  });
+  
+  console.log("Recommendation card animations initialized");
+}
+
+// Helper function to apply floating animation to recommendation cards
+function applyFloatingAnimation(card) {
+  // Apply subtle floating animation
+  let floatY = 0;
+  let floatDirection = 1;
+  
+  // Don't apply animation on mobile
+  if (window.innerWidth <= 768) return;
+  
+  const floatAnimation = () => {
+    // Very subtle floating motion
+    floatY += 0.05 * floatDirection;
+    
+    // Reverse direction when reaching limits
+    if (floatY > 5) floatDirection = -1;
+    if (floatY < 0) floatDirection = 1;
+    
+    // Apply the floating transform
+    card.style.transform = `translateY(${floatY}px)`;
+    
+    // Only animate if not being hovered
+    if (!card.matches(':hover')) {
+      requestAnimationFrame(floatAnimation);
+    }
+  };
+  
+  // Start the floating animation
+  requestAnimationFrame(floatAnimation);
+  
+  // Restart animation when mouse leaves
+  card.addEventListener('mouseleave', function() {
+    // Wait for the transition to complete
+    setTimeout(() => {
+      requestAnimationFrame(floatAnimation);
+    }, 800);
+  });
 }

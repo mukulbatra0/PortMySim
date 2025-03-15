@@ -14,6 +14,7 @@
     />
     <link rel="stylesheet" href="../CSS/common.css" />
     <link rel="stylesheet" href="../CSS/plans.css" />
+    <link rel="stylesheet" href="../CSS/loader.css" />
     <!-- Dark Theme CSS is now part of common.css -->
   </head>
   <body class="bg-dark-1">
@@ -31,26 +32,26 @@
           <div class="nav-elements">
             <ul class="nav-links">
               <li class="nav-item">
-                <a href="index.html" class="nav-link">Home</a>
+                <a href="index.html" class="nav-link" data-transition="fade">Home</a>
               </li>
               <li class="nav-item">
-                <a href="how-it-works.html" class="nav-link">How It Works</a>
+                <a href="how-it-works.html" class="nav-link" data-transition="slide">How It Works</a>
               </li>
               <li class="nav-item">
                 <a href="plans.html" class="nav-link active">Plans</a>
               </li>
               <li class="nav-item">
-                <a href="about.html" class="nav-link">About</a>
+                <a href="about.html" class="nav-link" data-transition="fade">About</a>
               </li>
               <li class="nav-item">
-                <a href="contact.html" class="nav-link">Contact</a>
+                <a href="contact.html" class="nav-link" data-transition="slide">Contact</a>
               </li>
             </ul>
 
             <!-- Authentication Buttons -->
             <div class="auth-btns">
-              <a href="login.html" class="btn btn-login">Login</a>
-              <a href="signup.html" class="btn btn-signup">Sign Up</a>
+              <a href="login.html" class="btn btn-login" data-transition="fade">Login</a>
+              <a href="signup.html" class="btn btn-signup" data-transition="zoom">Sign Up</a>
             </div>
           </div>
 
@@ -67,8 +68,8 @@
     <!-- Page Header -->
     <section class="hero-section">
         <div class="hero-content">
-            <h1 class="hero-title">Compare Mobile Plans</h1>
-            <p class="hero-text">Find and compare the best plans from leading operators</p>
+            <h1 class="hero-title content-transition" data-animation="slide-up" data-delay="0.2s">Compare Mobile Plans</h1>
+            <p class="hero-text content-transition" data-animation="slide-up" data-delay="0.4s">Find and compare the best plans from leading operators</p>
         </div>
     </section>
 
@@ -76,14 +77,14 @@
     <section class="operator-comparison">
       <div class="container">
         <div class="section-header">
-          <h2>Compare Operator Plans</h2>
-          <p>Find the best plan from leading operators</p>
+          <h2 class="content-transition" data-animation="slide-up">Compare Operator Plans</h2>
+          <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Find the best plan from leading operators</p>
         </div>
 
         <div class="operator-filters">
           <div class="filter-group">
             <label class="filter-label" for="planType">Plan Type</label>
-            <select class="filter-select" id="planType">
+            <select class="filter-select" id="planType" aria-label="Filter by plan type">
               <option value="all">All Plans</option>
               <option value="prepaid">Prepaid</option>
               <option value="postpaid">Postpaid</option>
@@ -123,10 +124,14 @@
 
         <div class="operator-plans-grid">
           <!-- Jio Plan -->
-          <div class="operator-plan-card">
+          <div class="operator-plan-card content-transition" data-animation="fade-in" data-delay="0.4s">
+            <img src="../images/backgrounds/jio-pattern.jpg" alt="Jio Pattern" class="plan-background">
             <div class="operator-logo">
               <img src="../images/operators/jio-logo.png" alt="Jio" />
               <span class="network-type type-5g">5G</span>
+            </div>
+            <div class="plan-thumbnail">
+              <img src="../images/thumbnails/jio-plan-data.jpg" alt="Jio Premium Plan">
             </div>
             <div class="operator-plan-details">
               <div class="recommendation-badge">Best Value</div>
@@ -148,25 +153,31 @@
                   <span>98%</span>
                 </div>
                 <div class="meta-item">
-                  <span>5G Cities</span>
-                  <span>250+</span>
+                  <span>Speed</span>
+                  <span>Up to 50Mbps</span>
+                </div>
+                <div class="meta-item">
+                  <span>Validity</span>
+                  <span>28 days</span>
                 </div>
               </div>
-            </div>
-            <div class="plan-actions">
-              <a href="#" class="btn-compare">Select Plan</a>
+              <a href="signup.html" class="btn-primary btn-select-plan" data-transition="slide">Select Plan</a>
             </div>
           </div>
 
           <!-- Airtel Plan -->
-          <div class="operator-plan-card">
+          <div class="operator-plan-card content-transition" data-animation="fade-in" data-delay="0.5s">
+            <img src="../images/backgrounds/airtel-pattern.jpg" alt="Airtel Pattern" class="plan-background">
             <div class="operator-logo">
               <img src="../images/operators/airtel-logo.png" alt="Airtel" />
               <span class="network-type type-5g">5G</span>
             </div>
+            <div class="plan-thumbnail">
+              <img src="../images/thumbnails/airtel-plan-premium.jpg" alt="Airtel Plan">
+            </div>
             <div class="operator-plan-details">
-              <div class="recommendation-badge">Best Coverage</div>
-              <h3 class="plan-name">Airtel Premium</h3>
+              <div class="recommendation-badge">Widest Coverage</div>
+              <h3 class="plan-name">Airtel Smart</h3>
               <div class="plan-price">
                 <span class="currency">₹</span>349
                 <span class="period">/month</span>
@@ -176,65 +187,73 @@
                 <li>Unlimited calls</li>
                 <li>100 SMS per day</li>
                 <li>Amazon Prime subscription</li>
-                <li>Wynk Music Premium</li>
+                <li>Airtel Xstream access</li>
               </ul>
               <div class="plan-meta">
                 <div class="meta-item">
                   <span>Network Coverage</span>
-                  <span>97%</span>
+                  <span>99%</span>
                 </div>
                 <div class="meta-item">
-                  <span>5G Cities</span>
-                  <span>200+</span>
+                  <span>Speed</span>
+                  <span>Up to 100Mbps</span>
+                </div>
+                <div class="meta-item">
+                  <span>Validity</span>
+                  <span>28 days</span>
                 </div>
               </div>
-            </div>
-            <div class="plan-actions">
-              <a href="#" class="btn-compare">Select Plan</a>
+              <a href="signup.html" class="btn-primary btn-select-plan" data-transition="slide">Select Plan</a>
             </div>
           </div>
 
           <!-- Vi Plan -->
-          <div class="operator-plan-card">
+          <div class="operator-plan-card content-transition" data-animation="fade-in" data-delay="0.6s">
+            <img src="../images/backgrounds/vi-pattern.jpg" alt="Vi Pattern" class="plan-background">
             <div class="operator-logo">
               <img src="../images/operators/vi-logo.png" alt="Vi" />
-              <span class="network-type type-5g">5G</span>
+              <span class="network-type type-4g">4G</span>
+            </div>
+            <div class="plan-thumbnail">
+              <img src="../images/thumbnails/vi-plan-budget.jpg" alt="Vi Plan">
             </div>
             <div class="operator-plan-details">
-              <div class="recommendation-badge">Best Entertainment</div>
-              <h3 class="plan-name">Vi Premium</h3>
+              <div class="recommendation-badge">Budget Choice</div>
+              <h3 class="plan-name">Vi Basic</h3>
               <div class="plan-price">
-                <span class="currency">₹</span>319
+                <span class="currency">₹</span>249
                 <span class="period">/month</span>
               </div>
               <ul class="plan-benefits">
-                <li>2GB data per day</li>
+                <li>1.5GB data per day</li>
                 <li>Unlimited calls</li>
                 <li>100 SMS per day</li>
-                <li>Netflix Mobile subscription</li>
-                <li>Vi Movies & TV access</li>
+                <li>Vi Movies & TV subscription</li>
+                <li>Weekend data rollover</li>
               </ul>
               <div class="plan-meta">
                 <div class="meta-item">
                   <span>Network Coverage</span>
-                  <span>95%</span>
+                  <span>92%</span>
                 </div>
                 <div class="meta-item">
-                  <span>5G Cities</span>
-                  <span>150+</span>
+                  <span>Speed</span>
+                  <span>Up to 40Mbps</span>
+                </div>
+                <div class="meta-item">
+                  <span>Validity</span>
+                  <span>28 days</span>
                 </div>
               </div>
-            </div>
-            <div class="plan-actions">
-              <a href="#" class="btn-compare">Select Plan</a>
+              <a href="signup.html" class="btn-primary btn-select-plan" data-transition="slide">Select Plan</a>
             </div>
           </div>
         </div>
 
         <!-- Detailed Comparison Table -->
         <div class="plan-comparison">
-          <h2>Detailed Plan Comparison</h2>
-          <div class="comparison-table">
+          <h2 class="content-transition" data-animation="slide-up" data-delay="0.3s">Detailed Plan Comparison</h2>
+          <div class="comparison-table content-transition" data-animation="fade-in" data-delay="0.5s">
             <table>
               <thead>
                 <tr>
@@ -330,8 +349,8 @@
 
         <!-- Coverage Map -->
         <div class="coverage-map">
-          <h2>Network Coverage Map</h2>
-          <div class="map-container" id="coverageMap">
+          <h2 class="content-transition" data-animation="slide-up" data-delay="0.3s">Network Coverage Map</h2>
+          <div class="map-container content-transition" data-animation="fade-in" data-delay="0.5s" id="coverageMap">
             <!-- Map will be loaded here using JavaScript -->
             <div class="map-placeholder">
               <i class="fas fa-map-marked-alt"></i>
@@ -346,12 +365,12 @@
     <section class="recommendation-section">
       <div class="container">
         <div class="section-header">
-          <h2>Our Recommendations</h2>
-          <p>Based on different user needs</p>
+          <h2 class="content-transition" data-animation="slide-up">Our Recommendations</h2>
+          <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Based on different user needs</p>
         </div>
 
         <div class="recommendations-grid">
-          <div class="recommendation-card">
+          <div class="recommendation-card content-transition" data-animation="fade-in" data-delay="0.3s">
             <div class="recommendation-header">
               <i class="fas fa-bolt"></i>
               <h3>Best for High-Speed Data</h3>
@@ -369,7 +388,7 @@
             </div>
           </div>
 
-          <div class="recommendation-card">
+          <div class="recommendation-card content-transition" data-animation="fade-in" data-delay="0.4s">
             <div class="recommendation-header">
               <i class="fas fa-tv"></i>
               <h3>Best for Entertainment</h3>
@@ -384,7 +403,7 @@
             </div>
           </div>
 
-          <div class="recommendation-card">
+          <div class="recommendation-card content-transition" data-animation="fade-in" data-delay="0.5s">
             <div class="recommendation-header">
               <i class="fas fa-piggy-bank"></i>
               <h3>Best Value for Money</h3>
@@ -406,37 +425,37 @@
     <footer class="footer">
       <div class="container">
         <div class="footer-content">
-          <div class="footer-section">
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.3s">
             <h3>PortMySim</h3>
             <p>Making mobile number portability simple and hassle-free.</p>
           </div>
-          <div class="footer-section">
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.4s">
             <h3>Quick Links</h3>
             <ul>
-              <li><a href="index.html">Home</a></li>
-              <li><a href="how-it-works.html">How It Works</a></li>
-              <li><a href="plans.html">Plans</a></li>
-              <li><a href="about.html">About</a></li>
-              <li><a href="contact.html">Contact</a></li>
+              <li><a href="index.html" data-transition="fade">Home</a></li>
+              <li><a href="how-it-works.html" data-transition="fade">How It Works</a></li>
+              <li><a href="plans.html" data-transition="fade">Plans</a></li>
+              <li><a href="about.html" data-transition="fade">About</a></li>
+              <li><a href="contact.html" data-transition="fade">Contact</a></li>
             </ul>
           </div>
-          <div class="footer-section">
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.5s">
             <h3>Contact Us</h3>
             <p>Email: support@portmysim.com</p>
             <p>Phone: +91 1234567890</p>
           </div>
-          <div class="footer-section">
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.6s">
             <h3>Support</h3>
             <ul>
-              <li><a href="terms-of-service.html">Terms & Conditions</a></li>
-              <li><a href="privacy-policy.html">Privacy Policy</a></li>
-              <li><a href="faq.html">FAQ</a></li>
-              <li><a href="help-center.html">Help Center</a></li>
-              <li><a href="refund-policy.html">Refund Policy</a></li>
+              <li><a href="terms-of-service.html" data-transition="fade">Terms & Conditions</a></li>
+              <li><a href="privacy-policy.html" data-transition="fade">Privacy Policy</a></li>
+              <li><a href="faq.html" data-transition="fade">FAQ</a></li>
+              <li><a href="help-center.html" data-transition="fade">Help Center</a></li>
+              <li><a href="refund-policy.html" data-transition="fade">Refund Policy</a></li>
             </ul>
           </div>
         </div>
-        <div class="footer-bottom">
+        <div class="footer-bottom content-transition" data-animation="fade-in" data-delay="0.7s">
           <p>
             &copy; <span id="currentYear"></span> PortMySim. All rights
             reserved.
@@ -447,5 +466,7 @@
 
     <!-- Main JS - Contains all consolidated JavaScript functionality -->
     <script src="../JS/main.js"></script>
+    <script src="../JS/loader.js"></script>
+    <script src="../JS/transitions.js"></script>
   </body>
 </html>

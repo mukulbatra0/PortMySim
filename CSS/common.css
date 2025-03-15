@@ -614,22 +614,60 @@ img {
     
     .nav-elements {
         position: fixed;
-        top: 0;
+        top: var(--navbar-height);
         right: -100%;
-        width: 80%;
-        height: 100vh;
-        background-color: var(--bg-dark-2);
+        width: 70%;
+        height: calc(100vh - var(--navbar-height));
+        background: var(--bg-dark-2);
         flex-direction: column;
         justify-content: flex-start;
-        padding-top: var(--navbar-height);
-        padding: 6rem 2rem 2rem;
-        transition: right 0.3s ease;
+        align-items: flex-start;
+        padding: 2rem;
+        box-shadow: -5px 0px 20px rgba(0, 0, 0, 0.2);
         z-index: 999;
-        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+        transition: right 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* Slower animation */
+        overflow-y: auto;
     }
     
     .nav-elements.active {
         right: 0;
+        opacity: 1;
+        visibility: visible;
+    }
+    
+    /* Animated items in the mobile navigation */
+    .nav-elements .nav-item {
+        opacity: 0;
+        transform: translateX(20px);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        transition-delay: 0.1s;
+    }
+    
+    .nav-elements.active .nav-item {
+        opacity: 1;
+        transform: translateX(0);
+        transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); /* Slower animation */
+    }
+    
+    /* Staggered animation for nav items */
+    .nav-elements.active .nav-item:nth-child(1) { transition-delay: 0.2s; }
+    .nav-elements.active .nav-item:nth-child(2) { transition-delay: 0.4s; }
+    .nav-elements.active .nav-item:nth-child(3) { transition-delay: 0.6s; }
+    .nav-elements.active .nav-item:nth-child(4) { transition-delay: 0.8s; }
+    .nav-elements.active .nav-item:nth-child(5) { transition-delay: 1s; }
+    
+    /* Auth buttons animations */
+    .nav-elements .auth-btns {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        transition-delay: 0.2s;
+    }
+    
+    .nav-elements.active .auth-btns {
+        opacity: 1;
+        transform: translateY(0);
+        transition-delay: 0.6s;
     }
     
     .nav-links {
@@ -692,4 +730,1019 @@ img {
         --navbar-height: 60px;   /* Even smaller navbar on mobile */
         --logo-height: 48px;     /* Even smaller logo on mobile */
     }
+}
+
+/* Operator Comparison Animations - BSNL-inspired */
+.operator-filters {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.filter-group {
+  position: relative;
+  flex: 1 1 200px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transform: translateY(0);
+  z-index: 10;
+}
+
+.filter-group:hover {
+  transform: translateY(-5px);
+  z-index: 20;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.filter-group:hover .filter-label {
+  color: var(--primary-light);
+  transform: translateX(5px);
+}
+
+.filter-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-dark-2);
+  border: 1px solid var(--bg-dark-4);
+  color: var(--text-light);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23F0B67F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  font-size: var(--font-size-sm);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+  /* Remove animation which may cause issues */
+  animation: none;
+}
+
+.filter-group:hover .filter-select {
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-dark-3);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23FCD0A1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
+/* BSNL-style operator plan card animations */
+.operator-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.operator-plan-card {
+  position: relative;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55), box-shadow 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  overflow: hidden;
+  background: var(--bg-dark-2);
+  background-image: linear-gradient(125deg, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0) 40%),
+                    linear-gradient(to bottom, var(--bg-dark-2), var(--bg-dark-3));
+  z-index: 1;
+  will-change: transform, box-shadow;
+  border-radius: var(--border-radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 450px; /* Give all cards consistent height */
+}
+
+/* Add a plan background image that doesn't interfere with content */
+.operator-plan-card .plan-background {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.05;
+  object-fit: cover;
+  z-index: -1;
+  transition: opacity 0.5s ease;
+}
+
+.operator-plan-card:hover .plan-background {
+  opacity: 0.08;
+}
+
+.operator-plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+                rgba(var(--primary-rgb), 0.1) 0%, 
+                rgba(var(--accent-rgb), 0.05) 100%);
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 0.5s ease-in-out;
+  z-index: -1;
+}
+
+.operator-plan-card:hover {
+  transform: translateY(-15px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 
+              0 0 0 1px rgba(var(--primary-rgb), 0.1);
+}
+
+.operator-logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed rgba(var(--primary-rgb), 0.2);
+  transition: all 0.3s ease;
+  z-index: 2; /* Ensure logo stays above other elements */
+}
+
+.operator-plan-card:hover .operator-logo {
+  border-bottom-color: rgba(var(--primary-rgb), 0.6);
+}
+
+.operator-logo img {
+  height: 40px;
+  width: auto;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  max-width: 120px; /* Prevent oversized logos */
+}
+
+.operator-plan-card:hover .operator-logo img {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.network-type {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  margin-left: auto; /* Push to right */
+  z-index: 2;
+}
+
+.network-type.type-5g {
+  background-color: rgba(var(--accent-rgb), 0.2);
+  color: var(--accent-light);
+  box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.1);
+}
+
+.network-type.type-4g {
+  background-color: rgba(var(--primary-rgb), 0.2);
+  color: var(--primary-light);
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.1);
+}
+
+.operator-plan-card:hover .network-type {
+  padding: 0.25rem 1rem;
+  transform: translateX(-5px);
+}
+
+.operator-plan-card:hover .network-type.type-5g {
+  background-color: rgba(var(--accent-rgb), 0.3);
+  box-shadow: 0 0 15px rgba(var(--accent-rgb), 0.2);
+}
+
+.operator-plan-card:hover .network-type.type-4g {
+  background-color: rgba(var(--primary-rgb), 0.3);
+  box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Staggered animation for plan benefits */
+.operator-plan-card:hover .plan-benefits li:nth-child(1) {
+  transition-delay: 0.05s;
+}
+
+.operator-plan-card:hover .plan-benefits li:nth-child(2) {
+  transition-delay: 0.1s;
+}
+
+.operator-plan-card:hover .plan-benefits li:nth-child(3) {
+  transition-delay: 0.15s;
+}
+
+.operator-plan-card:hover .plan-benefits li:nth-child(4) {
+  transition-delay: 0.2s;
+}
+
+.operator-plan-card:hover .plan-benefits li:nth-child(5) {
+  transition-delay: 0.25s;
+}
+
+.operator-plan-card:hover .meta-item:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.operator-plan-card:hover .meta-item:nth-child(2) {
+  transition-delay: 0.2s;
+}
+
+.operator-plan-card:hover .meta-item:nth-child(3) {
+  transition-delay: 0.3s;
+}
+
+.btn-select-plan {
+  display: inline-block;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+  color: var(--bg-dark-1);
+  border-radius: var(--border-radius-md);
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  margin-top: auto; /* Push to bottom */
+}
+
+.btn-select-plan::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--accent-dark) 100%);
+  transition: width 0.3s ease;
+  z-index: -1;
+}
+
+.operator-plan-card:hover .btn-select-plan {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.operator-plan-card:hover .btn-select-plan::before {
+  width: 100%;
+}
+
+/* Recommendation badge animation */
+.operator-plan-card:hover .recommendation-badge {
+  transform: translateX(-10px) rotate(-5deg);
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  padding: 0.25rem 1rem;
+}
+
+/* Plan thumbnail image styles - NEW */
+.plan-thumbnail {
+  margin: 0 -1.5rem; /* Extend beyond card padding */
+  height: 120px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  position: relative;
+  border-radius: var(--border-radius-sm);
+}
+
+.plan-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.operator-plan-card:hover .plan-thumbnail img {
+  transform: scale(1.05);
+}
+
+/* Add an overlay gradient to the thumbnail */
+.plan-thumbnail::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+                rgba(0,0,0,0.1) 0%, 
+                rgba(0,0,0,0.6) 100%);
+  z-index: 1;
+}
+
+.operator-plan-details {
+  position: relative;
+  z-index: 2;
+  flex: 1; /* Takes up remaining space */
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-name {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-light);
+  transition: all 0.3s ease;
+}
+
+.operator-plan-card:hover .plan-name {
+  color: var(--primary-color);
+  transform: translateX(5px);
+}
+
+.plan-price {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--primary-color);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.operator-plan-card:hover .plan-price {
+  transform: scale(1.1);
+  color: var(--primary-light);
+}
+
+.currency, .period {
+  font-size: 1rem;
+  color: var(--text-light-muted);
+  font-weight: 400;
+}
+
+.plan-benefits {
+  margin-bottom: 1.5rem;
+  list-style: none;
+  padding-left: 0;
+}
+
+.plan-benefits li {
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.plan-benefits li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: var(--primary-color);
+  opacity: 0.8;
+  transition: all 0.3s ease;
+}
+
+.operator-plan-card:hover .plan-benefits li {
+  transform: translateX(5px);
+}
+
+.operator-plan-card:hover .plan-benefits li::before {
+  opacity: 1;
+  color: var(--accent-color);
+}
+
+/* Plan meta section */
+.plan-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(var(--bg-dark-4-rgb), 0.5);
+  transition: all 0.3s ease;
+  margin-top: auto; /* Push to bottom of flex container */
+}
+
+.operator-plan-card:hover .plan-meta {
+  border-top-color: rgba(var(--primary-rgb), 0.2);
+}
+
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.meta-item span:first-child {
+  font-size: 0.7rem;
+  color: var(--text-light-muted);
+  margin-bottom: 0.25rem;
+}
+
+.meta-item span:last-child {
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.operator-plan-card:hover .meta-item {
+  transform: translateY(-5px);
+}
+
+/* Recommendation badge positioning fix */
+.recommendation-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  color: var(--bg-dark-1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transform: translateX(0);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  z-index: 10; /* Ensure it stays on top */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .operator-filters {
+    flex-direction: column;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .operator-plans-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sparkle animation for select elements */
+@keyframes sparkle {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+.filter-select:focus {
+  background-size: 200% 200%;
+  animation: sparkle 2s linear infinite;
+  background-image: linear-gradient(45deg, 
+    rgba(var(--primary-rgb), 0.1) 25%, 
+    transparent 25%, 
+    transparent 50%, 
+    rgba(var(--primary-rgb), 0.1) 50%, 
+    rgba(var(--primary-rgb), 0.1) 75%, 
+    transparent 75%, 
+    transparent);
+}
+
+/* Operator Comparison Section Animations */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.comparison-table {
+  overflow-x: auto;
+  margin-top: 2rem;
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-dark-2);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+}
+
+.comparison-table:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.comparison-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table th,
+.comparison-table td {
+  padding: 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--bg-dark-3);
+  transition: background-color 0.3s ease;
+}
+
+.comparison-table tr:hover td {
+  background-color: rgba(var(--bg-dark-3-rgb), 0.5);
+}
+
+.operator-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.operator-header img {
+  height: 30px;
+  width: auto;
+  transition: transform 0.3s ease;
+}
+
+.comparison-table tr:hover .operator-header img {
+  transform: scale(1.1);
+}
+
+/* Thumbnail placeholder styles */
+.thumbnail-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+  background: rgba(var(--bg-dark-3-rgb), 0.5);
+  color: var(--primary-color);
+  font-size: 1.5rem;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.3s ease;
+}
+
+.thumbnail-placeholder i {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.8;
+}
+
+.thumbnail-placeholder span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.operator-plan-card:hover .thumbnail-placeholder {
+  background: rgba(var(--primary-rgb), 0.2);
+  transform: scale(1.05);
+}
+
+.operator-plan-card:hover .thumbnail-placeholder i {
+  opacity: 1;
+  color: var(--accent-color);
+  transform: translateY(-5px);
+}
+
+/* Responsive adjustments for plan cards */
+@media (max-width: 576px) {
+  .operator-plan-card {
+    min-height: auto;
+    padding: 1rem;
+  }
+  
+  .plan-thumbnail {
+    height: 100px;
+    margin: 0 -1rem 0.75rem;
+  }
+  
+  .operator-logo img {
+    height: 30px;
+  }
+  
+  .plan-name {
+    font-size: 1.25rem;
+  }
+  
+  .plan-price {
+    font-size: 1.75rem;
+  }
+  
+  .plan-benefits li {
+    font-size: 0.9rem;
+  }
+  
+  .meta-item span:last-child {
+    font-size: 0.9rem;
+  }
+  
+  .btn-select-plan {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Custom dropdown styling - NEW */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.custom-dropdown-selected {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--border-radius-md);
+  background-color: var(--bg-dark-2);
+  border: 1px solid var(--bg-dark-4);
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  font-size: var(--font-size-sm);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-dropdown-selected::after {
+  content: '';
+  width: 0.8rem;
+  height: 0.8rem;
+  display: inline-block;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23F0B67F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  transition: transform 0.6s ease;
+}
+
+.custom-dropdown.open .custom-dropdown-selected::after {
+  transform: rotate(180deg);
+  animation: slowRotate 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+@keyframes slowRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(200deg); /* Slight overshoot for more natural effect */
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+
+.custom-dropdown-selected:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-dark-3);
+}
+
+.custom-dropdown-list {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 100%;
+  background-color: var(--bg-dark-2);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 3;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+}
+
+.custom-dropdown.open .custom-dropdown-list {
+  max-height: 300px;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+  overflow-y: auto;
+}
+
+.custom-dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.5s ease;
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.custom-dropdown.open .custom-dropdown-item {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Staggered animation for dropdown items with longer delays */
+.custom-dropdown.open .custom-dropdown-item:nth-child(1) { transition-delay: 0.1s; }
+.custom-dropdown.open .custom-dropdown-item:nth-child(2) { transition-delay: 0.2s; }
+.custom-dropdown.open .custom-dropdown-item:nth-child(3) { transition-delay: 0.3s; }
+.custom-dropdown.open .custom-dropdown-item:nth-child(4) { transition-delay: 0.4s; }
+.custom-dropdown.open .custom-dropdown-item:nth-child(5) { transition-delay: 0.5s; }
+
+.custom-dropdown-item:hover {
+  background-color: var(--bg-dark-3);
+  color: var(--primary-light);
+  padding-left: 1.25rem;
+}
+
+.custom-dropdown-item.selected {
+  color: var(--primary-color);
+  font-weight: 500;
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+/* When dropdown is open, add a highlight effect */
+.custom-dropdown.open .custom-dropdown-selected {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Add initial animation for filter groups when page loads */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.operator-filters .filter-group {
+  opacity: 0;
+  animation: fadeInUp 0.5s forwards;
+}
+
+.operator-filters .filter-group:nth-child(1) { animation-delay: 0.1s; }
+.operator-filters .filter-group:nth-child(2) { animation-delay: 0.2s; }
+.operator-filters .filter-group:nth-child(3) { animation-delay: 0.3s; }
+.operator-filters .filter-group:nth-child(4) { animation-delay: 0.4s; }
+.operator-filters .filter-group:nth-child(5) { animation-delay: 0.5s; }
+
+/* Mobile-specific dropdown animations */
+@media (max-width: 768px) {
+  .custom-dropdown-list {
+    max-height: 0;
+    transform: translateY(-20px); /* More pronounced initial position */
+    opacity: 0;
+    transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1); /* Even slower for mobile */
+  }
+  
+  .custom-dropdown.open .custom-dropdown-list {
+    max-height: 300px;
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .custom-dropdown-item {
+    padding: 1rem 1.25rem; /* Slightly larger touch targets */
+    transition: all 0.7s ease; /* Slower transition on mobile */
+    transform: translateY(-15px); /* More pronounced starting position */
+  }
+  
+  .custom-dropdown.open .custom-dropdown-item {
+    transform: translateY(0);
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1); /* More pronounced animation */
+  }
+  
+  .custom-dropdown-item:active {
+    background-color: rgba(var(--primary-rgb), 0.2);
+    transform: scale(0.98); /* Subtle feedback when tapped */
+    transition: all 0.8s ease; /* Slower transition back to normal */
+  }
+}
+
+/* Enhanced recommendation section styles */
+.recommendation-section {
+  padding: 4rem 0;
+  background: var(--bg-dark-2);
+  position: relative;
+  overflow: hidden;
+}
+
+.recommendation-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 10% 10%, rgba(var(--primary-rgb), 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.recommendations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+}
+
+/* Enhanced recommendation card styles with animations */
+.recommendation-card {
+  background: var(--bg-dark-3);
+  border-radius: var(--border-radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 1px solid var(--bg-dark-4);
+  transform: translateY(0);
+  will-change: transform, box-shadow;
+}
+
+.recommendation-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.recommendation-card:hover {
+  transform: translateY(-15px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 0 0 30px rgba(var(--primary-rgb), 0.1);
+  border-color: rgba(var(--primary-rgb), 0.3);
+}
+
+.recommendation-card:hover::before {
+  transform: scaleX(1);
+}
+
+.recommendation-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.recommendation-header i {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-right: 1rem;
+  transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 200%;
+  background-position: 0% 0%;
+}
+
+.recommendation-card:hover .recommendation-header i {
+  transform: translateY(-5px) scale(1.2) rotate(10deg);
+  background-position: 100% 100%;
+}
+
+.recommendation-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--text-light);
+  font-weight: 600;
+  position: relative;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.5s ease;
+}
+
+.recommendation-card:hover .recommendation-header h3 {
+  color: var(--primary-color);
+  transform: translateX(5px);
+}
+
+.recommendation-content {
+  position: relative;
+  transition: all 0.5s ease;
+}
+
+.recommendation-card:hover .recommendation-content {
+  transform: translateY(5px);
+}
+
+.recommendation-content p {
+  color: var(--text-light-muted);
+  margin-bottom: 1.2rem;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  transition: color 0.5s ease;
+}
+
+.recommendation-card:hover .recommendation-content p {
+  color: var(--text-light);
+}
+
+.recommendation-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendation-content ul li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.8rem;
+  color: var(--text-light-muted);
+  font-size: 0.9rem;
+  opacity: 0.8;
+  transition: all 0.5s ease;
+  transform: translateX(0);
+}
+
+.recommendation-content ul li:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--primary-color);
+  opacity: 0.7;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.recommendation-card:hover .recommendation-content ul li {
+  color: var(--text-light);
+  opacity: 1;
+  transform: translateX(5px);
+}
+
+.recommendation-card:hover .recommendation-content ul li:before {
+  opacity: 1;
+  transform: scale(1.5);
+  box-shadow: 0 0 10px rgba(var(--primary-rgb), 0.7);
+}
+
+/* Staggered animation for list items */
+.recommendation-card:hover .recommendation-content ul li:nth-child(1) {
+  transition-delay: 0.1s;
+}
+.recommendation-card:hover .recommendation-content ul li:nth-child(2) {
+  transition-delay: 0.2s;
+}
+.recommendation-card:hover .recommendation-content ul li:nth-child(3) {
+  transition-delay: 0.3s;
+}
+.recommendation-card:hover .recommendation-content ul li:nth-child(4) {
+  transition-delay: 0.4s;
+}
+
+/* Special floating animation on page load */
+@keyframes floatUp {
+  0% {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recommendations-grid .recommendation-card {
+  animation: floatUp 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+.recommendations-grid .recommendation-card:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.recommendations-grid .recommendation-card:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.recommendations-grid .recommendation-card:nth-child(3) {
+  animation-delay: 0.7s;
+}
+
+/* Glow pulse effect for icons */
+@keyframes iconGlow {
+  0% {
+    filter: drop-shadow(0 0 2px rgba(var(--primary-rgb), 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(var(--primary-rgb), 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 2px rgba(var(--primary-rgb), 0.3));
+  }
+}
+
+.recommendation-card:hover .recommendation-header i {
+  animation: iconGlow 2s ease-in-out infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .recommendations-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .recommendation-card {
+    padding: 1.25rem;
+  }
+  
+  .recommendation-card:hover {
+    transform: translateY(-10px) scale(1.01);
+  }
 } 
