@@ -1874,6 +1874,98 @@ function initContactPageAnimations() {
         const infoHeader = document.querySelector('.info-header');
         const socialLinks = document.querySelector('.social-links');
         const infoIcon = document.querySelector('.info-icon');
+        const formIcon = document.querySelector('.form-icon');
+        const formHeader = document.querySelector('.form-header');
+        
+        // Add enhanced interactive effects to the form icon
+        if (formIcon) {
+            // Add a 3D perspective effect on mouse move
+            formIcon.addEventListener('mousemove', function(e) {
+                const iconRect = this.getBoundingClientRect();
+                const mouseX = e.clientX - iconRect.left - iconRect.width / 2;
+                const mouseY = e.clientY - iconRect.top - iconRect.height / 2;
+                
+                // Calculate rotation based on mouse position (max 10 degrees)
+                const maxRotation = 10;
+                const rotateX = (mouseY / (iconRect.height / 2)) * -maxRotation;
+                const rotateY = (mouseX / (iconRect.width / 2)) * maxRotation;
+                
+                // Apply the rotation transform
+                this.style.transform = `perspective(300px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+                
+                // Create a dynamic shine effect
+                const shine = this.querySelector('::before');
+                if (shine) {
+                    const x = (mouseX / iconRect.width) * 100 + 50;
+                    const y = (mouseY / iconRect.height) * 100 + 50;
+                    this.style.setProperty('--shine-position', `${x}% ${y}%`);
+                }
+            });
+            
+            // Reset on mouse out
+            formIcon.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+            
+            // Add a click effect
+            formIcon.addEventListener('click', function() {
+                // Create a ripple effect
+                const ripple = document.createElement('span');
+                ripple.classList.add('icon-ripple');
+                ripple.style.position = 'absolute';
+                ripple.style.top = '0';
+                ripple.style.left = '0';
+                ripple.style.width = '100%';
+                ripple.style.height = '100%';
+                ripple.style.borderRadius = '50%';
+                ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
+                ripple.style.zIndex = '4';
+                
+                this.appendChild(ripple);
+                
+                // Trigger the animation
+                setTimeout(() => {
+                    ripple.style.transform = 'scale(2)';
+                    ripple.style.opacity = '0';
+                }, 10);
+                
+                // Animate the icon
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.style.animation = 'none';
+                    icon.style.transform = 'translateY(5px) rotate(10deg)';
+                    
+                    setTimeout(() => {
+                        icon.style.transform = 'translateY(-10px) rotate(-15deg)';
+                        
+                        setTimeout(() => {
+                            icon.style.transform = '';
+                            icon.style.animation = 'paperPlaneFloat 3s ease-in-out infinite';
+                        }, 200);
+                    }, 200);
+                }
+                
+                // Clean up the ripple element
+                setTimeout(() => {
+                    ripple.remove();
+                }, 800);
+            });
+        }
+        
+        // Add subtle hover effect to the form header
+        if (formHeader) {
+            formHeader.addEventListener('mouseover', function() {
+                const formIcon = this.querySelector('.form-icon');
+                if (formIcon) {
+                    formIcon.style.transform = 'scale(1.05) rotate(5deg)';
+                    setTimeout(() => {
+                        formIcon.style.transform = '';
+                    }, 300);
+                }
+            });
+        }
         
         // Add enhanced interactive effects to the info icon
         if (infoIcon) {
@@ -1918,7 +2010,7 @@ function initContactPageAnimations() {
                 ripple.style.borderRadius = '50%';
                 ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
                 ripple.style.transform = 'scale(0)';
-                ripple.style.transition = 'transform 0.6s ease-out';
+                ripple.style.transition = 'transform 0.6s ease-out, opacity 0.6s ease-out';
                 ripple.style.zIndex = '4';
                 
                 this.appendChild(ripple);

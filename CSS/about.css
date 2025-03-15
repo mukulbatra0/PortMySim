@@ -131,7 +131,7 @@
         opacity: 0;
     }
     100% {
-        opacity: 0.9;
+    opacity: 0.9;
     }
 }
 
@@ -822,7 +822,23 @@
 .delay-200 { animation-delay: 0.2s; }
 .delay-300 { animation-delay: 0.3s; }
 .delay-400 { animation-delay: 0.4s; }
-.delay-500 { animation-delay: 0.5s; } 
+.delay-500 { animation-delay: 0.5s; }
+
+/* Add gap above Our Story section */
+.about-story-section {
+    margin-top: 4rem;
+    padding-top: 2rem;
+}
+
+/* Target Our Story heading specifically */
+.about-story-section h2 {
+    margin-top: 2rem;
+}
+
+/* Add this class to any section that needs additional spacing */
+.section-gap {
+    margin-top: 4rem;
+} 
 
 
 
