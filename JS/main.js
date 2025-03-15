@@ -157,6 +157,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Initialize recommendation card animations
   initRecommendationCardAnimations();
+
+  // Initialize about page animations
+  initAboutPageAnimations();
+
+  // Contact Form Validation and Interactivity
+  initContactForm();
 });
 
 // NEW FUNCTION: Initialize custom dropdown menus
@@ -220,7 +226,7 @@ function initCustomDropdowns() {
         this.classList.add('selected');
         
         // Close dropdown with a slight delay for smoother animation
-        setTimeout(() => {
+                setTimeout(() => {
           dropdown.classList.remove('open');
         }, 100);
         
@@ -228,9 +234,9 @@ function initCustomDropdowns() {
         if (select.classList.contains('filter-select')) {
           applyFilterSelectEffects(select);
         }
-      });
-    });
-    
+            });
+        });
+        
     // Add click listener to toggle dropdown
     selectedDisplay.addEventListener('click', function(e) {
       e.stopPropagation();
@@ -317,7 +323,7 @@ function createRippleEffect(e) {
   } else if (button.classList.contains("secondary")) {
     ripple.style.backgroundColor =
       "rgba(var(--primary-rgb, 240, 182, 127), 0.3)";
-  } else {
+            } else {
     ripple.style.backgroundColor = "rgba(255, 255, 255, 0.3)";
   }
 
@@ -342,7 +348,7 @@ function createRippleEffect(e) {
     button.classList.contains("btn-primary")
   ) {
     button.style.boxShadow = "var(--glow-primary)";
-  } else {
+            } else {
     button.style.boxShadow = "var(--shadow-lg)";
   }
 
@@ -515,6 +521,12 @@ function initUnifiedAnimationSystem() {
 
   // Add a class to indicate animations are enabled
   document.documentElement.classList.add("animations-enabled");
+
+  // Initialize page-specific animations
+  initOperatorPlanAnimations();
+  initRecommendationCardAnimations();
+  initAboutPageAnimations();
+  initContactPageAnimations();
 }
 
 // Apply pop-up animations to elements that should have them
@@ -927,7 +939,7 @@ function initMobileNavigation() {
             navElements.classList.remove("active");
           }, 150); // Longer delay for smoother animation
         }
-      });
+        });
     });
     
     // Close menu on ESC key
@@ -1034,7 +1046,7 @@ function initializeHeroButtons() {
       if (this.classList.contains("primary")) {
         this.style.backgroundImage =
           "linear-gradient(135deg, var(--primary-color), var(--accent-color))";
-                    } else {
+            } else {
         this.style.backgroundImage = "";
       }
 
@@ -1277,7 +1289,7 @@ function initOperatorPlanAnimations() {
   
   planCards.forEach((card, index) => {
     // Apply staggered hover effects
-    card.addEventListener('mouseenter', function() {
+            card.addEventListener('mouseenter', function() {
       // Don't use animation property to avoid conflicts
       this.style.transform = 'translateY(-15px)';
       this.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(240, 182, 127, 0.1)';
@@ -1384,8 +1396,8 @@ function initOperatorPlanAnimations() {
     }
     
     // Reset the 3D effect on mouse leave - simplified
-    card.addEventListener('mouseleave', function() {
-      this.style.transform = '';
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = '';
       this.style.backgroundImage = '';
     });
     
@@ -1408,9 +1420,9 @@ function initRecommendationCardAnimations() {
   const cards = document.querySelectorAll('.recommendation-card');
   if (!cards.length) {
     console.log("No recommendation cards found on page");
-    return;
-  }
-  
+                    return;
+                }
+                
   cards.forEach((card) => {
     // Remove existing animation attributions to avoid conflicts
     card.classList.remove('content-transition');
@@ -1501,7 +1513,7 @@ function initRecommendationCardAnimations() {
       });
       
       // Remove transition property after animation completes
-      setTimeout(() => {
+                setTimeout(() => {
         this.style.transition = '';
       }, 800);
     });
@@ -1550,3 +1562,628 @@ function applyFloatingAnimation(card) {
     }, 800);
   });
 }
+
+// Initialize the about page animations
+function initAboutPageAnimations() {
+  console.log("Initializing about page animations");
+  
+  // Only run on the about page
+  if (!document.querySelector('.about-section')) {
+    return;
+  }
+  
+  // Apply 3D tilt effect to mission items
+  const missionItems = document.querySelectorAll('.mission-item');
+  missionItems.forEach(item => {
+    // Add 3D tilt effect on mousemove
+    item.addEventListener('mousemove', function(e) {
+      // Only apply 3D effect if not on mobile
+      if (window.innerWidth <= 768) return;
+      
+      try {
+        // Calculate mouse position relative to the item
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Calculate rotation based on mouse position (subtle effect)
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateY = ((x - centerX) / centerX) * 4; // max 4 degrees
+        const rotateX = ((centerY - y) / centerY) * 4; // max 4 degrees
+        
+        // Apply the rotation with a smooth transition
+        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-15px)`;
+        
+        // Apply highlight effect based on mouse position
+        const glowX = (x / rect.width) * 100;
+        const glowY = (y / rect.height) * 100;
+        this.style.backgroundImage = `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(var(--bg-dark-2-rgb), 0.9) 0%, rgba(var(--bg-dark-3-rgb), 0.9) 80%)`;
+        
+        // Enhance the box shadow based on mouse position
+        const shadowX = (x / rect.width - 0.5) * 10;
+        const shadowY = (y / rect.height - 0.5) * 10;
+        this.style.boxShadow = `
+          ${shadowX}px ${shadowY}px 30px rgba(0, 0, 0, 0.2),
+          0 0 20px rgba(var(--primary-rgb), 0.15)
+        `;
+        
+        // Animate the icon to follow mouse movement
+        const icon = this.querySelector('.mission-icon');
+        if (icon) {
+          icon.style.transform = `translateX(${rotateY * 2}px) translateY(${-rotateX * 2}px) scale(1.1)`;
+        }
+        
+        // Lift the heading slightly
+        const heading = this.querySelector('h3');
+        if (heading) {
+          heading.style.transform = `translateZ(15px)`;
+          heading.style.textShadow = `0 2px 5px rgba(0, 0, 0, 0.2)`;
+        }
+      } catch (error) {
+        console.warn('Error applying 3D effect to mission item:', error);
+      }
+    });
+    
+    // Reset the 3D effect on mouse leave
+    item.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+      this.style.boxShadow = '';
+      this.style.backgroundImage = '';
+      
+      const icon = this.querySelector('.mission-icon');
+      if (icon) {
+        icon.style.transform = '';
+      }
+      
+      const heading = this.querySelector('h3');
+      if (heading) {
+        heading.style.transform = '';
+        heading.style.textShadow = '';
+      }
+    });
+  });
+  
+  // Apply 3D tilt effect to team members
+  const teamMembers = document.querySelectorAll('.team-member');
+  teamMembers.forEach(member => {
+    member.addEventListener('mousemove', function(e) {
+      // Only apply 3D effect if not on mobile
+      if (window.innerWidth <= 768) return;
+      
+      try {
+        // Calculate mouse position relative to the card
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Calculate rotation based on mouse position (subtle effect)
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateY = ((x - centerX) / centerX) * 3; // max 3 degrees
+        const rotateX = ((centerY - y) / centerY) * 3; // max 3 degrees
+        
+        // Apply the rotation with a smooth transition
+        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-15px)`;
+        
+        // Enhance the box shadow
+        this.style.boxShadow = `0 20px 40px rgba(0, 0, 0, 0.2), 0 0 30px rgba(var(--primary-rgb), 0.2)`;
+        
+        // Add special effects to image
+        const img = this.querySelector('.team-member-image img');
+        if (img) {
+          img.style.transform = `scale(1.1) translateZ(20px)`;
+        }
+        
+        // Lift the team member info
+        const info = this.querySelector('.team-member-info');
+        if (info) {
+          info.style.transform = `translateZ(20px)`;
+        }
+        
+        // Animate social icons
+        const socialIcons = this.querySelectorAll('.team-member-social a');
+        socialIcons.forEach((icon, index) => {
+          icon.style.transform = `translateY(-${5 + index * 2}px)`;
+        });
+      } catch (error) {
+        console.warn('Error applying 3D effect to team member:', error);
+      }
+    });
+    
+    // Reset the 3D effect on mouse leave
+    member.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+      this.style.boxShadow = '';
+      
+      const img = this.querySelector('.team-member-image img');
+      if (img) {
+        img.style.transform = '';
+      }
+      
+      const info = this.querySelector('.team-member-info');
+      if (info) {
+        info.style.transform = '';
+      }
+      
+      const socialIcons = this.querySelectorAll('.team-member-social a');
+      socialIcons.forEach(icon => {
+        icon.style.transform = '';
+      });
+    });
+  });
+  
+  // Apply 3D tilt effect to achievement cards
+  const achievementCards = document.querySelectorAll('.achievement-card');
+  achievementCards.forEach(card => {
+    card.addEventListener('mousemove', function(e) {
+      // Only apply 3D effect if not on mobile
+      if (window.innerWidth <= 768) return;
+      
+      try {
+        // Calculate mouse position relative to the card
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        // Calculate rotation based on mouse position (subtle effect)
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateY = ((x - centerX) / centerX) * 5; // max 5 degrees
+        const rotateX = ((centerY - y) / centerY) * 5; // max 5 degrees
+        
+        // Apply the rotation with a smooth transition
+        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-15px) scale(1.05)`;
+        
+        // Apply highlight effect based on mouse position
+        const glowX = (x / rect.width) * 100;
+        const glowY = (y / rect.height) * 100;
+        this.style.backgroundImage = `radial-gradient(circle at ${glowX}% ${glowY}%, rgba(var(--bg-dark-2-rgb), 1) 0%, rgba(var(--bg-dark-3-rgb), 0.9) 80%)`;
+        
+        // Enhance the box shadow
+        this.style.boxShadow = `0 25px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(var(--primary-rgb), 0.2)`;
+        
+        // Animate the icon
+        const icon = this.querySelector('.achievement-icon');
+        if (icon) {
+          icon.style.transform = `translateX(${rotateY * 1.5}px) translateY(${-rotateX * 1.5}px) rotate(${rotateY}deg) scale(1.2)`;
+        }
+        
+        // Lift the heading
+        const heading = this.querySelector('h3');
+        if (heading) {
+          heading.style.transform = `translateZ(20px)`;
+          heading.style.textShadow = `0 2px 5px rgba(0, 0, 0, 0.2)`;
+        }
+        
+        // Lift the paragraph
+        const paragraph = this.querySelector('p');
+        if (paragraph) {
+          paragraph.style.transform = `translateZ(10px)`;
+        }
+      } catch (error) {
+        console.warn('Error applying 3D effect to achievement card:', error);
+      }
+    });
+    
+    // Reset the 3D effect on mouse leave
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = '';
+      this.style.boxShadow = '';
+      this.style.backgroundImage = '';
+      
+      const icon = this.querySelector('.achievement-icon');
+      if (icon) {
+        icon.style.transform = '';
+      }
+      
+      const heading = this.querySelector('h3');
+      if (heading) {
+        heading.style.transform = '';
+        heading.style.textShadow = '';
+      }
+      
+      const paragraph = this.querySelector('p');
+      if (paragraph) {
+        paragraph.style.transform = '';
+      }
+    });
+  });
+  
+  // Apply parallax effect to about section image
+  const aboutImage = document.querySelector('.about-image');
+  if (aboutImage) {
+    window.addEventListener('scroll', function() {
+      // Simple parallax effect
+      const scrollPosition = window.scrollY;
+      aboutImage.style.transform = `translateY(${scrollPosition * 0.05}px)`;
+    });
+  }
+  
+  // Add scroll-triggered animations for statistic counters
+  const statItems = document.querySelectorAll('.stat-item h3');
+  
+  // Animate number counter when stat items come into view
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const statValue = entry.target.innerText;
+        const targetNumber = parseInt(statValue.replace(/[^\d]/g, ''));
+        
+        // Start from zero and count up
+        let currentNumber = 0;
+        const duration = 2000; // 2 seconds
+        const interval = 16; // Update every ~16ms for smooth 60fps
+        const steps = duration / interval;
+        const increment = targetNumber / steps;
+        
+        // Counter animation
+        const counter = setInterval(() => {
+          currentNumber += increment;
+          
+          // Check if we've reached the target
+          if (currentNumber >= targetNumber) {
+            entry.target.innerText = statValue; // Set to original text
+            clearInterval(counter);
+    } else {
+            // Format the number based on the original format
+            if (statValue.includes('K+')) {
+              entry.target.innerText = `${Math.floor(currentNumber)}K+`;
+            } else if (statValue.includes('%')) {
+              entry.target.innerText = `${Math.floor(currentNumber)}%`;
+            } else {
+              entry.target.innerText = `${Math.floor(currentNumber)}`;
+            }
+          }
+        }, interval);
+        
+        // Stop observing after animation is triggered
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.5
+  });
+  
+  // Start observing
+  statItems.forEach(stat => {
+    observer.observe(stat);
+  });
+  
+  console.log("About page animations initialized");
+}
+
+// Contact Page Animations and Interactions
+function initContactPageAnimations() {
+    console.log("Initializing contact page animations");
+    
+    // Make sure contact elements are visible
+    ensureContactElementsVisibility();
+    
+    // Get in Touch section enhancements
+    enhanceGetInTouchSection();
+    
+    // Initialize Port Forward animations
+    initPortForwardAnimations();
+    
+    // Initialize Contact Form
+    initContactForm();
+    
+    function enhanceGetInTouchSection() {
+        const infoItems = document.querySelectorAll('.info-item');
+        const infoHeader = document.querySelector('.info-header');
+        const socialLinks = document.querySelector('.social-links');
+        const infoIcon = document.querySelector('.info-icon');
+        
+        // Add enhanced interactive effects to the info icon
+        if (infoIcon) {
+            // Add a 3D perspective effect on mouse move
+            infoIcon.addEventListener('mousemove', function(e) {
+                const iconRect = this.getBoundingClientRect();
+                const mouseX = e.clientX - iconRect.left - iconRect.width / 2;
+                const mouseY = e.clientY - iconRect.top - iconRect.height / 2;
+                
+                // Calculate rotation based on mouse position (max 10 degrees)
+                const maxRotation = 10;
+                const rotateX = (mouseY / (iconRect.height / 2)) * -maxRotation;
+                const rotateY = (mouseX / (iconRect.width / 2)) * maxRotation;
+                
+                // Apply the rotation transform
+                this.style.transform = `perspective(300px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+                
+                // Create a dynamic shine effect
+                const shine = this.querySelector('::before');
+                if (shine) {
+                    const x = (mouseX / iconRect.width) * 100 + 50;
+                    const y = (mouseY / iconRect.height) * 100 + 50;
+                    this.style.setProperty('--shine-position', `${x}% ${y}%`);
+                }
+            });
+            
+            // Reset on mouse out
+            infoIcon.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+            
+            // Add a click effect
+            infoIcon.addEventListener('click', function() {
+                // Create a ripple effect
+                const ripple = document.createElement('span');
+                ripple.classList.add('icon-ripple');
+                ripple.style.position = 'absolute';
+                ripple.style.top = '0';
+                ripple.style.left = '0';
+                ripple.style.width = '100%';
+                ripple.style.height = '100%';
+                ripple.style.borderRadius = '50%';
+                ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.transition = 'transform 0.6s ease-out';
+                ripple.style.zIndex = '4';
+                
+                this.appendChild(ripple);
+                
+                // Trigger the animation
+                setTimeout(() => {
+                    ripple.style.transform = 'scale(2)';
+                    ripple.style.opacity = '0';
+                }, 10);
+                
+                // Animate the icon
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.style.animation = 'none';
+                    icon.style.transform = 'scale(0.8)';
+                    
+                    setTimeout(() => {
+                        icon.style.transform = 'scale(1.2)';
+                        
+                        setTimeout(() => {
+                            icon.style.transform = '';
+                            icon.style.animation = 'pulseAndRotate 3s ease-in-out infinite';
+                        }, 200);
+                    }, 200);
+                }
+                
+                // Clean up the ripple element
+                setTimeout(() => {
+                    ripple.remove();
+                }, 800);
+            });
+        }
+        
+        // Add subtle shimmer effect to the info header on hover
+        if (infoHeader) {
+            infoHeader.addEventListener('mouseover', function() {
+                const infoIcon = this.querySelector('.info-icon');
+                if (infoIcon) {
+                    infoIcon.style.transform = 'scale(1.05) rotate(5deg)';
+                    setTimeout(() => {
+                        infoIcon.style.transform = '';
+                    }, 300);
+                }
+            });
+        }
+        
+        // Add hover effects to info items
+        if (infoItems && infoItems.length > 0) {
+            infoItems.forEach(item => {
+                item.addEventListener('mouseover', function() {
+                    // Add a subtle background animation
+                    this.style.transition = 'all 0.3s ease';
+                    
+                    // Find the icon and add a bounce effect
+                    const icon = this.querySelector('.item-icon i');
+                    if (icon) {
+                        icon.style.transition = 'all 0.3s ease';
+                        icon.style.transform = 'scale(1.2)';
+                        icon.style.color = 'var(--accent-color)';
+                    }
+                });
+                
+                item.addEventListener('mouseout', function() {
+                    // Reset styles
+                    const icon = this.querySelector('.item-icon i');
+                    if (icon) {
+                        icon.style.transform = 'scale(1)';
+                        icon.style.color = 'var(--primary-color)';
+                    }
+                });
+            });
+        }
+        
+        // Add interactive effect to social links
+        if (socialLinks) {
+            const socialIcons = socialLinks.querySelectorAll('.social-icons a');
+            if (socialIcons && socialIcons.length > 0) {
+                socialIcons.forEach(icon => {
+                    icon.addEventListener('mouseover', function() {
+                        // Create a ripple effect
+                        const ripple = document.createElement('span');
+                        ripple.classList.add('social-ripple');
+                        ripple.style.position = 'absolute';
+                        ripple.style.top = '0';
+                        ripple.style.left = '0';
+                        ripple.style.width = '100%';
+                        ripple.style.height = '100%';
+                        ripple.style.borderRadius = '50%';
+                        ripple.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                        ripple.style.transform = 'scale(0)';
+                        ripple.style.transition = 'transform 0.6s ease-out';
+                        
+                        this.appendChild(ripple);
+                        
+                        // Trigger the animation
+                        setTimeout(() => {
+                            ripple.style.transform = 'scale(1.5)';
+                            ripple.style.opacity = '0';
+                        }, 10);
+                        
+                        // Clean up the ripple element
+                        setTimeout(() => {
+                            ripple.remove();
+                        }, 600);
+                    });
+                });
+            }
+        }
+    }
+    
+    function ensureContactElementsVisibility() {
+        // ... existing code ...
+    }
+    
+    function initPortForwardAnimations() {
+        // ... existing code ...
+    }
+}
+
+// Contact Form Validation and Interactivity
+function initContactForm() {
+    const contactForm = document.getElementById('contactForm');
+    if (!contactForm) return;
+
+    const formInputs = contactForm.querySelectorAll('.form-control');
+    const formGroups = contactForm.querySelectorAll('.form-group');
+    
+    // Add floating effect to icons on input focus
+    formInputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            const icon = this.parentElement.querySelector('i');
+            if (icon) {
+                icon.classList.add('floating');
+            }
+        });
+        
+        input.addEventListener('blur', function() {
+            const icon = this.parentElement.querySelector('i');
+            if (icon) {
+                icon.classList.remove('floating');
+            }
+        });
+    });
+    
+    // Real-time validation
+    formInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            validateInput(this);
+        });
+        
+        input.addEventListener('blur', function() {
+            validateInput(this);
+        });
+    });
+    
+    // Form submission with validation
+    contactForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        let isValid = true;
+        formInputs.forEach(input => {
+            if (!validateInput(input)) {
+                isValid = false;
+            }
+        });
+        
+        if (isValid) {
+            // Show success message
+            const formSuccess = document.createElement('div');
+            formSuccess.className = 'form-success';
+            formSuccess.innerHTML = `
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <div class="success-message">
+                    <h3>Message Sent Successfully!</h3>
+                    <p>Thank you for reaching out. We'll get back to you shortly.</p>
+                </div>
+            `;
+            
+            // Replace form with success message
+            contactForm.style.opacity = '0';
+            setTimeout(() => {
+                contactForm.innerHTML = '';
+                contactForm.appendChild(formSuccess);
+                contactForm.style.opacity = '1';
+            }, 500);
+            
+            // Reset form after 5 seconds
+            setTimeout(() => {
+                location.reload();
+            }, 5000);
+        }
+    });
+    
+    // Helper function to validate inputs
+    function validateInput(input) {
+        const errorElement = input.parentElement.parentElement.querySelector('.error-message');
+        let isValid = true;
+        
+        // Clear previous error
+        errorElement.style.display = 'none';
+        errorElement.textContent = '';
+        
+        // Check if empty
+        if (input.hasAttribute('required') && !input.value.trim()) {
+            errorElement.textContent = 'This field is required';
+            errorElement.style.display = 'block';
+            isValid = false;
+        }
+        
+        // Email validation
+        if (input.type === 'email' && input.value.trim()) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(input.value)) {
+                errorElement.textContent = 'Please enter a valid email address';
+                errorElement.style.display = 'block';
+                isValid = false;
+            }
+        }
+        
+        // Phone validation
+        if (input.type === 'tel' && input.value.trim()) {
+            const phoneRegex = /^[\d\s+()-]{10,15}$/;
+            if (!phoneRegex.test(input.value.replace(/\s+/g, ''))) {
+                errorElement.textContent = 'Please enter a valid phone number';
+                errorElement.style.display = 'block';
+                isValid = false;
+            }
+        }
+        
+        // Update input styling based on validation
+        if (!isValid) {
+            input.classList.add('invalid');
+            input.classList.remove('valid');
+        } else {
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+        }
+        
+        return isValid;
+    }
+    
+    // Add ripple effect to form button
+    const formBtn = contactForm.querySelector('.form-btn');
+    if (formBtn) {
+        formBtn.addEventListener('click', function(e) {
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            this.appendChild(ripple);
+            
+            const x = e.clientX - e.target.getBoundingClientRect().left;
+            const y = e.clientY - e.target.getBoundingClientRect().top;
+            
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+    }
+}
+
+// Initialize the contact form when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initContactForm();
+});

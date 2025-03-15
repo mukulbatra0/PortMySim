@@ -60,93 +60,192 @@
     <!-- Contact Section -->
     <section class="contact-section">
         <div class="container">
+            <div class="section-title">
+                <h2>Contact Us</h2>
+                <p>We'd love to hear from you. Reach out to us through any of these channels.</p>
+            </div>
             <div class="contact-container">
                 <!-- Contact Information -->
-                <div class="contact-info">
-                    <h2>Get in Touch</h2>
-                    <p>Have questions about porting your number? Our support team is here to help.</p>
+                <div class="contact-info always-visible">
+                    <div class="info-header">
+                        <span class="info-icon"><i class="fas fa-headset"></i></span>
+                        <h2>Get in Touch</h2>
+                    </div>
+                    <p>Have questions about porting your number? Our support team is here to help you 24/7.</p>
                     
-                    <div class="info-item">
-                        <i class="fas fa-phone-alt"></i>
-                        <div>
+                    <div class="info-item always-visible">
+                        <div class="item-icon">
+                            <i class="fas fa-phone-alt"></i>
+                        </div>
+                        <div class="item-content">
                             <h3>Phone</h3>
                             <p>+91 1234 567 890</p>
                             <p class="text-muted">Monday to Friday, 9am to 6pm IST</p>
                         </div>
                     </div>
                     
-                    <div class="info-item">
-                        <i class="fas fa-envelope"></i>
-                        <div>
+                    <div class="info-item always-visible">
+                        <div class="item-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="item-content">
                             <h3>Email</h3>
                             <p>support@portxpress.com</p>
                             <p class="text-muted">We'll respond within 24 hours</p>
                         </div>
                     </div>
                     
-                    <div class="info-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
+                    <div class="info-item always-visible">
+                        <div class="item-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="item-content">
                             <h3>Office</h3>
                             <p>123 Tech Park, Cyber City</p>
                             <p>Gurugram, Haryana 122002</p>
                         </div>
                     </div>
                     
-                    <div class="social-links">
-                        <h3>Follow Us</h3>
+                    <div class="contact-divider"></div>
+                    
+                    <div class="social-links always-visible">
+                        <h3>Connect With Us</h3>
                         <div class="social-icons">
-                            <a href="#" class="facebook"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#" class="twitter"><i class="fab fa-twitter"></i></a>
-                            <a href="#" class="instagram"><i class="fab fa-instagram"></i></a>
-                            <a href="#" class="linkedin"><i class="fab fa-linkedin-in"></i></a>
+                            <a href="#" class="facebook always-visible" aria-label="Facebook">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="twitter always-visible" aria-label="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="instagram always-visible" aria-label="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="linkedin always-visible" aria-label="LinkedIn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Contact Form -->
                 <div class="contact-form">
-                    <h2>Send us a Message</h2>
+                    <div class="form-header">
+                        <span class="form-icon"><i class="fas fa-paper-plane"></i></span>
+                        <h2>Send us a Message</h2>
+                    </div>
+                    <p class="form-subtitle">We're eager to hear your questions, suggestions, or concerns. Fill out the form below and we'll get back to you promptly.</p>
+                    
                     <form id="contactForm">
-                        <div class="form-group">
-                            <label for="name" class="form-label">Your Name</label>
-                            <input type="text" id="name" name="name" class="form-control" required>
-                            <div class="error-message"></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name" class="form-label">Your Name</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-user"></i>
+                                    <input type="text" id="name" name="name" class="form-control" required placeholder="John Doe">
+                                </div>
+                                <div class="error-message"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-envelope"></i>
+                                    <input type="email" id="email" name="email" class="form-control" required placeholder="john@example.com">
+                                </div>
+                                <div class="error-message"></div>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label for="email" class="form-label">Email Address</label>
-                            <input type="email" id="email" name="email" class="form-control" required>
-                            <div class="error-message"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="phone" class="form-label">Phone Number</label>
-                            <input type="tel" id="phone" name="phone" class="form-control" required>
-                            <div class="error-message"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="subject" class="form-label">Subject</label>
-                            <select id="subject" name="subject" class="form-control" required>
-                                <option value="">Select a subject</option>
-                                <option value="porting">Porting Query</option>
-                                <option value="plans">Plans & Pricing</option>
-                                <option value="technical">Technical Support</option>
-                                <option value="feedback">Feedback</option>
-                                <option value="other">Other</option>
-                            </select>
-                            <div class="error-message"></div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-mobile-alt"></i>
+                                    <input type="tel" id="phone" name="phone" class="form-control" required placeholder="+91 98765 43210">
+                                </div>
+                                <div class="error-message"></div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="subject" class="form-label">Subject</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-tag"></i>
+                                    <select id="subject" name="subject" class="form-control" required>
+                                        <option value="">Select a subject</option>
+                                        <option value="porting">Porting Query</option>
+                                        <option value="plans">Plans & Pricing</option>
+                                        <option value="technical">Technical Support</option>
+                                        <option value="feedback">Feedback</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="error-message"></div>
+                            </div>
                         </div>
                         
                         <div class="form-group">
                             <label for="message" class="form-label">Message</label>
-                            <textarea id="message" name="message" class="form-control" rows="5" required></textarea>
+                            <div class="input-with-icon textarea-icon">
+                                <i class="fas fa-comment-alt"></i>
+                                <textarea id="message" name="message" class="form-control" rows="5" required placeholder="Type your message here..."></textarea>
+                            </div>
                             <div class="error-message"></div>
                         </div>
                         
-                        <button type="submit" class="form-btn">Send Message</button>
+                        <div class="form-footer">
+                            <div class="form-note">
+                                <i class="fas fa-info-circle"></i>
+                                <span>All fields are required. We respect your privacy.</span>
+                            </div>
+                            <button type="submit" class="form-btn">
+                                <span>Send Message</span>
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Port Forward Section -->
+    <section class="port-forward-section">
+        <div class="container">
+            <div class="port-forward-container">
+                <div class="port-forward-content">
+                    <h2>Ready to Port Your Number?</h2>
+                    <p>Easily transfer your mobile number from your current operator to a new one. Our streamlined process makes porting simple and hassle-free.</p>
+                    <div class="port-forward-features">
+                        <div class="feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Quick Setup</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>No Service Interruption</span>
+                        </div>
+                        <div class="feature">
+                            <i class="fas fa-check-circle"></i>
+                            <span>24/7 Support</span>
+                        </div>
+                    </div>
+                    <a href="plans.html" class="port-forward-btn">
+                        <span class="btn-content">
+                            <span class="btn-icon"><i class="fas fa-exchange-alt"></i></span>
+                            <span class="btn-text">Start Porting Now</span>
+                        </span>
+                        <span class="btn-arrow"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                </div>
+                <div class="port-forward-image">
+                    <img src="../images/port-forward.svg" alt="Port Forward Illustration" 
+                         onerror="this.onerror=null; 
+                                 this.src='data:image/svg+xml;charset=utf-8,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'600\' height=\'400\' viewBox=\'0 0 600 400\'%3E%3Crect width=\'600\' height=\'400\' fill=\'%23252836\'/%3E%3Cdefs%3E%3ClinearGradient id=\'grad\' x1=\'0%25\' y1=\'0%25\' x2=\'100%25\' y2=\'100%25\'%3E%3Cstop offset=\'0%25\' stop-color=\'%23f0b67f\'/%3E%3Cstop offset=\'100%25\' stop-color=\'%23fe5f55\'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect x=\'120\' y=\'100\' width=\'120\' height=\'200\' rx=\'20\' fill=\'%23343a40\' stroke=\'%23485e74\' stroke-width=\'3\'/%3E%3Crect x=\'360\' y=\'100\' width=\'120\' height=\'200\' rx=\'20\' fill=\'%23343a40\' stroke=\'%23485e74\' stroke-width=\'3\'/%3E%3Cpath d=\'M260,200 L340,200\' stroke=\'url(%23grad)\' stroke-width=\'8\' stroke-linecap=\'round\'/%3E%3Cpath d=\'M320,180 L340,200 L320,220\' stroke=\'url(%23grad)\' stroke-width=\'8\' stroke-linecap=\'round\'/%3E%3Ctext x=\'300\' y=\'270\' font-family=\'sans-serif\' font-size=\'24\' fill=\'url(%23grad)\' text-anchor=\'middle\' font-weight=\'bold\'%3EPort Your Number%3C/text%3E%3Ctext x=\'300\' y=\'300\' font-family=\'sans-serif\' font-size=\'16\' fill=\'%23ffffff\' text-anchor=\'middle\'%3ESeamless Transfer Between Providers%3C/text%3E%3C/svg%3E';">
+                    <div class="floating-elements">
+                        <div class="floating-element e1"><i class="fas fa-mobile-alt"></i></div>
+                        <div class="floating-element e2"><i class="fas fa-sim-card"></i></div>
+                        <div class="floating-element e3"><i class="fas fa-signal"></i></div>
+                    </div>
                 </div>
             </div>
         </div>
