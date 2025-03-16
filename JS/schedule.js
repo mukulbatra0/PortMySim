@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initScheduleForm();
     setupProgressSteps();
     setupProviderSelection();
+    setupCircleSelection();
     setMinDate();
 });
 
@@ -217,6 +218,20 @@ function validateInput(input) {
         }
     }
     
+    // End of Recharge Date validation
+    if (input.id === 'currentPlan' && input.value.trim()) {
+        const selectedDate = new Date(input.value);
+        const today = new Date();
+        
+        // Clear time part for comparison
+        today.setHours(0, 0, 0, 0);
+        
+        if (selectedDate < today) {
+            isValid = false;
+            message = 'Please select a current or future date';
+        }
+    }
+    
     // Display error message if any
     if (!isValid && errorMessage) {
         errorMessage.textContent = message;
@@ -271,6 +286,38 @@ function setMinDate() {
         const day = String(tomorrow.getDate()).padStart(2, '0');
         
         datePicker.min = `${year}-${month}-${day}`;
+    }
+}
+
+// Setup circle selection behavior
+function setupCircleSelection() {
+    const currentProvider = document.getElementById('currentProvider');
+    const currentCircle = document.getElementById('currentCircle');
+    
+    // Optional functionality: You could change available circles based on provider
+    if (currentProvider && currentCircle) {
+        currentProvider.addEventListener('change', function() {
+            // Reset circle selection when provider changes
+            currentCircle.selectedIndex = 0;
+            
+            // You could add provider-specific circle filtering here if needed
+            // For example, some providers might not be available in all circles
+            /*
+            const provider = currentProvider.value;
+            Array.from(currentCircle.options).forEach(option => {
+                if (option.value === '') return; // Skip the placeholder
+                
+                // Example: MTNL only available in Mumbai and Delhi
+                if (provider === 'mtnl' && 
+                    option.value !== 'mumbai' && 
+                    option.value !== 'delhi') {
+                    option.disabled = true;
+                } else {
+                    option.disabled = false;
+                }
+            });
+            */
+        });
     }
 }
 
