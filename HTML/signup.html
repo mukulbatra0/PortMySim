@@ -8,43 +8,47 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../CSS/common.css">
     <link rel="stylesheet" href="../CSS/auth.css">
+    <link rel="stylesheet" href="../CSS/page-transitions.css">
 
 </head>
 <body class="bg-dark-1">
-    <nav class="nav">
-        <div class="nav-container">
-            <!-- Logo -->
-            <div class="logo">
-                <a href="index.html">
-                    <img src="../images/logo.png" alt="PortMySim Logo">
-                </a>
-            </div>
-            
-            <!-- Main Navigation Links -->
-            <div class="nav-elements">
-                <ul class="nav-links">
-                    <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
-                    <li class="nav-item"><a href="how-it-works.html" class="nav-link">How It Works</a></li>
-                    <li class="nav-item"><a href="plans.html" class="nav-link">Plans</a></li>
-                    <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
-                    <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
-                </ul>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <!-- Logo -->
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="../images/logo.png" alt="PortMySim Logo">
+                    </a>
+                </div>
                 
-                <!-- Authentication Buttons -->
-                <div class="auth-btns">
-                    <a href="login.html" class="btn btn-login active">Login</a>
-                    <a href="signup.html" class="btn btn-signup">Sign Up</a>
+                <!-- Main Navigation Links -->
+                <div class="nav-elements">
+                    <ul class="nav-links">
+                        <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                        <li class="nav-item"><a href="how-it-works.html" class="nav-link">How It Works</a></li>
+                        <li class="nav-item"><a href="plans.html" class="nav-link">Plans</a></li>
+                        <li class="nav-item"><a href="compare.html" class="nav-link">Compare Networks</a></li>
+                        <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
+                        <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+                    </ul>
+                    
+                    <!-- Authentication Buttons -->
+                    <div class="auth-btns">
+                        <a href="login.html" class="btn btn-login active">Login</a>
+                        <a href="signup.html" class="btn btn-signup">Sign Up</a>
+                    </div>
+                </div>
+                
+                <!-- Hamburger Menu for Mobile -->
+                <div class="hamburger">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
                 </div>
             </div>
-            
-            <!-- Hamburger Menu for Mobile -->
-            <div class="hamburger">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
     
     <!-- Signup Section -->
     <section class="auth-section">
@@ -194,5 +198,6 @@
     
     <!-- Main JS - Contains all consolidated JavaScript functionality -->
     <script src="../JS/main.js"></script>
+    <script src="../JS/page-transitions.js"></script>
 </body>
 </html> 

@@ -392,6 +392,17 @@
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2.5rem;
     margin-top: 3rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Two-member team layout */
+@media (min-width: 992px) {
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 3rem;
+    }
 }
 
 .team-member {
@@ -1044,6 +1055,136 @@
     display: block;
     justify-content: center;
     text-align: center;
+}
+
+/* Modern SVG Illustrations */
+.modern-illustration {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+    transition: all 0.4s ease;
+}
+
+.modern-illustration:hover {
+    transform: translateY(-5px);
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.15));
+}
+
+.about-image {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    transform: perspective(1000px) rotateY(-5deg);
+    transition: all 0.5s ease;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+}
+
+.about-image:hover {
+    transform: perspective(1000px) rotateY(0deg);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+/* Team Profile SVGs */
+.team-profile-svg {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.team-member-image {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.team-member-image:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.team-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to top, rgba(11, 57, 84, 0.8) 0%, rgba(11, 57, 84, 0) 60%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.5rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.team-member-image:hover .team-overlay {
+    opacity: 1;
+}
+
+.team-overlay h3 {
+    color: #fff;
+    margin-bottom: 0.25rem;
+    font-size: 1.2rem;
+    transform: translateY(20px);
+    transition: all 0.3s ease 0.1s;
+}
+
+.team-overlay p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    transform: translateY(20px);
+    transition: all 0.3s ease 0.2s;
+}
+
+.team-member-image:hover .team-overlay h3,
+.team-member-image:hover .team-overlay p {
+    transform: translateY(0);
+}
+
+/* Achievements Section */
+.achievements-illustration {
+    margin: 2rem 0 3rem;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.achievements-grid {
+    margin-top: 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .about-image {
+        margin-top: 2rem;
+        transform: perspective(1000px) rotateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .modern-illustration {
+        max-width: 90%;
+    }
+    
+    .achievements-illustration {
+        margin: 1rem 0 2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .team-overlay {
+        opacity: 1;
+        background: linear-gradient(to top, rgba(11, 57, 84, 0.8) 0%, rgba(11, 57, 84, 0) 70%);
+    }
+    
+    .team-overlay h3,
+    .team-overlay p {
+        transform: translateY(0);
+    }
 }
 
 

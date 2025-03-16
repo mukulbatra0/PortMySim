@@ -57,8 +57,61 @@
 
 .hero-buttons {
     display: flex;
-    gap: 1rem;
+    gap: 1.2rem;
     margin-top: 2rem;
+}
+
+.hero-buttons .btn-primary,
+.hero-buttons .btn-outline-white {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    transform: translateY(0);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-buttons .btn-primary:hover,
+.hero-buttons .btn-outline-white:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.hero-buttons .btn-primary:active,
+.hero-buttons .btn-outline-white:active {
+    transform: translateY(-2px);
+}
+
+.hero-buttons .btn-primary::before,
+.hero-buttons .btn-outline-white::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        transparent 100%
+    );
+    transition: left 0.7s ease;
+    z-index: -1;
+}
+
+.hero-buttons .btn-primary:hover::before,
+.hero-buttons .btn-outline-white:hover::before {
+    left: 100%;
+}
+
+/* Additional hover effect for the get started button */
+.hero-buttons .btn-primary {
+    background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
+    border: none;
+}
+
+.hero-buttons .btn-primary:hover {
+    background: linear-gradient(90deg, var(--primary-dark), var(--primary-color));
 }
 
 .hero-image {
@@ -72,6 +125,66 @@
     height: auto;
     border-radius: 10px;
     box-shadow: var(--shadow-lg);
+}
+
+/* Hero Section Styling */
+.hero-svg {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.2));
+    transition: all 0.5s ease;
+    transform: translateY(0);
+}
+
+.hero-svg:hover {
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.3));
+    transform: translateY(-8px);
+}
+
+/* Ensure the hero image has proper size and alignment */
+.hero-image {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+/* Add a faint glow around the SVG on hover */
+.hero-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(240, 182, 127, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.hero-image:hover::after {
+    opacity: 1;
+}
+
+/* Add responsive behavior for the hero section */
+@media (max-width: 992px) {
+    .hero-svg {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-content {
+        padding: 2rem 0;
+    }
+    
+    .hero-svg {
+        max-width: 80%;
+        margin: 0 auto;
+    }
 }
 
 /* Features Section */
@@ -788,6 +901,32 @@
 }
 
 @media (max-width: 992px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hero-text {
+        max-width: 100%;
+        margin-bottom: 2rem;
+    }
+    
+    .hero-image {
+        max-width: 80%;
+    }
+    
+    .hero-buttons {
+        justify-content: center;
+    }
+    
+    .section-title h2 {
+        font-size: 2.2rem;
+    }
+    
+    .section-title p {
+        font-size: 1rem;
+    }
+    
     .steps-container {
         gap: 4rem;
     }
@@ -827,79 +966,18 @@
         width: 100%;
         padding-top: 1rem;
     }
-}
-
-@media (max-width: 768px) {
-    .how-it-works {
+    
+    .cta-section {
         padding: 4rem 0;
     }
     
-    .how-it-works .section-title h2 {
+    .cta-content h2 {
         font-size: 2.2rem;
     }
-    
-    .steps-container {
-        gap: 3.5rem;
-        margin-top: 3rem;
-    }
-    
-    .step {
-        padding: 1.5rem;
-        padding-left: 3.5rem;
-    }
-    
-    .step-content h3 {
-        font-size: 1.8rem;
-    }
-    
-    .step-content p {
-        font-size: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .step .btn-primary {
-        padding: 0.8rem 1.5rem;
-        font-size: 1rem;
-    }
 }
 
-@media (max-width: 576px) {
-    .steps-container {
-        gap: 3rem;
-    }
-    
-    .step {
-        padding: 1.2rem;
-        padding-left: 3rem;
-    }
-    
-    .steps-container::before {
-        left: 22px;
-    }
-    
-    .step-number {
-        width: 45px;
-        height: 45px;
-        font-size: 1.2rem;
-        left: -25px;
-    }
-    
-    .step-content h3 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-    }
-    
-    .how-it-works .section-title h2 {
-        font-size: 1.8rem;
-    }
-    
-    .how-it-works .section-title p {
-        font-size: 1rem;
-    }
-}
-
-/* Additional Mobile Menu Styling */
 @media (max-width: 768px) {
+    /* Hamburger Menu */
     .hamburger {
         display: block;
         cursor: pointer;
@@ -1793,5 +1871,53 @@
     .animate-on-scroll.visible {
         opacity: 1 !important;
         animation: none !important;
+    }
+}
+
+/* Step SVG Image Styling */
+.step-svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
+    transition: all 0.5s ease;
+    transform: translateY(0);
+}
+
+.step:hover .step-svg {
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.25));
+    transform: translateY(-5px) scale(1.02);
+}
+
+/* Add a subtle glow effect to SVGs based on step number */
+.step:nth-child(1):hover .step-svg {
+    filter: drop-shadow(0 0 15px rgba(240, 182, 127, 0.3)) drop-shadow(0 15px 30px rgba(0, 0, 0, 0.25));
+}
+
+.step:nth-child(2):hover .step-svg {
+    filter: drop-shadow(0 0 15px rgba(108, 92, 231, 0.3)) drop-shadow(0 15px 30px rgba(0, 0, 0, 0.25));
+}
+
+.step:nth-child(3):hover .step-svg {
+    filter: drop-shadow(0 0 15px rgba(91, 124, 153, 0.3)) drop-shadow(0 15px 30px rgba(0, 0, 0, 0.25));
+}
+
+/* Improve responsiveness for the steps section */
+@media (max-width: 992px) {
+    .step-svg {
+        max-height: 300px;
+        margin: 0 auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .step-svg {
+        max-height: 250px;
+    }
+}
+
+@media (max-width: 576px) {
+    .step-svg {
+        max-height: 200px;
     }
 } 

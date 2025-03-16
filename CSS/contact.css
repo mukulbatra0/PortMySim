@@ -468,7 +468,7 @@
     }
     
     .contact-info, .contact-form {
-        padding: 2rem;
+    padding: 2rem;
     }
     
     .info-item {
@@ -515,7 +515,7 @@
     }
     
     .form-row {
-        display: block;
+    display: block;
     }
 }
 /* Enhancements for accessibility */
@@ -1393,7 +1393,7 @@
 
 .form-header h2 {
     margin: 0;
-    font-size: 1.8rem;
+        font-size: 1.8rem;
     background: linear-gradient(90deg, var(--accent-color), var(--primary-color), var(--accent-color));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

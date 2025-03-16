@@ -1700,4 +1700,105 @@
 
 .network-suggestion-item:hover {
     background-color: var(--bg-dark-4);
+}
+
+/* Custom Map Styles for Dark Theme */
+.coverage-map {
+  height: 600px;
+  width: 100%;
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 2rem;
+}
+
+/* Dark mode styling for OpenStreetMap tiles */
+.dark-map-tiles {
+  filter: invert(100%) hue-rotate(180deg) brightness(90%) contrast(85%);
+}
+
+/* City label styling */
+.city-label {
+  background: rgba(var(--primary-rgb), 0.8);
+  color: var(--bg-dark-1);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--border-radius-sm);
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+}
+
+/* Coverage tooltip styling */
+.coverage-tooltip {
+  background: var(--bg-dark-2) !important;
+  border: 1px solid var(--primary-color) !important;
+  color: var(--text-light) !important;
+  border-radius: var(--border-radius-sm) !important;
+  padding: 0.5rem 0.75rem !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 0.9rem !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Map legend styles */
+.excellent-coverage {
+  background-color: rgba(0, 184, 148, 0.8); /* Success color */
+}
+
+.good-coverage {
+  background-color: rgba(var(--primary-rgb), 0.8); /* Primary color */
+}
+
+.average-coverage {
+  background-color: rgba(253, 203, 110, 0.8); /* Warning color */
+}
+
+.limited-coverage {
+  background-color: rgba(255, 118, 117, 0.8); /* Danger color */
+}
+
+/* Leaflet controls styling */
+.leaflet-control-zoom {
+  display: none; /* Hide default zoom controls, we have custom ones */
+}
+
+.leaflet-control-attribution {
+  background: rgba(var(--bg-dark-2-rgb), 0.8) !important;
+  color: var(--text-light-muted) !important;
+  font-size: 0.7rem !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--primary-color) !important;
+}
+
+/* Popup styling */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-dark-2) !important;
+  color: var(--text-light) !important;
+  border-radius: var(--border-radius-md) !important;
+}
+
+.leaflet-popup-content {
+  margin: 1rem !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-popup-content h3 {
+  color: var(--primary-color) !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 1.1rem !important;
+}
+
+.leaflet-popup-content p {
+  margin: 0 !important;
+  font-size: 0.9rem !important;
+  color: var(--text-light-muted) !important;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-dark-2) !important;
 } 

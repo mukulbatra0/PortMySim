@@ -169,12 +169,13 @@ document.addEventListener("DOMContentLoaded", function () {
 function initCustomDropdowns() {
   console.log("Initializing custom dropdowns with slower animations");
   
-  // Find all filter-select elements
+  // Find all filter-select elements, but skip schedule-form selects
   const selectElements = document.querySelectorAll('.filter-select');
   
   selectElements.forEach((select) => {
     // Skip if already converted or if the browser doesn't support customElements
-    if (select.dataset.customized || !window.customElements) return;
+    // Also skip if select is inside schedule-form (handled by dropdown-animation.js)
+    if (select.dataset.customized === 'true' || !window.customElements || select.closest('.schedule-form')) return;
     
     // Create parent container div
     const dropdown = document.createElement('div');
@@ -418,8 +419,8 @@ function reinitializeButtonAnimations() {
       button.style.animation = "none";
       setTimeout(() => {
         button.style.animation = "pulse 2s infinite";
-      }, 10);
-    }
+                }, 10);
+            }
 
     // Add special hover effect for primary buttons in hero section
     if (
@@ -607,10 +608,10 @@ function applyPopUpAnimations() {
             (group.baseDelay + index * group.stagger) / 1000
           }s`;
         }
-      }
+            }
+        });
     });
-  });
-
+    
   // Process explicit pop-up animations
   const popUpElements = document.querySelectorAll(
     ".animate-pop-up:not(.animated)"
@@ -629,7 +630,7 @@ function applyPopUpAnimations() {
     else if (element.classList.contains("delay-500")) delay = 500;
     else delay = index * 100; // Default staggered delay
 
-    setTimeout(() => {
+                setTimeout(() => {
       element.style.opacity = "1";
       element.style.transform = "scale(1) translateY(0)";
     }, delay);
@@ -846,120 +847,165 @@ function resetCardTilt(e) {
 
 // Mobile Navigation Toggle - Enhanced with better animations
 function initMobileNavigation() {
+  console.log("Initializing mobile navigation with fixed implementation");
+  
   const hamburger = document.querySelector(".hamburger");
   const navElements = document.querySelector(".nav-elements");
-
-  if (hamburger && navElements) {
-    console.log("Found hamburger and navElements, initializing mobile navigation with slower animations");
+  
+  if (!hamburger || !navElements) {
+    console.warn("Hamburger menu elements not found");
+    return;
+  }
+  
+  // First clear any existing event listeners to avoid duplication
+  const newHamburger = hamburger.cloneNode(true);
+  hamburger.parentNode.replaceChild(newHamburger, hamburger);
+  
+  // Handle hamburger click
+  newHamburger.addEventListener("click", function(e) {
+    e.stopPropagation();
+    console.log("Hamburger clicked");
     
-    // Clear any previous click listeners to avoid conflicts
-    const newHamburger = hamburger.cloneNode(true);
-    hamburger.parentNode.replaceChild(newHamburger, hamburger);
+    // Toggle hamburger active state
+    this.classList.toggle("active");
     
-    newHamburger.addEventListener("click", function(e) {
-      e.stopPropagation(); // Prevent document click from immediately closing the menu
+    if (!navElements.classList.contains("active")) {
+      // Opening the menu
+      // First ensure visibility is set
+      navElements.style.visibility = "visible";
+      navElements.style.opacity = "1";
       
-      console.log("Hamburger clicked, toggling menu");
-      newHamburger.classList.toggle("active");
-      
-      // Add a small delay before showing the nav elements to make animation more noticeable
-      if (!navElements.classList.contains("active")) {
-        // Opening the menu
+      // Add active class in the next frame for smooth animation
+      requestAnimationFrame(() => {
         navElements.classList.add("active");
         document.body.classList.add("menu-open");
+      });
+      
+      // Set up animated elements inside the menu
+      const navItems = navElements.querySelectorAll(".nav-item");
+      navItems.forEach((item, index) => {
+        item.style.opacity = "0";
+        item.style.transform = "translateX(30px)";
         
-        // Reset animation on nav items to ensure they animate every time
-        const navItems = navElements.querySelectorAll(".nav-item");
-        navItems.forEach(item => {
-          // Briefly remove transitions
-          item.style.transition = 'none';
-          item.style.opacity = '0';
-          item.style.transform = 'translateX(30px)'; // More pronounced starting position
-          
-          // Force reflow
-          void item.offsetWidth;
-          
-          // Re-enable transitions
-          item.style.transition = '';
-        });
+        // Forced reflow to ensure animation works
+        void item.offsetWidth;
         
-        // Reset animation on auth buttons
-        const authBtns = navElements.querySelector(".auth-btns");
-        if (authBtns) {
-          authBtns.style.transition = 'none';
-          authBtns.style.opacity = '0';
-          authBtns.style.transform = 'translateY(30px)'; // More pronounced starting position
-          
-          // Force reflow
-          void authBtns.offsetWidth;
-          
-          // Re-enable transitions
-          authBtns.style.transition = '';
-        }
-      } else {
-        // Closing the menu - add a delay to allow for exit animation
-        document.body.classList.remove("menu-open");
+        // Apply animations with staggered delays
+        item.style.transition = "opacity 0.7s ease, transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)";
+        item.style.transitionDelay = `${0.2 + (index * 0.15)}s`;
+        item.style.opacity = "1";
+        item.style.transform = "translateX(0)";
+      });
+      
+      // Animate auth buttons separately
+      const authBtns = navElements.querySelector(".auth-btns");
+      if (authBtns) {
+        authBtns.style.opacity = "0";
+        authBtns.style.transform = "translateY(30px)";
         
-        // Delay removing the active class to allow for exit animation
-        setTimeout(() => {
-          navElements.classList.remove("active");
-        }, 150); // Longer delay before removing active class
+        // Forced reflow
+        void authBtns.offsetWidth;
+        
+        // Apply animation
+        authBtns.style.transition = "opacity 0.7s ease, transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1)";
+        authBtns.style.transitionDelay = "0.8s";
+        authBtns.style.opacity = "1";
+        authBtns.style.transform = "translateY(0)";
       }
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener("click", function(event) {
-      const isClickInside = 
-        navElements.contains(event.target) || 
-        newHamburger.contains(event.target);
-
-      if (!isClickInside && navElements.classList.contains("active")) {
-        console.log("Click outside, closing menu");
+    } else {
+      // Closing the menu
+      document.body.classList.remove("menu-open");
+      navElements.classList.remove("active");
+      
+      // Hide after animation completes
+      setTimeout(() => {
+        if (!navElements.classList.contains("active")) {
+          navElements.style.visibility = "hidden";
+          navElements.style.opacity = "0";
+          
+          // Reset navigation item styles
+          const navItems = navElements.querySelectorAll(".nav-item");
+          navItems.forEach(item => {
+            item.style.transition = "";
+            item.style.transitionDelay = "";
+          });
+          
+          // Reset auth buttons styles
+          const authBtns = navElements.querySelector(".auth-btns");
+          if (authBtns) {
+            authBtns.style.transition = "";
+            authBtns.style.transitionDelay = "";
+          }
+        }
+      }, 800); // Match transition duration
+    }
+  });
+  
+  // Close navigation when clicking outside
+  document.addEventListener("click", function(e) {
+    if (navElements.classList.contains("active") && 
+        !navElements.contains(e.target) && 
+        !newHamburger.contains(e.target)) {
+      
+      console.log("Closing menu by outside click");
+      newHamburger.classList.remove("active");
+      document.body.classList.remove("menu-open");
+      navElements.classList.remove("active");
+      
+      setTimeout(() => {
+        if (!navElements.classList.contains("active")) {
+          navElements.style.visibility = "hidden";
+          navElements.style.opacity = "0";
+        }
+      }, 800);
+    }
+  });
+  
+  // Close navigation when clicking on a link
+  const navLinks = navElements.querySelectorAll(".nav-item a, .nav-link");
+  navLinks.forEach(link => {
+    link.addEventListener("click", function(e) {
+      if (window.innerWidth <= 768) {
+        console.log("Navigation link clicked, closing menu");
         newHamburger.classList.remove("active");
         document.body.classList.remove("menu-open");
+        navElements.classList.remove("active");
         
-        // Delay removing the active class to allow for exit animation
         setTimeout(() => {
-          navElements.classList.remove("active");
-        }, 150); // Longer delay for smoother animation
+          navElements.style.visibility = "hidden";
+          navElements.style.opacity = "0";
+        }, 800);
       }
     });
-
-    // Close mobile menu when clicking on a nav link
-    const navLinks = document.querySelectorAll(".nav-item a, .nav-link");
-    navLinks.forEach((link) => {
-      link.addEventListener("click", function() {
-        if (window.innerWidth <= 768) {
-          console.log("Nav link clicked, closing menu");
-          newHamburger.classList.remove("active");
-          document.body.classList.remove("menu-open");
-          
-          // Delay removing the active class to allow for exit animation
-          setTimeout(() => {
-            navElements.classList.remove("active");
-          }, 150); // Longer delay for smoother animation
-        }
-        });
-    });
-    
-    // Close menu on ESC key
-    document.addEventListener("keydown", function(e) {
-      if (e.key === "Escape" && navElements.classList.contains("active")) {
-        console.log("ESC pressed, closing menu");
-        newHamburger.classList.remove("active");
-        document.body.classList.remove("menu-open");
-        
-        // Delay removing the active class to allow for exit animation
-        setTimeout(() => {
-          navElements.classList.remove("active");
-        }, 150); // Longer delay for smoother animation
-      }
-    });
-
-    console.log("Enhanced mobile navigation initialized with slower animations");
-  } else {
-    console.warn("Mobile navigation elements not found. Hamburger:", hamburger, "Nav elements:", navElements);
-  }
+  });
+  
+  // Close on ESC key
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && navElements.classList.contains("active")) {
+      console.log("ESC pressed, closing menu");
+      newHamburger.classList.remove("active");
+      document.body.classList.remove("menu-open");
+      navElements.classList.remove("active");
+      
+      setTimeout(() => {
+        navElements.style.visibility = "hidden";
+        navElements.style.opacity = "0";
+      }, 800);
+    }
+  });
+  
+  // Force hamburger bar visibility
+  const hamburgerBars = newHamburger.querySelectorAll(".bar");
+  hamburgerBars.forEach(bar => {
+    bar.style.backgroundColor = "var(--primary-color)";
+    bar.style.display = "block";
+    bar.style.width = "100%";
+    bar.style.height = "2px";
+    bar.style.margin = "5px auto";
+    bar.style.transition = "transform 0.3s ease, opacity 0.3s ease";
+  });
+  
+  console.log("Mobile navigation initialization complete");
 }
 
 // Update the existing reinitializer function to include all effects
@@ -1180,9 +1226,9 @@ function fixTestimonialCardAnimations() {
       this.style.transform = "translateY(0) rotateY(0)";
       this.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.1)";
       this.style.borderColor = "var(--bg-dark-4)";
-            });
         });
-
+    });
+    
   console.log("Fixed testimonial card animations with 3D effects");
 }
 
@@ -1487,10 +1533,10 @@ function initRecommendationCardAnimations() {
     });
     
     // Reset the 3D effect on mouse leave with a smooth transition
-    card.addEventListener('mouseleave', function() {
+            card.addEventListener('mouseleave', function() {
       // Smooth transition back to normal state
       this.style.transition = 'all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
-      this.style.transform = '';
+                this.style.transform = '';
       this.style.boxShadow = '';
       this.style.backgroundImage = '';
       
@@ -1569,9 +1615,9 @@ function initAboutPageAnimations() {
   
   // Only run on the about page
   if (!document.querySelector('.about-section')) {
-    return;
-  }
-  
+                    return;
+                }
+                
   // Apply 3D tilt effect to mission items
   const missionItems = document.querySelectorAll('.mission-item');
   missionItems.forEach(item => {
@@ -2112,11 +2158,11 @@ function initContactPageAnimations() {
                         }, 10);
                         
                         // Clean up the ripple element
-                        setTimeout(() => {
-                            ripple.remove();
-                        }, 600);
-                    });
-                });
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
             }
         }
     }

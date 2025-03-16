@@ -9,6 +9,12 @@ function initCustomDropdowns() {
     const selectElements = document.querySelectorAll('.schedule-form select');
     
     selectElements.forEach(select => {
+        // Skip if select is already customized
+        if (select.dataset.customized === 'true' || select.style.display === 'none') {
+            console.log('Skipping already customized select:', select.id || 'unnamed');
+            return;
+        }
+        
         // Get the form icon if it exists
         const formGroup = select.closest('.form-group');
         const formIcon = formGroup?.querySelector('.form-icon');
@@ -161,6 +167,9 @@ function initCustomDropdowns() {
         // Hide the original select and insert the custom one
         select.style.display = 'none';
         select.parentNode.insertBefore(wrapper, select);
+        
+        // Mark this select as customized
+        select.dataset.customized = 'true';
         
         // Update custom select when original select changes
         select.addEventListener('change', function() {
