@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Schedule Porting - PortMySim</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="../CSS/common.css" />
+    <link rel="stylesheet" href="../CSS/schedule.css" />
+  </head>
+  <body class="bg-dark-1">
+    <header class="header">
+      <nav class="nav">
+        <div class="nav-container">
+          <!-- Logo -->
+          <div class="logo">
+            <a href="index.html">
+              <img src="../images/logo.png" alt="PortMySim Logo" />
+            </a>
+          </div>
+
+          <!-- Main Navigation Links -->
+          <div class="nav-elements">
+            <ul class="nav-links">
+              <li class="nav-item">
+                <a href="index.html" class="nav-link">Home</a>
+              </li>
+              <li class="nav-item">
+                <a href="how-it-works.html" class="nav-link">How It Works</a>
+              </li>
+              <li class="nav-item">
+                <a href="plans.html" class="nav-link">Plans</a>
+              </li>
+              <li class="nav-item">
+                <a href="compare.html" class="nav-link">Compare Networks</a>
+              </li>
+              <li class="nav-item">
+                <a href="about.html" class="nav-link">About</a>
+              </li>
+              <li class="nav-item">
+                <a href="contact.html" class="nav-link">Contact</a>
+              </li>
+            </ul>
+
+            <!-- Authentication Buttons -->
+            <div class="auth-btns">
+              <a href="login.html" class="btn btn-login">Login</a>
+              <a href="signup.html" class="btn btn-signup">Sign Up</a>
+            </div>
+          </div>
+
+          <!-- Hamburger Menu for Mobile -->
+          <div class="hamburger">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div class="container">
+        <h1>Schedule Your Porting</h1>
+        <p>Complete the form below to set up your mobile number porting</p>
+      </div>
+    </header>
+
+    <!-- Scheduling Form Section -->
+    <section class="schedule-section">
+      <div class="container">
+        <div class="schedule-wrapper">
+          <!-- Progress Steps -->
+          <div class="progress-steps">
+            <div class="step active" data-step="1">
+              <div class="step-icon">
+                <i class="fas fa-mobile-alt"></i>
+              </div>
+              <div class="step-text">Current Details</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="step" data-step="2">
+              <div class="step-icon">
+                <i class="fas fa-exchange-alt"></i>
+              </div>
+              <div class="step-text">New Provider</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="step" data-step="3">
+              <div class="step-icon">
+                <i class="far fa-calendar-alt"></i>
+              </div>
+              <div class="step-text">Schedule</div>
+            </div>
+            <div class="progress-line"></div>
+            <div class="step" data-step="4">
+              <div class="step-icon">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="step-text">Personal Info</div>
+            </div>
+          </div>
+
+          <!-- Form Container -->
+          <div class="schedule-form-container">
+            <form id="portingForm" class="schedule-form">
+              <!-- Step 1: Current Details -->
+              <div class="form-step active" data-step="1">
+                <h2>Current Service Details</h2>
+                <p class="form-subtitle">
+                  Tell us about your current mobile service
+                </p>
+
+                <div class="form-group">
+                  <label for="currentNumber" class="form-label"
+                    >Your Mobile Number</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="fas fa-phone form-icon"></i>
+                    <input
+                      type="tel"
+                      id="currentNumber"
+                      name="currentNumber"
+                      placeholder="Enter your 10-digit mobile number"
+                      required
+                      pattern="[0-9]{10}"
+                    />
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="currentProvider" class="form-label"
+                    >Current Service Provider</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="fas fa-broadcast-tower form-icon"></i>
+                    <select
+                      id="currentProvider"
+                      name="currentProvider"
+                      required
+                    >
+                      <option value="" disabled selected>
+                        Select your current provider
+                      </option>
+                      <option value="airtel">Airtel</option>
+                      <option value="jio">Jio</option>
+                      <option value="vi">Vi (Vodafone Idea)</option>
+                      <option value="bsnl">BSNL</option>
+                      <option value="mtnl">MTNL</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="currentCircle" class="form-label"
+                    >Choose Circle</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="fas fa-map-marker-alt form-icon"></i>
+                    <select id="currentCircle" name="currentCircle" required>
+                      <option value="" disabled selected>
+                        Select your current circle
+                      </option>
+                      <option value="andhra-pradesh">Andhra Pradesh</option>
+                      <option value="assam">Assam</option>
+                      <option value="bihar">Bihar & Jharkhand</option>
+                      <option value="delhi">Delhi NCR</option>
+                      <option value="gujarat">Gujarat</option>
+                      <option value="haryana">Haryana</option>
+                      <option value="himachal">Himachal Pradesh</option>
+                      <option value="jammu">Jammu & Kashmir</option>
+                      <option value="karnataka">Karnataka</option>
+                      <option value="kerala">Kerala</option>
+                      <option value="kolkata">Kolkata</option>
+                      <option value="maharashtra">Maharashtra & Goa</option>
+                      <option value="madhya-pradesh">
+                        Madhya Pradesh & Chhattisgarh
+                      </option>
+                      <option value="mumbai">Mumbai</option>
+                      <option value="northeast">North East</option>
+                      <option value="orissa">Orissa</option>
+                      <option value="punjab">Punjab</option>
+                      <option value="rajasthan">Rajasthan</option>
+                      <option value="tamil-nadu">Tamil Nadu</option>
+                      <option value="up-east">UP East</option>
+                      <option value="up-west">UP West</option>
+                      <option value="west-bengal">West Bengal</option>
+                    </select>
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="currentPlan" class="form-label"
+                    >End of Recharge Date</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="fas fa-calendar-alt form-icon"></i>
+                    <input
+                      type="date"
+                      id="currentPlan"
+                      name="currentPlan"
+                      class="date-input"
+                    />
+                  </div>
+                  <span class="error-message"></span>
+                  <small class="form-help-text"
+                    >Please select the date when your current plan expires.
+                    We'll schedule your port to complete just before this
+                    date.</small
+                  >
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn-next" data-next="2">
+                    Continue <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 2: New Provider -->
+              <div class="form-step" data-step="2">
+                <h2>Choose New Provider</h2>
+                <p class="form-subtitle">
+                  Select your desired new service provider
+                </p>
+
+                <div class="provider-options">
+                  <div class="provider-card" data-provider="airtel">
+                    <div class="provider-logo">
+                      <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h3>Airtel</h3>
+                    <p>Wide coverage & great speeds</p>
+                  </div>
+
+                  <div class="provider-card" data-provider="jio">
+                    <div class="provider-logo">
+                      <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h3>Jio</h3>
+                    <p>Affordable plans & digital benefits</p>
+                  </div>
+
+                  <div class="provider-card" data-provider="vi">
+                    <div class="provider-logo">
+                      <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h3>Vi</h3>
+                    <p>Weekend data & entertainment</p>
+                  </div>
+
+                  <div class="provider-card" data-provider="bsnl">
+                    <div class="provider-logo">
+                      <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <h3>BSNL</h3>
+                    <p>Extensive rural coverage</p>
+                  </div>
+                </div>
+
+                <div class="selected-provider">
+                  <input
+                    type="hidden"
+                    id="newProvider"
+                    name="newProvider"
+                    required
+                  />
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="newPlan" class="form-label"
+                    >Desired Plan (Optional)</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="fas fa-tag form-icon"></i>
+                    <input
+                      type="text"
+                      id="newPlan"
+                      name="newPlan"
+                      placeholder="E.g., Prepaid 499, Postpaid 799"
+                    />
+                  </div>
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn-prev" data-prev="1">
+                    <i class="fas fa-arrow-left"></i> Back
+                  </button>
+                  <button type="button" class="btn-next" data-next="3">
+                    Continue <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 3: Schedule -->
+              <div class="form-step" data-step="3">
+                <h2>Schedule Your Porting</h2>
+                <p class="form-subtitle">
+                  Choose when you'd like to port your number
+                </p>
+
+                <div class="form-group">
+                  <label for="portingDate" class="form-label"
+                    >Preferred Date</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="far fa-calendar-alt form-icon"></i>
+                    <input
+                      type="date"
+                      id="portingDate"
+                      name="portingDate"
+                      required
+                    />
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="portingTime" class="form-label"
+                    >Preferred Time Window</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="far fa-clock form-icon"></i>
+                    <select id="portingTime" name="portingTime" required>
+                      <option value="" disabled selected>
+                        Select a time slot
+                      </option>
+                      <option value="morning">Morning (8 AM - 12 PM)</option>
+                      <option value="afternoon">
+                        Afternoon (12 PM - 4 PM)
+                      </option>
+                      <option value="evening">Evening (4 PM - 8 PM)</option>
+                    </select>
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn-prev" data-prev="2">
+                    <i class="fas fa-arrow-left"></i> Back
+                  </button>
+                  <button type="button" class="btn-next" data-next="4">
+                    Continue <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Step 4: Personal Info -->
+              <div class="form-step" data-step="4">
+                <h2>Personal Information</h2>
+                <p class="form-subtitle">
+                  Enter your contact details for confirmation
+                </p>
+
+                <div class="form-group">
+                  <label for="fullName" class="form-label">Full Name</label>
+                  <div class="input-with-icon">
+                    <i class="fas fa-user form-icon"></i>
+                    <input
+                      type="text"
+                      id="fullName"
+                      name="fullName"
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="email" class="form-label">Email Address</label>
+                  <div class="input-with-icon">
+                    <i class="fas fa-envelope form-icon"></i>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      placeholder="Enter your email address"
+                      required
+                    />
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="altNumber" class="form-label"
+                    >Alternate Contact Number (Optional)</label
+                  >
+                  <div class="input-with-icon">
+                    <i class="fas fa-phone-alt form-icon"></i>
+                    <input
+                      type="tel"
+                      id="altNumber"
+                      name="altNumber"
+                      placeholder="Enter an alternate number"
+                      pattern="[0-9]{10}"
+                    />
+                  </div>
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-group form-checkbox">
+                  <input
+                    type="checkbox"
+                    id="termsAgree"
+                    name="termsAgree"
+                    required
+                  />
+                  <label for="termsAgree"
+                    >I agree to the
+                    <a href="terms-of-service.html">Terms & Conditions</a> and
+                    <a href="privacy-policy.html">Privacy Policy</a></label
+                  >
+                  <span class="error-message"></span>
+                </div>
+
+                <div class="form-buttons">
+                  <button type="button" class="btn-prev" data-prev="3">
+                    <i class="fas fa-arrow-left"></i> Back
+                  </button>
+                  <button type="submit" class="btn-submit">
+                    Schedule Porting <i class="fas fa-check"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Confirmation Success (hidden initially) -->
+              <div class="form-success">
+                <div class="success-icon">
+                  <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>Porting Scheduled Successfully!</h2>
+                <p>
+                  We've received your porting request. A confirmation has been
+                  sent to your email.
+                </p>
+                <p class="confirmation-number">
+                  Your reference number: <span id="refNumber">PORT-12345</span>
+                </p>
+                <div class="next-steps">
+                  <h3>Next Steps:</h3>
+                  <ol>
+                    <li>Check your email for confirmation details</li>
+                    <li>Keep your phone on to receive SMS verification</li>
+                    <li>Our team will call you for final confirmation</li>
+                  </ol>
+                </div>
+                <a href="dashboard.html" class="btn-dashboard"
+                  >Go to Dashboard</a
+                >
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+      <div class="container">
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <h3>Fast Processing</h3>
+            <p>
+              Your porting request is processed within 24 hours of submission
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-headset"></i>
+            </div>
+            <h3>Dedicated Support</h3>
+            <p>Our team assists you at every step of the porting process</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3>Secure Process</h3>
+            <p>Your information is encrypted and handled securely</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-check-double"></i>
+            </div>
+            <h3>Guaranteed Service</h3>
+            <p>
+              We ensure your number is ported successfully with minimal downtime
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <h3>PortMySim</h3>
+            <p>Making mobile number portability simple and hassle-free.</p>
+          </div>
+          <div class="footer-section">
+            <h3>Quick Links</h3>
+            <ul>
+              <li><a href="index.html">Home</a></li>
+              <li><a href="how-it-works.html">How It Works</a></li>
+              <li><a href="plans.html">Plans</a></li>
+              <li><a href="about.html">About</a></li>
+              <li><a href="contact.html">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h3>Contact Us</h3>
+            <p>Email: support@portmysim.com</p>
+            <p>Phone: +91 1234567890</p>
+          </div>
+          <div class="footer-section">
+            <h3>Support</h3>
+            <ul>
+              <li><a href="terms-of-service.html">Terms & Conditions</a></li>
+              <li><a href="privacy-policy.html">Privacy Policy</a></li>
+              <li><a href="faq.html">FAQ</a></li>
+              <li><a href="help-center.html">Help Center</a></li>
+              <li><a href="refund-policy.html">Refund Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>
+            &copy; <span id="currentYear"></span> PortMySim. All rights
+            reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Main JS - Contains all consolidated JavaScript functionality -->
+    <script src="../JS/dropdown-animation.js"></script>
+    <script src="../JS/api.js"></script>
+    <script src="../JS/auth.js"></script>
+    <script src="../JS/main.js"></script>
+    <script src="../JS/schedule.js"></script>
+    <script src="../JS/loader.js"></script>
+    <script src="../JS/transitions.js"></script>
+  </body>
+</html>

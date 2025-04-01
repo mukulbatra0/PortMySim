@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compare Networks - PortMySim</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../CSS/common.css" />
+    <link rel="stylesheet" href="../CSS/compare-networks.css" />
+    <link rel="stylesheet" href="../CSS/loader.css" />
+    <!-- Leaflet CSS for maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  </head>
+  <body class="bg-dark-1">
+    <header class="header">
+      <nav class="nav">
+        <div class="nav-container">
+          <!-- Logo -->
+          <div class="logo">
+            <a href="index.html">
+              <img src="../images/logo.png" alt="PortMySim Logo" />
+            </a>
+          </div>
+
+          <!-- Main Navigation Links -->
+          <div class="nav-elements">
+            <ul class="nav-links">
+              <li class="nav-item">
+                <a href="index.html" class="nav-link" data-transition="fade">Home</a>
+              </li>
+              <li class="nav-item">
+                <a href="how-it-works.html" class="nav-link" data-transition="slide">How It Works</a>
+              </li>
+              <li class="nav-item">
+                <a href="plans.html" class="nav-link">Plans</a>
+              </li>
+              <li class="nav-item">
+                <a href="compare.html" class="nav-link active" data-transition="fade">Compare Networks</a>
+              </li>
+              <li class="nav-item">
+                <a href="about.html" class="nav-link" data-transition="fade">About</a>
+              </li>
+              <li class="nav-item">
+                <a href="contact.html" class="nav-link" data-transition="slide">Contact</a>
+              </li>
+            </ul>
+
+            <!-- Authentication Buttons -->
+            <div class="auth-btns">
+              <a href="login.html" class="btn btn-login" data-transition="fade">Login</a>
+              <a href="signup.html" class="btn btn-signup" data-transition="zoom">Sign Up</a>
+            </div>
+          </div>
+
+          <!-- Hamburger Menu for Mobile -->
+          <div class="hamburger">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-text content-transition" data-animation="slide-up" data-delay="0.2s">
+          <h1>Compare Network Coverage</h1>
+          <p>
+            Find the best mobile network for your location. Get detailed insights on speed, coverage, and reliability.
+          </p>
+          <div class="hero-buttons">
+            <a href="#network-comparison-section" class="hero-btn primary">
+              <i class="fas fa-signal"></i> Compare Now
+            </a>
+            <a href="plans.html" class="hero-btn secondary">
+              <i class="fas fa-mobile-alt"></i> View Plans
+            </a>
+          </div>
+        </div>
+        <div class="hero-visual content-transition" data-animation="fade-in" data-delay="0.4s">
+          <div class="floating-network-icon icon-jio">
+            <img src="../images/jio.jpeg" alt="Jio" />
+          </div>
+          <div class="floating-network-icon icon-airtel">
+            <img src="../images/airtel.png" alt="Airtel" />
+          </div>
+          <div class="floating-network-icon icon-vi">
+            <img src="../images/vi.png" alt="Vi" />
+          </div>
+          <div class="signal-waves">
+            <div class="wave wave-1"></div>
+            <div class="wave wave-2"></div>
+            <div class="wave wave-3"></div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-shape-divider">
+        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" class="shape-fill"></path>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Network Comparison Section -->
+    <section id="network-comparison-section" class="network-comparison-section">
+      <div class="container">
+        <div class="section-title content-transition" data-animation="slide-up">
+          <h2>Find the Best Network for Your Location</h2>
+          <p>Enter your location to see which network offers the best coverage, speed and reliability in your area</p>
+        </div>
+        
+        <!-- Location Search Form -->
+        <div class="comparison-filters content-transition" data-animation="fade-in" data-delay="0.3s">
+          <div class="location-search-wrapper">
+            <input type="text" class="location-search" id="location-search" placeholder="Enter your city, locality or area..." />
+            <button type="button" class="location-search-btn" id="location-search-btn">
+              <i class="fas fa-search"></i>
+            </button>
+            <div class="location-suggestions" id="location-suggestions">
+              <!-- Suggestions will be dynamically populated -->
+              <div class="location-suggestion-item">New Delhi</div>
+              <div class="location-suggestion-item">Mumbai</div>
+              <div class="location-suggestion-item">Chennai</div>
+              <div class="location-suggestion-item">Kolkata</div>
+              <div class="location-suggestion-item">Bangalore</div>
+            </div>
+          </div>
+          
+          <button type="button" id="compare-btn" class="compare-btn content-transition" data-animation="fade-in" data-delay="0.4s">
+            <i class="fas fa-chart-bar"></i> Compare Networks
+          </button>
+        </div>
+        
+        <!-- India Map Container -->
+        <div class="india-map-container content-transition" data-animation="fade-in" data-delay="0.5s">
+          <div class="map-title">Network Coverage Map</div>
+          <p class="map-description">See which network provides the best coverage in your area. Toggle between networks to compare.</p>
+          
+          <div class="map-controls">
+            <div class="network-selector">
+              <label for="network-select">Select Network:</label>
+              <select id="network-select" class="map-select">
+                <option value="jio">Jio</option>
+                <option value="airtel">Airtel</option>
+                <option value="vi">Vi</option>
+                <option value="all">Compare All</option>
+              </select>
+            </div>
+            
+            <div class="coverage-type-options">
+              <label class="radio-label">
+                <input type="radio" name="coverage-type" value="4g" checked />
+                <span>4G</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="coverage-type" value="5g" />
+                <span>5G</span>
+              </label>
+            </div>
+          </div>
+          
+          <div id="india-map-svg-container" class="content-transition" data-animation="fade-in" data-delay="0.6s">
+            <!-- Interactive Map will be inserted here via JavaScript -->
+            <div id="coverage-map" class="coverage-map"></div>
+          </div>
+          
+          <div class="map-info-panel">
+            <div class="selected-state-info">
+              <h4>Select a location to see detailed coverage</h4>
+            </div>
+            
+            <div class="map-legend">
+              <div class="legend-item">
+                <div class="legend-color excellent-coverage"></div>
+                <div class="legend-text">Excellent</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color good-coverage"></div>
+                <div class="legend-text">Good</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color average-coverage"></div>
+                <div class="legend-text">Average</div>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color limited-coverage"></div>
+                <div class="legend-text">Limited</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="map-tooltip">
+            <div class="tooltip-header">
+              <h5>Coverage Details</h5>
+            </div>
+            <div class="tooltip-content">
+              <div class="tooltip-coverage">
+                <span class="network-name">Network</span>
+                <span class="coverage-level">Coverage</span>
+              </div>
+              <div class="tooltip-signal">
+                Signal Strength: <span>85%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="map-zoom-controls">
+            <button class="zoom-button" id="zoom-in">
+              <i class="fas fa-plus"></i>
+            </button>
+            <button class="zoom-button" id="zoom-out">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Networks Comparison Cards -->
+        <div class="networks-grid content-transition" data-animation="fade-in" data-delay="0.7s">
+          <!-- Jio Card -->
+          <div class="network-card animate-on-scroll" data-operator="jio">
+            <div class="network-logo">
+              <img src="../images/jio.jpeg" alt="Jio" />
+            </div>
+            <h3 class="network-name">Jio</h3>
+            <div class="network-type">5G Ready</div>
+            <div class="network-rating">
+              <div class="rating-stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star-half-alt"></i>
+              </div>
+              <div class="rating-value">4.5/5</div>
+            </div>
+            <ul class="network-features">
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Widest 5G coverage</li>
+              <li class="feature-item"><i class="fas fa-check-circle"></i> High speeds in urban areas</li>
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Good value plans</li>
+            </ul>
+            <div class="network-actions">
+              <a href="#" class="view-details-btn">View Coverage Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+          
+          <!-- Airtel Card -->
+          <div class="network-card animate-on-scroll delay-200" data-operator="airtel">
+            <div class="network-logo">
+              <img src="../images/airtel.png" alt="Airtel" />
+            </div>
+            <h3 class="network-name">Airtel</h3>
+            <div class="network-type">5G Ready</div>
+            <div class="network-rating">
+              <div class="rating-stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <div class="rating-value">4.8/5</div>
+            </div>
+            <ul class="network-features">
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Best call quality</li>
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Reliable connectivity</li>
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Excellent rural coverage</li>
+            </ul>
+            <div class="network-actions">
+              <a href="#" class="view-details-btn">View Coverage Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+          
+          <!-- Vi Card -->
+          <div class="network-card animate-on-scroll delay-400" data-operator="vi">
+            <div class="network-logo">
+              <img src="../images/vi.png" alt="Vi" />
+            </div>
+            <h3 class="network-name">Vi</h3>
+            <div class="network-type">4G/5G</div>
+            <div class="network-rating">
+              <div class="rating-stars">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="far fa-star"></i>
+              </div>
+              <div class="rating-value">4.0/5</div>
+            </div>
+            <ul class="network-features">
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Great entertainment bundles</li>
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Weekend data benefits</li>
+              <li class="feature-item"><i class="fas fa-check-circle"></i> Affordable pricing</li>
+            </ul>
+            <div class="network-actions">
+              <a href="#" class="view-details-btn">View Coverage Details <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Comparison Table Container -->
+        <div class="comparison-table-container content-transition" data-animation="fade-in" data-delay="0.8s">
+          <h3>Detailed Network Comparison</h3>
+          <p>Below is a side-by-side comparison of network performance in your selected area</p>
+          
+          <div class="selected-networks">
+            <div class="selected-network">
+              <img src="../images/jio.jpeg" alt="Jio" />
+              <span>Jio</span>
+              <button type="button"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="selected-network">
+              <img src="../images/airtel.png" alt="Airtel" />
+              <span>Airtel</span>
+              <button type="button"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="selected-network">
+              <img src="../images/vi.png" alt="Vi" />
+              <span>Vi</span>
+              <button type="button"><i class="fas fa-times"></i></button>
+            </div>
+          </div>
+          
+          <div class="comparison-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Jio</th>
+                  <th>Airtel</th>
+                  <th>Vi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="feature-name">4G Coverage</td>
+                  <td class="feature-value">98%</td>
+                  <td class="feature-value best">99%</td>
+                  <td class="feature-value">92%</td>
+                </tr>
+                <tr>
+                  <td class="feature-name">5G Coverage</td>
+                  <td class="feature-value best">85%</td>
+                  <td class="feature-value">80%</td>
+                  <td class="feature-value">60%</td>
+                </tr>
+                <tr>
+                  <td class="feature-name">Avg. Download Speed</td>
+                  <td class="feature-value">25 Mbps</td>
+                  <td class="feature-value best">30 Mbps</td>
+                  <td class="feature-value">20 Mbps</td>
+                </tr>
+                <tr>
+                  <td class="feature-name">Avg. Upload Speed</td>
+                  <td class="feature-value">10 Mbps</td>
+                  <td class="feature-value best">12 Mbps</td>
+                  <td class="feature-value">8 Mbps</td>
+                </tr>
+                <tr>
+                  <td class="feature-name">Call Quality</td>
+                  <td class="feature-value">Good</td>
+                  <td class="feature-value best">Excellent</td>
+                  <td class="feature-value">Good</td>
+                </tr>
+                <tr>
+                  <td class="feature-name">Indoor Reception</td>
+                  <td class="feature-value">Good</td>
+                  <td class="feature-value best">Excellent</td>
+                  <td class="feature-value">Average</td>
+                </tr>
+                <tr>
+                  <td class="feature-name">Congestion Handling</td>
+                  <td class="feature-value best">Excellent</td>
+                  <td class="feature-value">Good</td>
+                  <td class="feature-value">Average</td>
+                </tr>
+                <tr>
+                  <td class="feature-name">Customer Satisfaction</td>
+                  <td class="feature-value">4.5/5</td>
+                  <td class="feature-value best">4.8/5</td>
+                  <td class="feature-value">4.0/5</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Network Coverage Details -->
+        <div class="network-basics content-transition" data-animation="fade-in" data-delay="0.9s">
+          <div class="network-coverage-info">
+            <h3>Coverage Metrics for <span id="selected-location">Your Location</span></h3>
+            <p>These metrics represent network performance based on real user experiences and coverage tests</p>
+            
+            <div class="coverage-metrics">
+              <div class="metric-item">
+                <div class="metric-label">Jio 4G Coverage</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 98%"></div>
+                </div>
+                <div class="metric-value">98%</div>
+              </div>
+              
+              <div class="metric-item">
+                <div class="metric-label">Airtel 4G Coverage</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 99%"></div>
+                </div>
+                <div class="metric-value">99%</div>
+              </div>
+              
+              <div class="metric-item">
+                <div class="metric-label">Vi 4G Coverage</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 92%"></div>
+                </div>
+                <div class="metric-value">92%</div>
+              </div>
+              
+              <div class="metric-item">
+                <div class="metric-label">Jio 5G Coverage</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 85%"></div>
+                </div>
+                <div class="metric-value">85%</div>
+              </div>
+              
+              <div class="metric-item">
+                <div class="metric-label">Airtel 5G Coverage</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 80%"></div>
+                </div>
+                <div class="metric-value">80%</div>
+              </div>
+              
+              <div class="metric-item">
+                <div class="metric-label">Vi 5G Coverage</div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 60%"></div>
+                </div>
+                <div class="metric-value">60%</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="network-comparison-info">
+            <h5>Network Ranking in Your Area</h5>
+            
+            <div class="network-ranking">
+              <div class="ranking-item top-rank">
+                <div class="rank-number">1</div>
+                <div class="rank-network">
+                  <img src="../images/airtel.png" alt="Airtel" />
+                  <span>Airtel</span>
+                </div>
+                <div class="rank-score">92/100</div>
+              </div>
+              
+              <div class="ranking-item">
+                <div class="rank-number">2</div>
+                <div class="rank-network">
+                  <img src="../images/jio.jpeg" alt="Jio" />
+                  <span>Jio</span>
+                </div>
+                <div class="rank-score">89/100</div>
+              </div>
+              
+              <div class="ranking-item">
+                <div class="rank-number">3</div>
+                <div class="rank-network">
+                  <img src="../images/vi.png" alt="Vi" />
+                  <span>Vi</span>
+                </div>
+                <div class="rank-score">78/100</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Call to Action Section -->
+    <section class="cta-section">
+      <div class="container">
+        <div class="cta-content content-transition" data-animation="fade-in" data-delay="0.3s">
+          <h2>Ready to Switch to a Better Network?</h2>
+          <p>Port your number seamlessly with PortMySim. Keep your number, choose a better network!</p>
+          <div class="cta-buttons">
+            <a href="plans.html" class="hero-btn primary">
+              <i class="fas fa-mobile-alt"></i> View Plans
+            </a>
+            <a href="schedule-porting.html" class="hero-btn secondary">
+              <i class="fas fa-exchange-alt"></i> Start Porting
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.3s">
+            <h3>PortMySim</h3>
+            <p>Making mobile number portability simple and hassle-free.</p>
+          </div>
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.4s">
+            <h3>Quick Links</h3>
+            <ul>
+              <li><a href="index.html" data-transition="fade">Home</a></li>
+              <li><a href="how-it-works.html" data-transition="fade">How It Works</a></li>
+              <li><a href="plans.html" data-transition="fade">Plans</a></li>
+              <li><a href="compare.html" data-transition="fade">Compare Networks</a></li>
+              <li><a href="about.html" data-transition="fade">About</a></li>
+              <li><a href="contact.html" data-transition="fade">Contact</a></li>
+            </ul>
+          </div>
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.5s">
+            <h3>Contact Us</h3>
+            <p>Email: support@portmysim.com</p>
+            <p>Phone: +91 1234567890</p>
+          </div>
+          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.6s">
+            <h3>Support</h3>
+            <ul>
+              <li><a href="terms-of-service.html" data-transition="fade">Terms & Conditions</a></li>
+              <li><a href="privacy-policy.html" data-transition="fade">Privacy Policy</a></li>
+              <li><a href="faq.html" data-transition="fade">FAQ</a></li>
+              <li><a href="help-center.html" data-transition="fade">Help Center</a></li>
+              <li><a href="refund-policy.html" data-transition="fade">Refund Policy</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom content-transition" data-animation="fade-in" data-delay="0.7s">
+          <p>
+            &copy; <span id="currentYear"></span> PortMySim. All rights
+            reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Main JS - Contains all consolidated JavaScript functionality -->
+    <script src="../JS/main.js"></script>
+    <script src="../JS/loader.js"></script>
+    <script src="../JS/transitions.js"></script>
+    <script src="../JS/api.js"></script>
+    <script src="../JS/auth.js"></script>
+    <!-- Leaflet JS for maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Map initialization script -->
+    <script>
+      // Map initialization
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the map
+        const map = L.map('coverage-map').setView([20.5937, 78.9629], 5); // Center of India
+        
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 18,
+          // Use dark style for map to match theme
+          className: 'dark-map-tiles'
+        }).addTo(map);
+        
+        // Network Coverage Layers
+        const jio4GLayer = createCoverageLayer('jio', '4g');
+        const airtel4GLayer = createCoverageLayer('airtel', '4g');
+        const vi4GLayer = createCoverageLayer('vi', '4g');
+        
+        const jio5GLayer = createCoverageLayer('jio', '5g');
+        const airtel5GLayer = createCoverageLayer('airtel', '5g');
+        const vi5GLayer = createCoverageLayer('vi', '5g');
+        
+        // Initially show Jio 4G
+        jio4GLayer.addTo(map);
+        
+        // Network selector event handlers
+        document.getElementById('network-select').addEventListener('change', function() {
+          updateMapLayers();
+        });
+        
+        // Coverage type (4G/5G) event handlers
+        document.querySelectorAll('input[name="coverage-type"]').forEach(radio => {
+          radio.addEventListener('change', function() {
+            updateMapLayers();
+          });
+        });
+        
+        // Update visible layers based on selections
+        function updateMapLayers() {
+          // Remove all layers
+          map.removeLayer(jio4GLayer);
+          map.removeLayer(airtel4GLayer);
+          map.removeLayer(vi4GLayer);
+          map.removeLayer(jio5GLayer);
+          map.removeLayer(airtel5GLayer);
+          map.removeLayer(vi5GLayer);
+          
+          const selectedNetwork = document.getElementById('network-select').value;
+          const coverageType = document.querySelector('input[name="coverage-type"]:checked').value;
+          
+          // Add appropriate layers
+          if (selectedNetwork === 'all') {
+            if (coverageType === '4g') {
+              jio4GLayer.addTo(map);
+              airtel4GLayer.addTo(map);
+              vi4GLayer.addTo(map);
+            } else {
+              jio5GLayer.addTo(map);
+              airtel5GLayer.addTo(map);
+              vi5GLayer.addTo(map);
+            }
+          } else {
+            if (coverageType === '4g') {
+              if (selectedNetwork === 'jio') jio4GLayer.addTo(map);
+              if (selectedNetwork === 'airtel') airtel4GLayer.addTo(map);
+              if (selectedNetwork === 'vi') vi4GLayer.addTo(map);
+            } else {
+              if (selectedNetwork === 'jio') jio5GLayer.addTo(map);
+              if (selectedNetwork === 'airtel') airtel5GLayer.addTo(map);
+              if (selectedNetwork === 'vi') vi5GLayer.addTo(map);
+            }
+          }
+        }
+        
+        // Create stylized coverage layer for each network
+        function createCoverageLayer(network, coverageType) {
+          // This would be replaced with actual coverage data
+          // For demonstration purposes, we're creating random circles
+          
+          const layerGroup = L.layerGroup();
+          const cities = [
+            { name: 'Delhi', coords: [28.7041, 77.1025], radius: 50000 },
+            { name: 'Mumbai', coords: [19.0760, 72.8777], radius: 45000 },
+            { name: 'Chennai', coords: [13.0827, 80.2707], radius: 40000 },
+            { name: 'Kolkata', coords: [22.5726, 88.3639], radius: 42000 },
+            { name: 'Bangalore', coords: [12.9716, 77.5946], radius: 48000 },
+            { name: 'Hyderabad', coords: [17.3850, 78.4867], radius: 43000 },
+            { name: 'Pune', coords: [18.5204, 73.8567], radius: 38000 },
+            { name: 'Ahmedabad', coords: [23.0225, 72.5714], radius: 35000 },
+            { name: 'Jaipur', coords: [26.9124, 75.7873], radius: 33000 },
+            { name: 'Lucknow', coords: [26.8467, 80.9462], radius: 30000 }
+          ];
+          
+          // Coverage style based on network
+          let color;
+          if (network === 'jio') color = '#0F3CC9';
+          else if (network === 'airtel') color = '#E40000';
+          else color = '#ED1C24'; // Vi
+          
+          // 5G has smaller coverage but more transparent
+          const fillOpacity = coverageType === '5g' ? 0.3 : 0.5;
+          const radiusMultiplier = coverageType === '5g' ? 0.6 : 1;
+          
+          cities.forEach(city => {
+            // Some randomization to make each network's coverage look different
+            const networkFactor = network === 'jio' ? 1.1 : 
+                                  network === 'airtel' ? 1 : 0.9;
+            
+            const adjustedRadius = city.radius * radiusMultiplier * networkFactor;
+            
+            // Create circle for coverage area
+            const circle = L.circle(city.coords, {
+              color: color,
+              fillColor: color,
+              fillOpacity: fillOpacity,
+              radius: adjustedRadius
+            }).bindTooltip(`${network.toUpperCase()} ${coverageType.toUpperCase()} in ${city.name}`, {
+              permanent: false,
+              className: 'coverage-tooltip'
+            });
+            
+            layerGroup.addLayer(circle);
+            
+            // Add city marker
+            const marker = L.marker(city.coords, {
+              icon: L.divIcon({
+                className: 'city-marker',
+                html: `<div class="city-label">${city.name}</div>`,
+                iconSize: [100, 20],
+                iconAnchor: [50, 10]
+              })
+            });
+            
+            layerGroup.addLayer(marker);
+          });
+          
+          return layerGroup;
+        }
+        
+        // Zoom controls
+        document.getElementById('zoom-in').addEventListener('click', function() {
+          map.zoomIn();
+        });
+        
+        document.getElementById('zoom-out').addEventListener('click', function() {
+          map.zoomOut();
+        });
+        
+        // Location search functionality
+        document.getElementById('location-search-btn').addEventListener('click', function() {
+          searchLocation();
+        });
+        
+        document.getElementById('location-search').addEventListener('keyup', function(e) {
+          if (e.key === 'Enter') {
+            searchLocation();
+          } else {
+            showSuggestions();
+          }
+        });
+        
+        function showSuggestions() {
+          const suggestionElement = document.getElementById('location-suggestions');
+          suggestionElement.classList.add('show');
+          
+          // Add event listeners to suggestion items
+          document.querySelectorAll('.location-suggestion-item').forEach(item => {
+            item.addEventListener('click', function() {
+              document.getElementById('location-search').value = this.textContent;
+              suggestionElement.classList.remove('show');
+              searchLocation();
+            });
+          });
+        }
+        
+        function searchLocation() {
+          const location = document.getElementById('location-search').value.trim();
+          if (!location) return;
+          
+          // Hide suggestions
+          document.getElementById('location-suggestions').classList.remove('show');
+          
+          // Update selected location text
+          document.getElementById('selected-location').textContent = location;
+          
+          // For demo purposes, find the closest city and zoom there
+          const searchTerm = location.toLowerCase();
+          let targetCity = null;
+          
+          cities.forEach(city => {
+            if (city.name.toLowerCase().includes(searchTerm)) {
+              targetCity = city;
+            }
+          });
+          
+          if (targetCity) {
+            map.flyTo(targetCity.coords, 9, {
+              duration: 2,
+              animate: true
+            });
+            
+            // Show a popup at the location
+            L.popup()
+              .setLatLng(targetCity.coords)
+              .setContent(`<h3>${targetCity.name}</h3><p>Showing network coverage comparison</p>`)
+              .openOn(map);
+          } else {
+            alert('Location not found. Please try another location.');
+          }
+        }
+        
+        // View details button handlers
+        document.querySelectorAll('.view-details-btn').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const network = this.closest('.network-card').getAttribute('data-operator');
+            
+            // Select this network in the dropdown
+            document.getElementById('network-select').value = network;
+            
+            // Update map layers
+            updateMapLayers();
+            
+            // Scroll to map
+            document.getElementById('india-map-svg-container').scrollIntoView({
+              behavior: 'smooth'
+            });
+          });
+        });
+      });
+    </script>
+  </body>
+</html> 

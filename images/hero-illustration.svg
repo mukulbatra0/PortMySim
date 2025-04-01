@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="600px" viewBox="0 0 800 600" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Mobile Number Portability Illustration</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-primary">
+            <stop stop-color="#F0B67F" offset="0%"></stop>
+            <stop stop-color="#D89A61" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-secondary">
+            <stop stop-color="#5B7C99" offset="0%"></stop>
+            <stop stop-color="#426380" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-accent">
+            <stop stop-color="#6C5CE7" offset="0%"></stop>
+            <stop stop-color="#4834D4" offset="100%"></stop>
+        </linearGradient>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="10" />
+            <feOffset dx="0" dy="10" result="offsetblur" />
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3" />
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+    </defs>
+    <g id="hero-illustration" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Background Elements -->
+        <circle cx="650" cy="120" r="80" fill="url(#gradient-primary)" opacity="0.2"></circle>
+        <circle cx="150" cy="500" r="100" fill="url(#gradient-secondary)" opacity="0.15"></circle>
+        <circle cx="720" cy="400" r="60" fill="url(#gradient-accent)" opacity="0.1"></circle>
+        
+        <!-- Abstract Connection Lines -->
+        <path d="M200,300 C350,250 450,350 600,300" stroke="url(#gradient-primary)" stroke-width="3" stroke-dasharray="5,5" opacity="0.7"></path>
+        <path d="M150,200 C300,150 500,450 650,400" stroke="url(#gradient-secondary)" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"></path>
+        <path d="M250,400 C350,350 450,350 550,400" stroke="url(#gradient-accent)" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"></path>
+        
+        <!-- Left Phone (Origin) -->
+        <g transform="translate(180, 250)" filter="url(#shadow)">
+            <rect x="0" y="0" width="120" height="220" rx="12" fill="#222831"></rect>
+            <rect x="8" y="15" width="104" height="190" rx="5" fill="#1A1C22"></rect>
+            <circle cx="60" cy="10" r="3" fill="#444"></circle>
+            <rect x="48" y="210" width="24" height="4" rx="2" fill="#444"></rect>
+            
+            <!-- Phone Content -->
+            <rect x="20" y="40" width="80" height="15" rx="3" fill="#F0B67F"></rect>
+            <rect x="20" y="65" width="60" height="10" rx="2" fill="#5B7C99" opacity="0.8"></rect>
+            <rect x="20" y="85" width="40" height="10" rx="2" fill="#5B7C99" opacity="0.6"></rect>
+            
+            <circle cx="40" cy="120" r="20" fill="#F0B67F" opacity="0.8"></circle>
+            <text x="40" y="125" font-family="Arial" font-size="16" fill="white" text-anchor="middle">01</text>
+            
+            <rect x="70" y="110" width="30" height="8" rx="2" fill="#5B7C99" opacity="0.7"></rect>
+            <rect x="70" y="122" width="20" height="8" rx="2" fill="#5B7C99" opacity="0.5"></rect>
+            
+            <rect x="20" y="150" width="80" height="1" fill="#444" opacity="0.5"></rect>
+            
+            <rect x="25" y="160" width="70" height="25" rx="4" fill="#5B7C99" opacity="0.2"></rect>
+            <text x="60" y="176" font-family="Arial" font-size="10" fill="#F0B67F" text-anchor="middle">OPERATOR A</text>
+        </g>
+        
+        <!-- Right Phone (Destination) -->
+        <g transform="translate(500, 250)" filter="url(#shadow)">
+            <rect x="0" y="0" width="120" height="220" rx="12" fill="#222831"></rect>
+            <rect x="8" y="15" width="104" height="190" rx="5" fill="#1A1C22"></rect>
+            <circle cx="60" cy="10" r="3" fill="#444"></circle>
+            <rect x="48" y="210" width="24" height="4" rx="2" fill="#444"></rect>
+            
+            <!-- Phone Content -->
+            <rect x="20" y="40" width="80" height="15" rx="3" fill="#6C5CE7"></rect>
+            <rect x="20" y="65" width="60" height="10" rx="2" fill="#5B7C99" opacity="0.8"></rect>
+            <rect x="20" y="85" width="40" height="10" rx="2" fill="#5B7C99" opacity="0.6"></rect>
+            
+            <circle cx="40" cy="120" r="20" fill="#6C5CE7" opacity="0.8"></circle>
+            <text x="40" y="125" font-family="Arial" font-size="16" fill="white" text-anchor="middle">01</text>
+            
+            <rect x="70" y="110" width="30" height="8" rx="2" fill="#5B7C99" opacity="0.7"></rect>
+            <rect x="70" y="122" width="20" height="8" rx="2" fill="#5B7C99" opacity="0.5"></rect>
+            
+            <rect x="20" y="150" width="80" height="1" fill="#444" opacity="0.5"></rect>
+            
+            <rect x="25" y="160" width="70" height="25" rx="4" fill="#6C5CE7" opacity="0.2"></rect>
+            <text x="60" y="176" font-family="Arial" font-size="10" fill="#6C5CE7" text-anchor="middle">OPERATOR B</text>
+        </g>
+        
+        <!-- Central Animation Elements -->
+        <g transform="translate(350, 300)">
+            <circle cx="50" cy="50" r="48" fill="url(#gradient-primary)" opacity="0.15"></circle>
+            <circle cx="50" cy="50" r="38" fill="url(#gradient-primary)" opacity="0.2"></circle>
+            <circle cx="50" cy="50" r="28" fill="url(#gradient-primary)" opacity="0.4"></circle>
+            
+            <!-- Centered Number -->
+            <rect x="30" y="35" width="40" height="30" rx="5" fill="#222831" filter="url(#shadow)"></rect>
+            <text x="50" y="55" font-family="Arial" font-size="14" font-weight="bold" fill="#F0B67F" text-anchor="middle">01</text>
+            
+            <!-- Curved Arrow -->
+            <path d="M0,50 C20,0 80,0 100,50" stroke="#F0B67F" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+            
+            <!-- Subtle Pulse Animation -->
+            <style>
+                @keyframes pulse {
+                    0% { transform: scale(1); opacity: 0.6; }
+                    50% { transform: scale(1.1); opacity: 0.3; }
+                    100% { transform: scale(1); opacity: 0.6; }
+                }
+                #pulse-circle {
+                    animation: pulse 3s infinite ease-in-out;
+                }
+            </style>
+            <circle id="pulse-circle" cx="50" cy="50" r="48" fill="url(#gradient-primary)" opacity="0.2"></circle>
+        </g>
+        
+        <!-- Data Floating Elements -->
+        <g transform="translate(380, 150)">
+            <rect x="0" y="0" width="40" height="20" rx="5" fill="#5B7C99" opacity="0.6"></rect>
+            <text x="20" y="14" font-family="Arial" font-size="10" fill="white" text-anchor="middle">DATA</text>
+        </g>
+        
+        <g transform="translate(420, 190)">
+            <rect x="0" y="0" width="70" height="20" rx="5" fill="#6C5CE7" opacity="0.6"></rect>
+            <text x="35" y="14" font-family="Arial" font-size="10" fill="white" text-anchor="middle">CONTACTS</text>
+        </g>
+        
+        <g transform="translate(370, 230)">
+            <rect x="0" y="0" width="60" height="20" rx="5" fill="#F0B67F" opacity="0.6"></rect>
+            <text x="30" y="14" font-family="Arial" font-size="10" fill="white" text-anchor="middle">MEDIA</text>
+        </g>
+        
+        <!-- Arrow Marker Definition -->
+        <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#F0B67F"/>
+            </marker>
+        </defs>
+    </g>
+</svg> 

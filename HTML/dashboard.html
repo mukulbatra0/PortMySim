@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PortMySim</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../CSS/common.css">
+    <link rel="stylesheet" href="../CSS/auth.css">
+    <link rel="stylesheet" href="../CSS/page-transitions.css">
+    <style>
+        .dashboard-container {
+            background-color: var(--bg-dark-2);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2), 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .welcome-message {
+            font-size: 1.5rem;
+            color: var(--text-light);
+        }
+        
+        .dashboard-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .dashboard-card {
+            background-color: var(--bg-dark-3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .dashboard-card h3 {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        
+        .dashboard-card p {
+            color: var(--text-light-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .dashboard-card-icon {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .dashboard-card-icon i {
+            font-size: 1.5rem;
+            color: white;
+        }
+        
+        .dashboard-action {
+            margin-top: 1rem;
+        }
+        
+        .btn-dashboard {
+            background: rgba(var(--primary-rgb), 0.2);
+            color: var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 1px solid var(--primary-color);
+        }
+        
+        .btn-dashboard:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        #notLoggedInMessage {
+            display: none;
+            background-color: rgba(var(--error-rgb), 0.1);
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 2rem 0;
+            text-align: center;
+            border: 1px solid var(--error);
+        }
+    </style>
+</head>
+<body class="bg-dark-1">
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <!-- Logo -->
+                <div class="logo">
+                    <a href="index.html">
+                        <img src="../images/logo.png" alt="PortMySim Logo">
+                    </a>
+                </div>
+                
+                <!-- Main Navigation Links -->
+                <div class="nav-elements">
+                    <ul class="nav-links">
+                        <li class="nav-item"><a href="index.html" class="nav-link">Home</a></li>
+                        <li class="nav-item"><a href="how-it-works.html" class="nav-link">How It Works</a></li>
+                        <li class="nav-item"><a href="plans.html" class="nav-link">Plans</a></li>
+                        <li class="nav-item"><a href="compare.html" class="nav-link">Compare Networks</a></li>
+                        <li class="nav-item"><a href="about.html" class="nav-link">About</a></li>
+                        <li class="nav-item"><a href="contact.html" class="nav-link">Contact</a></li>
+                    </ul>
+                    
+                    <!-- Authentication Buttons - Will be updated by auth.js -->
+                    <div class="auth-btns">
+                        <a href="login.html" class="btn btn-login">Login</a>
+                        <a href="signup.html" class="btn btn-signup">Sign Up</a>
+                    </div>
+                </div>
+                
+                <!-- Hamburger Menu for Mobile -->
+                <div class="hamburger">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Dashboard Section -->
+    <section class="section">
+        <div class="container">
+            <div id="notLoggedInMessage">
+                <h2>You need to be logged in to access the dashboard</h2>
+                <p>Please <a href="login.html">log in</a> to view your dashboard</p>
+            </div>
+            
+            <div id="dashboardContent">
+                <div class="dashboard-container">
+                    <div class="dashboard-header">
+                        <h2 class="welcome-message">Welcome to your Dashboard, <span id="userName">User</span>!</h2>
+                        <button id="logoutBtn" class="btn btn-signup">Logout</button>
+                    </div>
+                    
+                    <div class="dashboard-content">
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <h3>My Porting Requests</h3>
+                            <p>Track and manage your active porting requests.</p>
+                            <p><strong>Active Requests:</strong> <span id="activeRequests">0</span></p>
+                            <div class="dashboard-action">
+                                <a href="#" class="btn-dashboard">View Requests</a>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-sim-card"></i>
+                            </div>
+                            <h3>New Porting Request</h3>
+                            <p>Start a new mobile number porting process.</p>
+                            <p>Transfer your number to a new provider easily.</p>
+                            <div class="dashboard-action">
+                                <a href="schedule-porting.html" class="btn-dashboard">Start New Request</a>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <h3>Compare Plans</h3>
+                            <p>Find the best plans for your needs.</p>
+                            <p>Compare features and prices across providers.</p>
+                            <div class="dashboard-action">
+                                <a href="plans.html" class="btn-dashboard">View Plans</a>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <div class="dashboard-card-icon">
+                                <i class="fas fa-user-cog"></i>
+                            </div>
+                            <h3>My Profile</h3>
+                            <p>Update your personal information and password.</p>
+                            <p><strong>Last Updated:</strong> <span id="lastUpdated">Never</span></p>
+                            <div class="dashboard-action">
+                                <a href="#" class="btn-dashboard">Edit Profile</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-info">
+                    <div class="footer-logo">
+                        <img src="../images/logo.png" alt="PortMySim Logo">
+                    </div>
+                    <p>PortMySim simplifies the mobile number porting process across India, allowing you to keep your existing number while changing your service provider.</p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <div class="footer-links-column">
+                        <h3>Company</h3>
+                        <ul>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="careers.html">Careers</a></li>
+                            <li><a href="blog.html">Blog</a></li>
+                            <li><a href="press.html">Press</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Support</h3>
+                        <ul>
+                            <li><a href="contact.html">Contact Us</a></li>
+                            <li><a href="help.html">Help Center</a></li>
+                            <li><a href="faq.html">FAQs</a></li>
+                            <li><a href="track.html">Track Request</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-links-column">
+                        <h3>Legal</h3>
+                        <ul>
+                            <li><a href="terms.html">Terms of Service</a></li>
+                            <li><a href="privacy.html">Privacy Policy</a></li>
+                            <li><a href="refund.html">Refund Policy</a></li>
+                            <li><a href="legal.html">Legal Notices</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="copyright">
+                    <p>&copy; <span id="year"></span> PortMySim. All rights reserved.</p>
+                </div>
+                <div class="footer-app-links">
+                    <a href="#" class="app-link">
+                        <img src="../images/app-store.png" alt="App Store">
+                    </a>
+                    <a href="#" class="app-link">
+                        <img src="../images/google-play.png" alt="Google Play">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="../JS/api.js"></script>
+    <script src="../JS/auth.js"></script>
+    <script src="../JS/main.js"></script>
+    <script>
+        // Dashboard-specific script
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is authenticated
+            if (window.PortMySimAPI && window.PortMySimAPI.isAuthenticated()) {
+                const user = window.PortMySimAPI.getUser();
+                
+                // Update user name
+                document.getElementById('userName').textContent = user.name;
+                
+                // Get user profile
+                window.PortMySimAPI.auth.getProfile()
+                    .then(response => {
+                        console.log('User profile:', response.data);
+                    })
+                    .catch(error => {
+                        console.error('Error getting profile:', error);
+                    });
+                
+                // Handle logout button
+                document.getElementById('logoutBtn').addEventListener('click', function() {
+                    window.PortMySimAPI.auth.logout();
+                });
+            } else {
+                // Hide dashboard content and show not logged in message
+                document.getElementById('dashboardContent').style.display = 'none';
+                document.getElementById('notLoggedInMessage').style.display = 'block';
+                
+                // Redirect to login after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html> 

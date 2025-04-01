@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800" height="500" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- AT&T Coverage Map - Main coverage area (Continental US) -->
+  <path d="M215,184 L232,134 L243,101 L270,108 L300,108 L347,103 L392,94 L427,82 L466,82 L493,76 L519,81 L545,81 L565,74 L591,81 L622,82 L636,94 L650,108 L650,129 L636,150 L618,168 L590,170 L566,177 L545,183 L545,199 L549,210 L553,232 L565,252 L574,270 L589,293 L589,310 L574,310 L553,317 L525,325 L498,325 L470,325 L441,325 L432,317 L420,317 L403,325 L387,332 L367,337 L347,341 L333,341 L323,332 L307,325 L290,325 L275,318 L259,315 L243,315 L231,310 L218,303 L205,296 L196,289 L186,280 L182,269 L186,258 L192,246 L192,235 L189,222 L182,211 L182,198 L189,189 L201,184 L215,184 Z" 
+        fill="#00a8e0" fill-opacity="0.2" 
+        stroke="#00a8e0" stroke-width="1" stroke-opacity="0.4"/>
+  
+  <!-- Gaps in AT&T coverage (rural areas and mountains) -->
+  <g>
+    <!-- Northern Mountain gap -->
+    <path d="M240,180 L260,170 L280,180 L270,200 L250,205 L230,195 Z" 
+          fill="#000000" fill-opacity="0.7"/>
+    
+    <!-- Midwest gap -->
+    <path d="M320,210 L350,200 L380,210 L370,230 L350,235 L320,225 Z" 
+          fill="#000000" fill-opacity="0.7"/>
+    
+    <!-- Desert Southwest gap -->
+    <path d="M430,250 L470,240 L490,260 L470,280 L440,275 L420,265 Z" 
+          fill="#000000" fill-opacity="0.7"/>
+    
+    <!-- Northwest gap -->
+    <path d="M260,140 L290,120 L320,140 L310,170 L280,175 L250,160 Z" 
+          fill="#000000" fill-opacity="0.7"/>
+  </g>
+  
+  <!-- Stronger coverage in urban areas -->
+  <g>
+    <!-- East Coast strong coverage -->
+    <path d="M510,180 L540,160 L560,175 L545,210 L520,220 L495,210 Z" 
+          fill="#00a8e0" fill-opacity="0.4"/>
+    
+    <!-- West Coast strong coverage -->
+    <path d="M220,220 L240,210 L260,220 L250,240 L230,245 L215,235 Z" 
+          fill="#00a8e0" fill-opacity="0.4"/>
+    
+    <!-- Texas/South strong coverage -->
+    <path d="M380,280 L410,270 L430,280 L420,300 L400,305 L375,295 Z" 
+          fill="#00a8e0" fill-opacity="0.4"/>
+  </g>
+  
+  <!-- Alaska coverage (limited) -->
+  <path d="M110,300 L125,285 L145,275 L170,273 L190,277 L205,285 L218,300 L215,320 L205,335 L190,345 L170,350 L145,347 L130,340 L119,330 L112,315 L110,300 Z" 
+        fill="#00a8e0" fill-opacity="0.15" 
+        stroke="#00a8e0" stroke-width="1" stroke-opacity="0.3"/>
+  
+  <!-- Hawaii coverage (good) -->
+  <path d="M220,375 C226,375 231,380 231,386 C231,392 226,397 220,397 C214,397 209,392 209,386 C209,380 214,375 220,375 Z M235,370 C241,370 246,375 246,381 C246,387 241,392 235,392 C229,392 224,387 224,381 C224,375 229,370 235,370 Z M250,377 C254,377 258,381 258,385 C258,389 254,393 250,393 C246,393 242,389 242,385 C242,381 246,377 250,377 Z" 
+        fill="#00a8e0" fill-opacity="0.3" 
+        stroke="#00a8e0" stroke-width="1" stroke-opacity="0.5"/>
+</svg> 

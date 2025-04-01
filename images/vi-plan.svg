@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400px" height="250px" viewBox="0 0 400 250" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Vi Plan Illustration</title>
+    <defs>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="viPrimaryGradient">
+            <stop stop-color="#ED1C24" offset="0%"></stop>
+            <stop stop-color="#F15A24" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="viSecondaryGradient">
+            <stop stop-color="#7F00FF" offset="0%"></stop>
+            <stop stop-color="#AA00FF" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="0%" y1="0%" x2="100%" y2="0%" id="viAccent">
+            <stop stop-color="#FFD600" offset="0%"></stop>
+            <stop stop-color="#FFAB00" offset="100%"></stop>
+        </linearGradient>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="5" />
+            <feOffset dx="0" dy="5" result="offsetblur" />
+            <feComponentTransfer>
+                <feFuncA type="linear" slope="0.3" />
+            </feComponentTransfer>
+            <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+            </feMerge>
+        </filter>
+        <!-- Pattern for background -->
+        <pattern id="viPattern" patternUnits="userSpaceOnUse" width="60" height="60" patternTransform="rotate(45)">
+            <rect width="60" height="60" fill="#7F00FF" opacity="0.03"></rect>
+            <circle cx="30" cy="30" r="20" fill="#ED1C24" opacity="0.05"></circle>
+            <path d="M0,30 L60,30" stroke="#FFD600" stroke-width="2" opacity="0.1"></path>
+        </pattern>
+    </defs>
+    <g id="vi-illustration" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <!-- Background with Pattern -->
+        <rect width="400" height="250" rx="15" fill="url(#viPattern)"></rect>
+        
+        <!-- Main Decorative Elements -->
+        <circle cx="350" cy="50" r="80" fill="url(#viSecondaryGradient)" opacity="0.1"></circle>
+        <circle cx="50" cy="200" r="100" fill="url(#viPrimaryGradient)" opacity="0.05"></circle>
+        
+        <!-- Vi Logo -->
+        <g transform="translate(40, 30)" filter="url(#shadow)">
+            <rect width="60" height="35" rx="5" fill="#FFFFFF"></rect>
+            <g transform="translate(15, 7)">
+                <path d="M0,0 L10,20 L20,0" stroke="url(#viPrimaryGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+                <path d="M25,0 L30,10 L35,0" stroke="url(#viSecondaryGradient)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+            </g>
+        </g>
+        
+        <!-- 5G Badge -->
+        <g transform="translate(110, 33)">
+            <rect width="40" height="25" rx="12.5" fill="url(#viAccent)"></rect>
+            <text x="20" y="17" font-family="Arial" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">4G</text>
+        </g>
+        
+        <!-- Plan Details Card -->
+        <g transform="translate(40, 80)" filter="url(#shadow)">
+            <rect width="320" height="140" rx="10" fill="#FFFFFF"></rect>
+            
+            <!-- Plan Name -->
+            <text x="20" y="30" font-family="Arial" font-size="18" font-weight="bold" fill="#AA00FF">Vi Basic</text>
+            
+            <!-- Price -->
+            <text x="20" y="60" font-family="Arial" font-size="24" font-weight="bold" fill="#111111">₹249</text>
+            <text x="90" y="60" font-family="Arial" font-size="14" fill="#555555">/month</text>
+            
+            <!-- Data Icon and Info -->
+            <g transform="translate(20, 85)">
+                <circle cx="12" cy="12" r="12" fill="url(#viSecondaryGradient)" opacity="0.2"></circle>
+                <path d="M6,12 L18,12 M12,6 L12,18" stroke="url(#viSecondaryGradient)" stroke-width="2" stroke-linecap="round"></path>
+                <text x="35" y="16" font-family="Arial" font-size="12" fill="#333333">1.5GB data per day</text>
+            </g>
+            
+            <!-- Call Icon and Info -->
+            <g transform="translate(180, 85)">
+                <circle cx="12" cy="12" r="12" fill="url(#viSecondaryGradient)" opacity="0.2"></circle>
+                <path d="M7,10 C7,7 9,5 12,5 C15,5 17,7 17,10 L15,14 L9,14 L7,10 Z M12,14 L12,17" stroke="url(#viSecondaryGradient)" stroke-width="1.5" stroke-linecap="round"></path>
+                <text x="35" y="16" font-family="Arial" font-size="12" fill="#333333">Unlimited calls</text>
+            </g>
+            
+            <!-- SMS Icon and Info -->
+            <g transform="translate(20, 115)">
+                <circle cx="12" cy="12" r="12" fill="url(#viSecondaryGradient)" opacity="0.2"></circle>
+                <rect x="6" y="7" width="12" height="10" rx="2" stroke="url(#viSecondaryGradient)" stroke-width="1.5" fill="none"></rect>
+                <text x="35" y="16" font-family="Arial" font-size="12" fill="#333333">100 SMS per day</text>
+            </g>
+            
+            <!-- Weekend Feature Icon and Info -->
+            <g transform="translate(180, 115)">
+                <circle cx="12" cy="12" r="12" fill="url(#viPrimaryGradient)" opacity="0.2"></circle>
+                <path d="M6,9 L18,9 L18,15 L6,15 Z" stroke="url(#viPrimaryGradient)" stroke-width="1.5" fill="none"></path>
+                <path d="M9,6 L9,9 M15,6 L15,9 M9,15 L9,18 M15,15 L15,18" stroke="url(#viPrimaryGradient)" stroke-width="1.5" stroke-linecap="round"></path>
+                <text x="35" y="16" font-family="Arial" font-size="12" fill="#333333">Weekend data rollover</text>
+            </g>
+        </g>
+        
+        <!-- Special Feature Badge -->
+        <g transform="translate(260, 40)" filter="url(#shadow)">
+            <path d="M0,15 L15,0 L40,0 L25,15 L40,30 L15,30 Z" fill="url(#viPrimaryGradient)"></path>
+            <text x="20" y="17" font-family="Arial" font-size="9" font-weight="bold" fill="#FFFFFF" text-anchor="middle" transform="rotate(-15, 20, 17)">WEEKEND</text>
+        </g>
+        
+        <!-- Animated Calendar Indicator -->
+        <g transform="translate(350, 180)">
+            <rect x="-15" y="-15" width="30" height="30" rx="3" fill="url(#viSecondaryGradient)" opacity="0.2"></rect>
+            <rect x="-12" y="-12" width="24" height="24" rx="2" fill="#FFFFFF"></rect>
+            
+            <!-- Calendar Days (Weekend Highlighted) -->
+            <g transform="translate(-9, -7)">
+                <circle cx="0" cy="0" r="2" fill="#999999"></circle>
+                <circle cx="6" cy="0" r="2" fill="#999999"></circle>
+                <circle cx="12" cy="0" r="2" fill="#999999"></circle>
+                <circle cx="18" cy="0" r="2" fill="#999999"></circle>
+                
+                <circle cx="0" cy="6" r="2" fill="#999999"></circle>
+                <circle cx="6" cy="6" r="2" fill="#999999"></circle>
+                <circle cx="12" cy="6" r="2" fill="#999999"></circle>
+                <circle cx="18" cy="6" r="2" fill="#999999"></circle>
+                
+                <circle cx="0" cy="12" r="2" fill="#999999"></circle>
+                <circle cx="6" cy="12" r="2" fill="#999999"></circle>
+                
+                <!-- Weekend Highlighted -->
+                <circle cx="12" cy="12" r="3" fill="url(#viPrimaryGradient)">
+                    <animate attributeName="r" values="3;4;3" dur="2s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="1;0.8;1" dur="2s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="18" cy="12" r="3" fill="url(#viPrimaryGradient)">
+                    <animate attributeName="r" values="3;4;3" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+                    <animate attributeName="opacity" values="1;0.8;1" dur="2s" repeatCount="indefinite" begin="0.3s"/>
+                </circle>
+            </g>
+        </g>
+    </g>
+</svg> 

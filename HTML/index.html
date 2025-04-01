@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortMySim - Smart SIM Porting Solution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../CSS/common.css">
+    <link rel="stylesheet" href="../CSS/home.css">
+    <link rel="stylesheet" href="../CSS/loader.css">
+    <link rel="icon" href="../images/logo.png" sizes="32x32" type="image/png" >
+    <!-- Dark Theme CSS is now part of common.css -->
+</head>
+<body class="bg-dark-1">
+    <!-- Loader will be added via JavaScript -->
+    
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <!-- Logo -->
+                <div class="logo animate-pop-up">
+                    <a href="index.html">
+                        <img src="../images/logo.png" alt="PortMySim Logo">
+                    </a>
+                </div>
+                
+                <!-- Main Navigation Links -->
+                <div class="nav-elements">
+                    <ul class="nav-links">
+                        <li class="nav-item animate-pop-up delay-100"><a href="index.html" class="nav-link active">Home</a></li>
+                        <li class="nav-item animate-pop-up delay-150"><a href="how-it-works.html" class="nav-link">How It Works</a></li>
+                        <li class="nav-item animate-pop-up delay-200"><a href="plans.html" class="nav-link">Plans</a></li>
+                        <li class="nav-item animate-pop-up delay-225"><a href="compare.html" class="nav-link">Compare Networks</a></li>
+                        <li class="nav-item animate-pop-up delay-250"><a href="about.html" class="nav-link">About</a></li>
+                        <li class="nav-item animate-pop-up delay-300"><a href="contact.html" class="nav-link">Contact</a></li>
+                    </ul>
+                    
+                    <!-- Authentication Buttons -->
+                    <div class="auth-btns">
+                        <a href="login.html" class="btn btn-login animate-pop-up delay-300">Login</a>
+                        <a href="signup.html" class="btn btn-signup animate-pop-up delay-400">Sign Up</a>
+                    </div>
+                </div>
+                
+                <!-- Hamburger Menu for Mobile -->
+                <div class="hamburger animate-pop-up delay-200">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+            </div>
+        </nav>
+    </header>
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text animate-pop-up">
+                    <h1 class="content-transition" data-animation="slide-up" data-delay="0.2s">Simplify Your Mobile Number Portability</h1>
+                    <p class="content-transition" data-animation="slide-up" data-delay="0.4s">PortMySim makes it easy to switch between mobile operators while keeping your number. Compare plans, complete paperwork, and track your porting status all in one place.</p>
+                    <div class="hero-buttons content-transition" data-animation="fade-in" data-delay="0.6s">
+                        <a href="schedule-porting.html" class="btn-primary" data-transition="slide">Get Started</a>
+                        <a href="how-it-works.html" class="btn-outline-white" data-transition="fade">How It Works</a>
+                    </div>
+                </div>
+                <div class="hero-image content-transition" data-animation="slide-left" data-delay="0.3s">
+                    <img src="../images/hero-illustration.svg" alt="Mobile Number Portability" class="hero-svg">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="content-transition" data-animation="slide-up">Why Choose PortMySim</h2>
+                <p class="content-transition" data-animation="slide-up" data-delay="0.2s">We make the porting process simple, transparent, and hassle-free</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.3s">
+                    <div class="feature-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <h3>Easy Switching</h3>
+                    <p>Switch between mobile operators seamlessly while keeping your existing number with our streamlined process.</p>
+                </div>
+                
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.4s">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>Compare Plans</h3>
+                    <p>Compare plans from different operators to find the best deal that suits your needs and budget.</p>
+                </div>
+                
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.5s">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3>Paperless Process</h3>
+                    <p>Complete all the necessary paperwork online without visiting any store or standing in queues.</p>
+                </div>
+                
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.6s">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Track Status</h3>
+                    <p>Track your porting status in real-time and get updates at every stage of the process.</p>
+                </div>
+                
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.7s">
+                    <div class="feature-icon">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <h3>24/7 Support</h3>
+                    <p>Our dedicated support team is available round the clock to assist you with any queries.</p>
+                </div>
+                
+                <div class="feature-card content-transition" data-animation="fade-in" data-delay="0.8s">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Secure & Private</h3>
+                    <p>Your data is encrypted and secure. We never share your personal information with third parties.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="animate-pop-up delay-100">How It Works</h2>
+                <p class="animate-pop-up delay-200">Complete your mobile number porting in just a few simple steps</p>
+            </div>
+            
+            <div class="steps-container">
+                <div class="step animate-pop-up delay-100">
+                    <div class="step-content">
+                        <div class="step-number">1</div>
+                        <h3>Choose a Plan</h3>
+                        <p>Browse and compare plans from different operators to find the one that best suits your needs.</p>
+                        <a href="plans.html" class="btn-primary animate-pop-up delay-200">Compare Plans <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="step-image">
+                        <img src="../images/choose-plan.svg" alt="Choose a Plan" class="step-svg">
+                    </div>
+                </div>
+                
+                <div class="step animate-pop-up delay-200">
+                    <div class="step-content">
+                        <div class="step-number">2</div>
+                        <h3>Submit Porting Request</h3>
+                        <p>Fill out the porting request form with your details and upload the required documents.</p>
+                        <a href="signup.html" class="btn-primary animate-pop-up delay-300">Get Started <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="step-image">
+                        <img src="../images/submit-request.svg" alt="Submit Request" class="step-svg">
+                    </div>
+                </div>
+                
+                <div class="step animate-pop-up delay-300">
+                    <div class="step-content">
+                        <div class="step-number">3</div>
+                        <h3>Track Your Status</h3>
+                        <p>Monitor the progress of your porting request in real-time through our dashboard.</p>
+                        <a href="login.html" class="btn-primary animate-pop-up delay-400">Track Status <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="step-image">
+                        <img src="../images/track-status.svg" alt="Track Status" class="step-svg">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials-section">
+        <div class="container">
+            <div class="section-title">
+                <h2 class="animate-pop-up delay-100">What Our Users Say</h2>
+                <p class="animate-pop-up delay-200">Thousands of users have successfully ported their numbers with PortMySim</p>
+            </div>
+            
+            <div class="testimonials-container">
+                <div class="testimonial-card animate-pop-up delay-100">
+                    <div class="testimonial-content">
+                        <p>I was dreading the process of changing my mobile operator, but PortMySim made it incredibly easy. The whole process was completed in just 2 days!</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="../images/testimonials/user1.jpg" alt="Rahul Sharma">
+                        </div>
+                        <div class="author-info">
+                            <h4>Rahul Sharma</h4>
+                            <p>Delhi</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card animate-pop-up delay-200">
+                    <div class="testimonial-content">
+                        <p>The plan comparison feature helped me save over ₹200 per month on my mobile bill. I wish I had known about this service earlier!</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="../images/testimonials/user2.jpg" alt="Priya Patel">
+                        </div>
+                        <div class="author-info">
+                            <h4>Priya Patel</h4>
+                            <p>Mumbai</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card animate-pop-up delay-300">
+                    <div class="testimonial-content">
+                        <p>As someone who's not tech-savvy, I found the interface very user-friendly. The customer support team was also very helpful throughout the process.</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <img src="../images/testimonials/user3.jpg" alt="Amit Kumar">
+                        </div>
+                        <div class="author-info">
+                            <h4>Amit Kumar</h4>
+                            <p>Bangalore</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA Section -->
+    <section id="cta" class="cta-section">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="content-transition" data-animation="slide-up">Ready to Switch Your Mobile Operator?</h2>
+                <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Join thousands of satisfied users who have simplified their mobile number porting process with PortMySim.</p>
+                <div class="cta-buttons content-transition" data-animation="fade-in" data-delay="0.4s">
+                    <a href="signup.html" class="btn-primary" data-transition="zoom">Get Started <i class="fas fa-arrow-right"></i></a>
+                    <a href="contact.html" class="btn-outline-white" data-transition="slide">Contact Us <i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section animate-pop-up delay-100">
+                    <h3>PortMySim</h3>
+                    <p>Making mobile number portability simple and hassle-free.</p>
+                </div>
+                <div class="footer-section animate-pop-up delay-200">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="how-it-works.html">How It Works</a></li>
+                        <li><a href="plans.html">Plans</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section animate-pop-up delay-300">
+                    <h3>Contact Us</h3>
+                    <p>Email: support@portmysim.com</p>
+                    <p>Phone: +91 1234567890</p>
+                </div>
+                <div class="footer-section animate-pop-up delay-400">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="terms.html">Terms & Conditions</a></li>
+                        <li><a href="privacyPolicy.html">Privacy Policy</a></li>
+                        <li><a href="FAQ.html">FAQ</a></li>
+                        <li><a href="helpCenter.html">Help Center</a></li>
+                        <li><a href="refundPolicy.html">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom animate-pop-up delay-500">
+                <p>&copy; <span id="currentYear"></span> PortMySim. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Main JS - Contains all consolidated JavaScript functionality -->
+    <script src="../JS/api.js"></script>
+    <script src="../JS/auth.js"></script>
+    <script src="../JS/main.js"></script>
+    <script src="../JS/loader.js"></script>
+    <script src="../JS/transitions.js"></script>
+</body>
+</html> 

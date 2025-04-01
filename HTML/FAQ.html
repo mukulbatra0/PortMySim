@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - SIM Porting Service</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../CSS/common.css">
+    <link rel="stylesheet" href="../CSS/test-navbar.css">
+    <link rel="stylesheet" href="../CSS/auth.css">
+    <link rel="stylesheet" href="../CSS/faq.css">
+    <!-- Dark Theme CSS is now part of common.css -->
+   
+    <script>
+        function toggleAnswer(id) {
+            const answer = document.getElementById(id);
+            answer.classList.toggle('show');
+        }
+    </script>
+</head>
+<body class="bg-dark-1">
+    <div class="faq-container">
+        <h1>Frequently Asked Questions (FAQ)</h1>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer1')">
+                1. What is SIM porting?
+            </div>
+            <div id="answer1" class="faq-answer">
+                SIM porting, also known as mobile number portability (MNP), allows you to switch to a new mobile network provider while keeping your existing phone number.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer2')">
+                2. How long does the SIM porting process take?
+            </div>
+            <div id="answer2" class="faq-answer">
+                The SIM porting process typically takes 1-2 business days to complete, depending on your current provider and the new network.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer3')">
+                3. Can I port my number to any network?
+            </div>
+            <div id="answer3" class="faq-answer">
+                Yes, you can port your number to any network that supports mobile number portability (MNP). However, you must ensure that your current number is eligible for porting.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer4')">
+                4. Will I experience any service disruption during porting?
+            </div>
+            <div id="answer4" class="faq-answer">
+                There may be a brief service interruption (usually a few hours) during the porting process. We recommend scheduling the porting at a convenient time.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer5')">
+                5. What information do I need to port my number?
+            </div>
+            <div id="answer5" class="faq-answer">
+                You will need your current mobile number, a valid ID proof, and your current network's customer details. You may also need a Porting Authorization Code (PAC) from your current provider.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer6')">
+                6. Can I cancel my porting request?
+            </div>
+            <div id="answer6" class="faq-answer">
+                Yes, you can cancel your porting request before the process is completed. Contact your new provider to cancel the request.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer7')">
+                7. Is there a fee for SIM porting?
+            </div>
+            <div id="answer7" class="faq-answer">
+                Some providers may charge a nominal fee for SIM porting. Please check with your new network provider for details.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer8')">
+                8. What happens to my old SIM card after porting?
+            </div>
+            <div id="answer8" class="faq-answer">
+                Your old SIM card will be deactivated once the porting process is complete. You will receive a new SIM card from your new provider.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer9')">
+                9. Can I port my number if I have an outstanding balance?
+            </div>
+            <div id="answer9" class="faq-answer">
+                You must clear any outstanding balance with your current provider before initiating the porting process.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <div class="faq-question" onclick="toggleAnswer('answer10')">
+                10. How do I check the status of my porting request?
+            </div>
+            <div id="answer10" class="faq-answer">
+                You can check the status of your porting request by contacting your new network provider or visiting their website.
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main JS - Contains all consolidated JavaScript functionality -->
+    <script src="../JS/main.js"></script>
+</body>
+</html>
