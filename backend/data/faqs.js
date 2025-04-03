@@ -104,6 +104,76 @@ const faqs = [
     category: 'porting',
     order: 10,
     isActive: true
+  },
+  {
+    question: 'Can I port my landline number?',
+    answer: 'No, mobile number portability services currently only apply to mobile numbers. Landline number portability is not available in India at this time.',
+    category: 'general',
+    order: 2,
+    isActive: true
+  },
+  {
+    question: 'What happens if my porting request is rejected?',
+    answer: 'If your porting request is rejected, you will receive an SMS with the reason for rejection. Common reasons include incorrect UPC code, outstanding dues, ongoing contractual obligations, or incomplete documentation. You can address the issue and reapply after generating a new UPC.',
+    category: 'porting',
+    order: 11,
+    isActive: true
+  },
+  {
+    question: 'Can I port my number during a nationwide lockdown or emergency?',
+    answer: 'Porting services may be affected during nationwide lockdowns or emergencies. While the electronic submission may still work, physical verification and SIM delivery might be delayed. Check with your chosen operator for the latest status.',
+    category: 'porting',
+    order: 12,
+    isActive: true
+  },
+  {
+    question: 'Do I need to be present in person for the porting process?',
+    answer: 'Yes, typically you need to be present for identity verification when submitting your porting request. Some operators may offer home delivery of the new SIM with verification at your doorstep.',
+    category: 'porting',
+    order: 13,
+    isActive: true
+  },
+  {
+    question: 'How does PortMySim make money?',
+    answer: 'PortMySim earns through referral commissions from telecom operators when users successfully port their numbers through our platform. We also generate revenue through premium service features and data insights while keeping the basic porting service free for users.',
+    category: 'general',
+    order: 3,
+    isActive: true
+  },
+  {
+    question: 'Is my data secure with PortMySim?',
+    answer: 'Yes, we take data security very seriously. We use industry-standard encryption protocols to protect your personal information and do not share it with third parties without your consent. We comply with all relevant data protection regulations.',
+    category: 'general',
+    order: 4,
+    isActive: true
+  },
+  {
+    question: 'What if I change my mind after initiating the porting process?',
+    answer: 'You can cancel your porting request before the UPC code is used by the new operator. Contact the new operator immediately to cancel the process. However, once the porting process has been initiated at the backend, it cannot be reversed.',
+    category: 'porting',
+    order: 14,
+    isActive: true
+  },
+  {
+    question: 'Will my phone work with the new network after porting?',
+    answer: 'Most modern phones are compatible with all networks. However, if your phone is locked to a specific carrier, you may need to get it unlocked before porting. Additionally, ensure your device supports the bands/frequencies used by your new operator.',
+    category: 'technical',
+    order: 3,
+    isActive: true
+  },
+  {
+    question: 'Can I use my existing SIM after porting to a new operator?',
+    answer: 'No, you cannot use your old SIM after porting. Your new service provider will give you a new SIM card which will be activated with your existing number once the porting process is complete.',
+    category: 'technical',
+    order: 4,
+    isActive: true
+  },
+  {
+    question: 'What is the difference between intra-circle and inter-circle porting?',
+    answer: 'Intra-circle porting refers to porting your number within the same telecom circle (geographic region), while inter-circle porting means porting your number to a different telecom circle. Inter-circle porting has additional requirements and may take longer to process.',
+    category: 'porting',
+    order: 15,
+    isActive: true
   }
 ];
 

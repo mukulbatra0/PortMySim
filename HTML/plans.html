@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="../CSS/common.css" />
     <link rel="stylesheet" href="../CSS/plans.css" />
     <link rel="stylesheet" href="../CSS/loader.css" />
+    <link rel="stylesheet" href="../CSS/button-styles.css" />
     <!-- Dark Theme CSS is now part of common.css -->
   </head>
   <body class="bg-dark-1">
@@ -73,351 +74,279 @@
         <div class="hero-content">
             <h1 class="hero-title content-transition" data-animation="slide-up" data-delay="0.2s">Compare Mobile Plans</h1>
             <p class="hero-text content-transition" data-animation="slide-up" data-delay="0.4s">Find and compare the best plans from leading operators</p>
+            <div class="hero-actions content-transition" data-animation="slide-up" data-delay="0.6s">
+              <a href="#plan-comparison" class="btn-primary">Compare Plans Side by Side</a>
+            </div>
         </div>
     </section>
 
-    <!-- Operator Plans Comparison -->
-    <section class="operator-comparison">
+    <!-- Plan Comparison Section -->
+    <section id="plan-comparison" class="plan-comparison-section">
       <div class="container">
         <div class="section-header">
-          <h2 class="content-transition" data-animation="slide-up">Compare Operator Plans</h2>
-          <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Find the best plan from leading operators</p>
+          <h2 class="content-transition" data-animation="slide-up">Compare Plans Side by Side</h2>
+          <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Select plans from different operators to see detailed comparisons</p>
         </div>
 
-        <div class="operator-filters">
-          <div class="filter-group">
-            <label class="filter-label" for="planType">Plan Type</label>
-            <select class="filter-select" id="planType" aria-label="Filter by plan type">
-              <option value="all">All Plans</option>
-              <option value="prepaid">Prepaid</option>
-              <option value="postpaid">Postpaid</option>
-            </select>
+        <div class="comparison-selector content-transition" data-animation="slide-up" data-delay="0.3s">
+          <div class="selector-intro">
+            <p><i class="fas fa-info-circle"></i> Select up to 3 plans to compare their features</p>
           </div>
-
-          <div class="filter-group">
-            <label class="filter-label" for="dataUsage">Data Usage</label>
-            <select class="filter-select" id="dataUsage">
-              <option value="all">All Data Plans</option>
-              <option value="low">Light (≤ 1GB/day)</option>
-              <option value="medium">Medium (1-2GB/day)</option>
-              <option value="high">Heavy (> 2GB/day)</option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <label class="filter-label" for="priceRange">Price Range</label>
-            <select class="filter-select" id="priceRange">
-              <option value="all">All Prices</option>
-              <option value="budget">Budget (≤ ₹200)</option>
-              <option value="mid">Mid-range (₹201-500)</option>
-              <option value="premium">Premium (> ₹500)</option>
-            </select>
-          </div>
-
-          <div class="filter-group">
-            <label class="filter-label" for="validity">Validity</label>
-            <select class="filter-select" id="validity">
-              <option value="all">All Durations</option>
-              <option value="monthly">Monthly</option>
-              <option value="quarterly">Quarterly</option>
-              <option value="annual">Annual</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="operator-plans-grid">
-          <!-- Jio Plan -->
-          <div class="operator-plan-card content-transition" data-animation="fade-in" data-delay="0.4s">
-            <img src="../images/jio.jpeg" alt="Jio Pattern" class="plan-background">
-            <div class="operator-logo">
-              <img src="../images/jio.jpeg" alt="Jio" />
-              <span class="network-type type-5g">5G</span>
-            </div>
-            <div class="plan-thumbnail">
-              <img src="../images/jio.jpeg" alt="Jio Premium Plan">
-            </div>
-            <div class="operator-plan-details">
-              <div class="recommendation-badge">Best Value</div>
-              <h3 class="plan-name">Jio Premium</h3>
-              <div class="plan-price">
-                <span class="currency">₹</span>299
-                <span class="period">/month</span>
+          
+          <div class="plan-selector-container">
+            <div class="selector-column">
+              <h3>Select Plan 1</h3>
+              <div class="operator-select">
+                <label for="operator1">Operator</label>
+                <select id="operator1" class="operator-dropdown">
+                  <option value="">Select Operator</option>
+                  <option value="jio">Jio</option>
+                  <option value="airtel">Airtel</option>
+                  <option value="vi">Vi</option>
+                  <option value="bsnl">BSNL</option>
+                </select>
               </div>
-              <ul class="plan-benefits">
-                <li>2GB data per day</li>
-                <li>Unlimited calls</li>
-                <li>100 SMS per day</li>
-                <li>Disney+ Hotstar subscription</li>
-                <li>JioTV access</li>
-              </ul>
-              <div class="plan-meta">
-                <div class="meta-item">
-                  <span>Network Coverage</span>
-                  <span>98%</span>
-                </div>
-                <div class="meta-item">
-                  <span>Speed</span>
-                  <span>Up to 50Mbps</span>
-                </div>
-                <div class="meta-item">
-                  <span>Validity</span>
-                  <span>28 days</span>
-                </div>
+              <div class="plan-select">
+                <label for="plan1">Plan</label>
+                <select id="plan1" class="plan-dropdown" disabled>
+                  <option value="">Select Plan</option>
+                </select>
               </div>
-              <a href="signup.html" class="btn-primary btn-select-plan" data-transition="slide">Select Plan</a>
+            </div>
+            
+            <div class="selector-column">
+              <h3>Select Plan 2</h3>
+              <div class="operator-select">
+                <label for="operator2">Operator</label>
+                <select id="operator2" class="operator-dropdown">
+                  <option value="">Select Operator</option>
+                  <option value="jio">Jio</option>
+                  <option value="airtel">Airtel</option>
+                  <option value="vi">Vi</option>
+                  <option value="bsnl">BSNL</option>
+                </select>
+              </div>
+              <div class="plan-select">
+                <label for="plan2">Plan</label>
+                <select id="plan2" class="plan-dropdown" disabled>
+                  <option value="">Select Plan</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="selector-column">
+              <h3>Select Plan 3</h3>
+              <div class="operator-select">
+                <label for="operator3">Operator</label>
+                <select id="operator3" class="operator-dropdown">
+                  <option value="">Select Operator</option>
+                  <option value="jio">Jio</option>
+                  <option value="airtel">Airtel</option>
+                  <option value="vi">Vi</option>
+                  <option value="bsnl">BSNL</option>
+                </select>
+              </div>
+              <div class="plan-select">
+                <label for="plan3">Plan</label>
+                <select id="plan3" class="plan-dropdown" disabled>
+                  <option value="">Select Plan</option>
+                </select>
+              </div>
             </div>
           </div>
-
-          <!-- Airtel Plan -->
-          <div class="operator-plan-card content-transition" data-animation="fade-in" data-delay="0.5s">
-            <img src="../images/airtel.png" alt="Airtel Pattern" class="plan-background">
-            <div class="operator-logo">
-              <img src="../images/airtel.png" alt="Airtel" />
-              <span class="network-type type-5g">5G</span>
-            </div>
-            <div class="plan-thumbnail">
-              <img src="../images/airtel.png" alt="Airtel Plan">
-            </div>
-            <div class="operator-plan-details">
-              <div class="recommendation-badge">Widest Coverage</div>
-              <h3 class="plan-name">Airtel Smart</h3>
-              <div class="plan-price">
-                <span class="currency">₹</span>349
-                <span class="period">/month</span>
-              </div>
-              <ul class="plan-benefits">
-                <li>2.5GB data per day</li>
-                <li>Unlimited calls</li>
-                <li>100 SMS per day</li>
-                <li>Amazon Prime subscription</li>
-                <li>Airtel Xstream access</li>
-              </ul>
-              <div class="plan-meta">
-                <div class="meta-item">
-                  <span>Network Coverage</span>
-                  <span>99%</span>
-                </div>
-                <div class="meta-item">
-                  <span>Speed</span>
-                  <span>Up to 100Mbps</span>
-                </div>
-                <div class="meta-item">
-                  <span>Validity</span>
-                  <span>28 days</span>
-                </div>
-              </div>
-              <a href="signup.html" class="btn-primary btn-select-plan" data-transition="slide">Select Plan</a>
-            </div>
-          </div>
-
-          <!-- Vi Plan -->
-          <div class="operator-plan-card content-transition" data-animation="fade-in" data-delay="0.6s">
-            <img src="../images/vi.png" alt="Vi Pattern" class="plan-background">
-            <div class="operator-logo">
-              <img src="../images/vi.png" alt="Vi" />
-              <span class="network-type type-4g">4G</span>
-            </div>
-            <div class="plan-thumbnail">
-              <img src="../images/vi.png" alt="Vi Plan">
-            </div>
-            <div class="operator-plan-details">
-              <div class="recommendation-badge">Budget Choice</div>
-              <h3 class="plan-name">Vi Basic</h3>
-              <div class="plan-price">
-                <span class="currency">₹</span>249
-                <span class="period">/month</span>
-              </div>
-              <ul class="plan-benefits">
-                <li>1.5GB data per day</li>
-                <li>Unlimited calls</li>
-                <li>100 SMS per day</li>
-                <li>Vi Movies & TV subscription</li>
-                <li>Weekend data rollover</li>
-              </ul>
-              <div class="plan-meta">
-                <div class="meta-item">
-                  <span>Network Coverage</span>
-                  <span>92%</span>
-                </div>
-                <div class="meta-item">
-                  <span>Speed</span>
-                  <span>Up to 40Mbps</span>
-                </div>
-                <div class="meta-item">
-                  <span>Validity</span>
-                  <span>28 days</span>
-                </div>
-              </div>
-              <a href="signup.html" class="btn-primary btn-select-plan" data-transition="slide">Select Plan</a>
-            </div>
+          
+          <div class="comparison-actions">
+            <button id="compare-plans-btn" class="btn-primary" disabled>
+              <i class="fas fa-chart-bar"></i> Compare Plans
+            </button>
+            <button id="reset-comparison-btn" class="btn-outline">
+              <i class="fas fa-redo"></i> Reset Selection
+            </button>
           </div>
         </div>
 
-        <!-- Detailed Comparison Table -->
-        <div class="plan-comparison">
-          <h2 class="content-transition" data-animation="slide-up" data-delay="0.3s">Detailed Plan Comparison</h2>
-          <div class="comparison-table content-transition" data-animation="fade-in" data-delay="0.5s">
-            <table>
-              <thead>
-                <tr>
-                  <th>Features</th>
-                  <th>
-                    <div class="operator-header">
-                      <img src="../images/jio.jpeg" alt="Jio" />
-                      <span>Jio Premium</span>
-                    </div>
-                  </th>
-                  <th>
-                    <div class="operator-header">
-                      <img
-                        src="../images/airtel.png"
-                        alt="Airtel"
-                      />
-                      <span>Airtel Premium</span>
-                    </div>
-                  </th>
-                  <th>
-                    <div class="operator-header">
-                      <img src="../images/vi.png" alt="Vi" />
-                      <span>Vi Premium</span>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Monthly Price</td>
-                  <td>₹299</td>
-                  <td>₹349</td>
-                  <td>₹319</td>
-                </tr>
-                <tr>
-                  <td>Data per Day</td>
-                  <td>2GB</td>
-                  <td>2.5GB</td>
-                  <td>2GB</td>
-                </tr>
-                <tr>
-                  <td>5G Support</td>
-                  <td><i class="fas fa-check text-success"></i></td>
-                  <td><i class="fas fa-check text-success"></i></td>
-                  <td><i class="fas fa-check text-success"></i></td>
-                </tr>
-                <tr>
-                  <td>Voice Calls</td>
-                  <td>Unlimited</td>
-                  <td>Unlimited</td>
-                  <td>Unlimited</td>
-                </tr>
-                <tr>
-                  <td>SMS per Day</td>
-                  <td>100</td>
-                  <td>100</td>
-                  <td>100</td>
-                </tr>
-                <tr>
-                  <td>Entertainment Benefits</td>
-                  <td>Disney+ Hotstar</td>
-                  <td>Amazon Prime</td>
-                  <td>Netflix Mobile</td>
-                </tr>
-                <tr>
-                  <td>Additional Apps</td>
-                  <td>JioTV, JioCinema</td>
-                  <td>Wynk Music, Airtel Xstream</td>
-                  <td>Vi Movies & TV</td>
-                </tr>
-                <tr>
-                  <td>Network Coverage</td>
-                  <td>98%</td>
-                  <td>97%</td>
-                  <td>95%</td>
-                </tr>
-                <tr>
-                  <td>5G Cities</td>
-                  <td>250+</td>
-                  <td>200+</td>
-                  <td>150+</td>
-                </tr>
-                <tr>
-                  <td>Family Add-on</td>
-                  <td>Available</td>
-                  <td>Available</td>
-                  <td>Not Available</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Coverage Map -->
-        <div class="coverage-map">
-          <h2 class="content-transition" data-animation="slide-up" data-delay="0.3s">Network Coverage Map</h2>
-          <div class="map-container content-transition" data-animation="fade-in" data-delay="0.5s" id="coverageMap">
-            <!-- Map will be loaded here using JavaScript -->
-            <div class="map-placeholder">
-              <i class="fas fa-map-marked-alt"></i>
-              <p>Interactive coverage map coming soon</p>
+        <div id="plans-comparison-result" class="plans-comparison-result content-transition" data-animation="fade-in" data-delay="0.4s">
+          <div class="text-summary-container content-transition" data-animation="slide-up" data-delay="0.3s">
+            <h3><i class="fas fa-chart-line"></i> Comparison Analysis</h3>
+            <div class="comparison-summary">
+              <!-- Summary will be populated dynamically -->
+              Select plans to see a detailed comparison analysis
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Recommendation Section -->
-    <section class="recommendation-section">
-      <div class="container">
-        <div class="section-header">
-          <h2 class="content-transition" data-animation="slide-up">Our Recommendations</h2>
-          <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Based on different user needs</p>
-        </div>
-
-        <div class="recommendations-grid">
-          <div class="recommendation-card content-transition" data-animation="fade-in" data-delay="0.3s">
-            <div class="recommendation-header">
-              <i class="fas fa-bolt"></i>
-              <h3>Best for High-Speed Data</h3>
+          
+          <div class="comparison-table-container">
+            <div class="comparison-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th class="feature-header">Features</th>
+                    <th class="plan-header plan-1">
+                      <div class="plan-header-content">
+                        <img src="../images/jio.jpeg" alt="Jio" class="operator-icon">
+                        <div class="plan-info">
+                          <h3>Jio Premium</h3>
+                          <div class="price">₹299 <span>/month</span></div>
+                        </div>
+                      </div>
+                    </th>
+                    <th class="plan-header plan-2">
+                      <div class="plan-header-content">
+                        <img src="../images/airtel.png" alt="Airtel" class="operator-icon">
+                        <div class="plan-info">
+                          <h3>Airtel Smart</h3>
+                          <div class="price">₹349 <span>/month</span></div>
+                        </div>
+                      </div>
+                    </th>
+                    <th class="plan-header plan-3">
+                      <div class="plan-header-content">
+                        <img src="../images/vi.png" alt="Vi" class="operator-icon">
+                        <div class="plan-info">
+                          <h3>Vi Basic</h3>
+                          <div class="price">₹249 <span>/month</span></div>
+                        </div>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="feature-name">Daily Data</td>
+                    <td class="feature-value best">2GB/day</td>
+                    <td class="feature-value best">2.5GB/day</td>
+                    <td class="feature-value">1.5GB/day</td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">Validity</td>
+                    <td class="feature-value">28 days</td>
+                    <td class="feature-value">28 days</td>
+                    <td class="feature-value">28 days</td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">Voice Calls</td>
+                    <td class="feature-value best">Unlimited</td>
+                    <td class="feature-value best">Unlimited</td>
+                    <td class="feature-value best">Unlimited</td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">SMS</td>
+                    <td class="feature-value">100/day</td>
+                    <td class="feature-value">100/day</td>
+                    <td class="feature-value">100/day</td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">5G Access</td>
+                    <td class="feature-value best"><i class="fas fa-check"></i></td>
+                    <td class="feature-value best"><i class="fas fa-check"></i></td>
+                    <td class="feature-value"><i class="fas fa-times"></i></td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">Bundled Subscriptions</td>
+                    <td class="feature-value">Disney+ Hotstar</td>
+                    <td class="feature-value best">Amazon Prime</td>
+                    <td class="feature-value">Vi Movies & TV</td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">Network Coverage</td>
+                    <td class="feature-value">98%</td>
+                    <td class="feature-value best">99%</td>
+                    <td class="feature-value">92%</td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">Data Speed</td>
+                    <td class="feature-value">50 Mbps</td>
+                    <td class="feature-value best">100 Mbps</td>
+                    <td class="feature-value">40 Mbps</td>
+                  </tr>
+                  <tr>
+                    <td class="feature-name">Extra Benefits</td>
+                    <td class="feature-value">JioTV access</td>
+                    <td class="feature-value">Airtel Xstream</td>
+                    <td class="feature-value">Weekend data rollover</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div class="recommendation-content">
-              <p>
-                If you're a heavy data user who needs fast internet for
-                streaming and gaming:
-              </p>
-              <ul>
-                <li>Airtel Premium Plan (2.5GB/day)</li>
-                <li>Extensive 5G coverage</li>
-                <li>Priority network access</li>
-              </ul>
+            
+            <div class="comparison-summary">
+              <div class="summary-card jio">
+                <div class="summary-header">
+                  <img src="../images/jio.jpeg" alt="Jio" class="operator-icon">
+                  <div class="summary-title">
+                    <h3>Jio Premium</h3>
+                    <div class="badge best-value">Best Value</div>
+                  </div>
+                </div>
+                <div class="summary-price">₹299 <span>/month</span></div>
+                <div class="summary-highlight">Great for streaming with Disney+ Hotstar</div>
+                <a href="signup.html" class="btn-primary">Select Plan</a>
+              </div>
+              
+              <div class="summary-card airtel">
+                <div class="summary-header">
+                  <img src="../images/airtel.png" alt="Airtel" class="operator-icon">
+                  <div class="summary-title">
+                    <h3>Airtel Smart</h3>
+                    <div class="badge best-data">Best Data</div>
+                  </div>
+                </div>
+                <div class="summary-price">₹349 <span>/month</span></div>
+                <div class="summary-highlight">Best for heavy data users with Amazon Prime</div>
+                <a href="signup.html" class="btn-primary">Select Plan</a>
+              </div>
+              
+              <div class="summary-card vi">
+                <div class="summary-header">
+                  <img src="../images/vi.png" alt="Vi" class="operator-icon">
+                  <div class="summary-title">
+                    <h3>Vi Basic</h3>
+                    <div class="badge budget">Budget Pick</div>
+                  </div>
+                </div>
+                <div class="summary-price">₹249 <span>/month</span></div>
+                <div class="summary-highlight">Most affordable with weekend data rollover</div>
+                <a href="signup.html" class="btn-primary">Select Plan</a>
+              </div>
             </div>
           </div>
-
-          <div class="recommendation-card content-transition" data-animation="fade-in" data-delay="0.4s">
-            <div class="recommendation-header">
-              <i class="fas fa-tv"></i>
-              <h3>Best for Entertainment</h3>
-            </div>
-            <div class="recommendation-content">
-              <p>For users who love streaming movies and TV shows:</p>
-              <ul>
-                <li>Vi Premium Plan</li>
-                <li>Netflix Mobile subscription</li>
-                <li>Additional entertainment apps</li>
-              </ul>
-            </div>
-          </div>
-
-          <div class="recommendation-card content-transition" data-animation="fade-in" data-delay="0.5s">
-            <div class="recommendation-header">
-              <i class="fas fa-piggy-bank"></i>
-              <h3>Best Value for Money</h3>
-            </div>
-            <div class="recommendation-content">
-              <p>For budget-conscious users who need a balanced plan:</p>
-              <ul>
-                <li>Jio Premium Plan</li>
-                <li>Competitive pricing</li>
-                <li>Comprehensive benefits</li>
-              </ul>
+          
+          <div class="value-meter-container content-transition" data-animation="slide-up" data-delay="0.5s">
+            <h3>Value Score</h3>
+            <p>How much are you getting for your money?</p>
+            
+            <div class="value-meters">
+              <div class="value-meter jio">
+                <div class="meter-label">
+                  <img src="../images/jio.jpeg" alt="Jio" class="operator-icon-small">
+                  <span>Jio Premium</span>
+                </div>
+                <div class="meter-bar">
+                  <div class="meter-fill" style="width: 85%"></div>
+                </div>
+                <div class="meter-value">8.5/10</div>
+              </div>
+              
+              <div class="value-meter airtel">
+                <div class="meter-label">
+                  <img src="../images/airtel.png" alt="Airtel" class="operator-icon-small">
+                  <span>Airtel Smart</span>
+                </div>
+                <div class="meter-bar">
+                  <div class="meter-fill" style="width: 90%"></div>
+                </div>
+                <div class="meter-value">9.0/10</div>
+              </div>
+              
+              <div class="value-meter vi">
+                <div class="meter-label">
+                  <img src="../images/vi.png" alt="Vi" class="operator-icon-small">
+                  <span>Vi Basic</span>
+                </div>
+                <div class="meter-bar">
+                  <div class="meter-fill" style="width: 75%"></div>
+                </div>
+                <div class="meter-value">7.5/10</div>
+              </div>
             </div>
           </div>
         </div>
@@ -426,53 +355,51 @@
 
     <!-- Footer -->
     <footer class="footer">
-      <div class="container">
-        <div class="footer-content">
-          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.3s">
-            <h3>PortMySim</h3>
-            <p>Making mobile number portability simple and hassle-free.</p>
-          </div>
-          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.4s">
-            <h3>Quick Links</h3>
-            <ul>
-              <li><a href="index.html" data-transition="fade">Home</a></li>
-              <li><a href="how-it-works.html" data-transition="fade">How It Works</a></li>
-              <li><a href="plans.html" data-transition="fade">Plans</a></li>
-              <li><a href="compare.html" data-transition="fade">Compare Networks</a></li>
-              <li><a href="about.html" data-transition="fade">About</a></li>
-              <li><a href="contact.html" data-transition="fade">Contact</a></li>
-            </ul>
-          </div>
-          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.5s">
-            <h3>Contact Us</h3>
-            <p>Email: support@portmysim.com</p>
-            <p>Phone: +91 1234567890</p>
-          </div>
-          <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.6s">
-            <h3>Support</h3>
-            <ul>
-              <li><a href="terms-of-service.html" data-transition="fade">Terms & Conditions</a></li>
-              <li><a href="privacy-policy.html" data-transition="fade">Privacy Policy</a></li>
-              <li><a href="faq.html" data-transition="fade">FAQ</a></li>
-              <li><a href="help-center.html" data-transition="fade">Help Center</a></li>
-              <li><a href="refund-policy.html" data-transition="fade">Refund Policy</a></li>
-            </ul>
-          </div>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section animate-pop-up delay-100">
+                    <h3>PortMySim</h3>
+                    <p>Making mobile number portability simple and hassle-free.</p>
+                </div>
+                <div class="footer-section animate-pop-up delay-200">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="how-it-works.html">How It Works</a></li>
+                        <li><a href="plans.html">Plans</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section animate-pop-up delay-300">
+                    <h3>Contact Us</h3>
+                    <p>Email: support@portmysim.com</p>
+                    <p>Phone: +91 1234567890</p>
+                </div>
+                <div class="footer-section animate-pop-up delay-400">
+                    <h3>Support</h3>
+                    <ul>
+                        <li><a href="terms.html">Terms & Conditions</a></li>
+                        <li><a href="privacyPolicy.html">Privacy Policy</a></li>
+                        <li><a href="FAQ.html">FAQ</a></li>
+                        <li><a href="helpCenter.html">Help Center</a></li>
+                        <li><a href="refundPolicy.html">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom animate-pop-up delay-500">
+                <p>&copy; <span id="currentYear"></span> PortMySim. All rights reserved.</p>
+            </div>
         </div>
-        <div class="footer-bottom content-transition" data-animation="fade-in" data-delay="0.7s">
-          <p>
-            &copy; <span id="currentYear"></span> PortMySim. All rights
-            reserved.
-          </p>
-        </div>
-      </div>
     </footer>
-
-    <!-- Main JS - Contains all consolidated JavaScript functionality -->
-    <script src="../JS/main.js"></script>
-    <script src="../JS/loader.js"></script>
-    <script src="../JS/transitions.js"></script>
+    
+    <!-- Scripts -->
+    <script src="../JS/common.js" defer></script>
+    <script src="../JS/plans.js" defer></script>
+    <script src="../JS/transitions.js" defer></script>
     <script src="../JS/api.js"></script>
     <script src="../JS/auth.js"></script>
+    <script src="../JS/main.js"></script>
+    <script src="../JS/loader.js"></script>
   </body>
 </html>

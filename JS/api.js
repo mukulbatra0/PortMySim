@@ -142,4 +142,130 @@ window.PortMySimAPI = {
   auth: authAPI,
   isAuthenticated,
   getUser
-}; 
+};
+
+/**
+ * API utilities for fetching data from the backend
+ */
+
+/**
+ * Fetch all plans with optional filtering
+ * @param {Object} filters - Query parameters for filtering
+ * @returns {Promise} - Resolves to plans data
+ */
+export async function fetchPlans(filters = {}) {
+  try {
+    // Build query string from filters
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        queryParams.append(key, value);
+      }
+    });
+    
+    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+    const response = await fetch(`${API_BASE_URL}/plans${queryString}`);
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching plans: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch plans by operator
+ * @param {string} operator - Operator name (jio, airtel, vi, bsnl)
+ * @returns {Promise} - Resolves to plans data for the operator
+ */
+export async function fetchPlansByOperator(operator) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/operators/${operator}/plans`);
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching operator plans: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Compare multiple plans
+ * @param {Array} planIds - Array of plan IDs to compare
+ * @returns {Promise} - Resolves to comparison data
+ */
+export async function comparePlans(planIds) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/plans/compare`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ planIds })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error comparing plans: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch similar plans for comparison
+ * @param {Object} options - Options for finding similar plans
+ * @param {string} options.planId - Base plan ID
+ * @param {number} options.priceRange - Price range for finding similar plans
+ * @param {string} options.operator - Operator to filter plans
+ * @returns {Promise} - Resolves to similar plans data
+ */
+export async function fetchSimilarPlans({ planId, priceRange, operator }) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (planId) queryParams.append('planId', planId);
+    if (priceRange) queryParams.append('priceRange', priceRange);
+    if (operator) queryParams.append('operator', operator);
+    
+    const response = await fetch(`${API_BASE_URL}/plans/similar?${queryParams.toString()}`);
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching similar plans: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Fetch recommended plans
+ * @returns {Promise} - Resolves to recommended plans data
+ */
+export async function fetchRecommendedPlans() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/plans/recommended`);
+    
+    if (!response.ok) {
+      throw new Error(`Error fetching recommended plans: ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+} 

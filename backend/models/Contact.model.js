@@ -18,9 +18,11 @@ const contactSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
+      required: [true, 'Please add your phone number'],
+      // Looser validation to allow international formats
       match: [
-        /^[6-9]\d{9}$/,
-        'Please add a valid 10-digit phone number'
+        /^[0-9+\-\s()]{10,15}$/,
+        'Please add a valid phone number'
       ]
     },
     subject: {
@@ -39,14 +41,17 @@ const contactSchema = new mongoose.Schema(
       default: 'new'
     },
     responseMessage: {
-      type: String
+      type: String,
+      default: ''
     },
     responseDate: {
-      type: Date
+      type: Date,
+      default: null
     },
     respondedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'User',
+      default: null
     }
   },
   {
@@ -54,6 +59,14 @@ const contactSchema = new mongoose.Schema(
   }
 );
 
-const Contact = mongoose.model('Contact', contactSchema);
+// Update mongoose model to ensure it's properly created
+let Contact;
+try {
+  // Try to get existing model first to avoid overwriting
+  Contact = mongoose.model('Contact');
+} catch (error) {
+  // Model doesn't exist yet, create it
+  Contact = mongoose.model('Contact', contactSchema);
+}
 
 module.exports = Contact; 

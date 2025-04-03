@@ -1,0 +1,223 @@
+/* New Button Styles with Improved Colors and Shapes */
+.btn-primary {
+    background: linear-gradient(135deg, #FF8A65, #FF5252);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    box-shadow: 0 8px 15px rgba(255, 82, 82, 0.3);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+}
+
+.btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                transparent 100%);
+    transition: all 0.6s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 20px rgba(255, 82, 82, 0.4);
+}
+
+.btn-primary:hover::before {
+    left: 100%;
+    animation: shine 1.5s infinite;
+}
+
+.btn-primary:hover i {
+    animation: icon-bounce 1s infinite;
+}
+
+.btn-primary:active {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(255, 82, 82, 0.3);
+    animation: btn-press 0.3s forwards;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    background: linear-gradient(135deg, #999, #777);
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: var(--text-light);
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    border: 2px solid rgba(255, 138, 101, 0.4);
+    cursor: pointer;
+    transition: all 0.4s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+}
+
+.btn-outline::before {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    background: linear-gradient(135deg, rgba(255, 138, 101, 0.1), rgba(255, 82, 82, 0.05));
+    transition: all 0.4s ease;
+    z-index: -1;
+    border-radius: 50px;
+}
+
+.btn-outline:hover {
+    border-color: #FF8A65;
+    color: #FF8A65;
+    transform: translateY(-6px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-outline:hover::before {
+    height: 100%;
+    animation: fill-up 0.5s forwards;
+}
+
+.btn-outline:hover i {
+    animation: icon-rotate 1.5s infinite ease;
+}
+
+.btn-outline:active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    animation: btn-press 0.3s forwards;
+}
+
+/* Special button styles for comparison actions */
+.comparison-actions .btn-primary {
+    background: linear-gradient(135deg, #FF8A65, #FF5252);
+    padding: 1.2rem 2.5rem;
+    box-shadow: 0 10px 25px rgba(255, 82, 82, 0.5);
+    min-width: 200px;
+    letter-spacing: 2px;
+    font-size: 1rem;
+}
+
+.comparison-actions .btn-primary:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 30px rgba(255, 82, 82, 0.6);
+    animation: pulse-subtle 2s infinite;
+}
+
+.comparison-actions .btn-outline {
+    border: 2px solid rgba(255, 138, 101, 0.4);
+    padding: 1.2rem 2.5rem;
+    min-width: 200px;
+    letter-spacing: 2px;
+    font-size: 1rem;
+}
+
+.comparison-actions .btn-outline:hover {
+    transform: translateY(-10px);
+    animation: float-subtle 4s infinite ease-in-out;
+}
+
+/* Summary card specific button colors */
+.summary-card.jio .btn-primary {
+    background: linear-gradient(135deg, #ff8a65, #ff5252);
+}
+
+.summary-card.airtel .btn-primary {
+    background: linear-gradient(135deg, #4ecdc4, #2cbfc9);
+}
+
+.summary-card.vi .btn-primary {
+    background: linear-gradient(135deg, #ffd166, #ffb347);
+}
+
+/* Make buttons responsive */
+@media (max-width: 768px) {
+    .btn-primary, .btn-outline {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.8rem;
+    }
+    
+    .comparison-actions .btn-primary,
+    .comparison-actions .btn-outline {
+        width: 100%;
+        max-width: 300px;
+        padding: 1rem 1.8rem;
+    }
+} 
+
+/* New Button Animations */
+@keyframes shine {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+}
+
+@keyframes icon-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+@keyframes icon-rotate {
+    0% { transform: rotate(0); }
+    25% { transform: rotate(10deg); }
+    75% { transform: rotate(-10deg); }
+    100% { transform: rotate(0); }
+}
+
+@keyframes btn-press {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+}
+
+@keyframes fill-up {
+    0% { height: 0; }
+    100% { height: 100%; }
+}
+
+@keyframes pulse-subtle {
+    0% { transform: translateY(-10px) scale(1); }
+    50% { transform: translateY(-10px) scale(1.03); }
+    100% { transform: translateY(-10px) scale(1); }
+}
+
+/* Add focus state animation for better accessibility */
+.btn-primary:focus, .btn-outline:focus {
+    outline: none;
+    animation: focus-pulse 2s infinite;
+}
+
+@keyframes focus-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 138, 101, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(255, 138, 101, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 138, 101, 0); }
+} 

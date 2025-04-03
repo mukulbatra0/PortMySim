@@ -1,96 +1,146 @@
-# PortMySim Backend API
+# Plans Comparison API
 
-Backend API for PortMySim - Mobile number porting service
+This document provides instructions for setting up and using the Plans Comparison API backend for PortMySim.
 
-## Setup Instructions
+## Table of Contents
 
-1. Install dependencies:
-   ```
+- [Overview](#overview)
+- [Setup](#setup)
+- [API Endpoints](#api-endpoints)
+- [Data Model](#data-model)
+- [Frontend Integration](#frontend-integration)
+- [Development](#development)
+
+## Overview
+
+The Plans Comparison API provides functionality to:
+
+- Retrieve, filter, and compare mobile plans from different operators
+- Calculate value scores and determine the best features for comparison
+- Support dynamic filtering by operator, plan type, data usage, price, and validity
+
+## Setup
+
+### Prerequisites
+
+- Node.js (v14 or later)
+- MongoDB (local or Atlas)
+
+### Installation
+
+1. Make sure MongoDB is running
+2. Install dependencies:
+   ```bash
    npm install
    ```
 
-2. Create a `.env` file in the root directory with the following variables:
+3. Setup environment variables:
+   Create a `.env` file in the root directory with:
    ```
+   MONGODB_URI=mongodb://localhost:27017/portmysim
    PORT=5000
    NODE_ENV=development
-   MONGO_URI=mongodb://localhost:27017/portmysim
-   JWT_SECRET=your_jwt_secret_key_change_in_production
-   JWT_EXPIRE=30d
    ```
 
-3. Start the development server:
+4. Run the setup script:
+   ```bash
+   npm run setup-plans
    ```
+   This will:
+   - Create necessary directories if they don't exist
+   - Seed the database with initial plan data
+   - Test the API endpoints
+
+5. Start the server:
+   ```bash
    npm run dev
    ```
 
-4. Start the production server:
-   ```
-   npm start
-   ```
-
-5. Seed the database with sample data:
-   ```
-   npm run data:import
-   ```
-
-6. Delete all data from the database:
-   ```
-   npm run data:destroy
-   ```
-
-## Implementation Steps
-
-1. ✅ Basic Setup: Create the project structure, install dependencies, setup express server
-2. ✅ Database Setup: Configure MongoDB connection, create models, seed data
-3. ✅ Authentication: Implement JWT authentication, user registration, login, and password reset
-4. ⬜ User Management: Implement user profile management, admin features
-5. ⬜ Porting Services: Implement porting request submission and tracking
-6. ⬜ Plan Management: Implement plan comparison and selection
-7. ⬜ Contact & Support: Implement contact forms and FAQ system
-8. ⬜ Testing & Documentation: Complete API testing and documentation
-
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user and get token
-- `GET /api/auth/me` - Get current logged in user (Protected)
-- `POST /api/auth/forgot-password` - Request password reset
-- `PUT /api/auth/reset-password/:resetToken` - Reset password with token
+### Plan Operations
 
-### Users
-- `GET /api/users` - Get all users (Admin only)
-- `GET /api/users/:id` - Get user by ID (Admin only)
-- `PUT /api/users/:id` - Update user (Protected)
-- `DELETE /api/users/:id` - Delete user (Admin only)
+- `GET /api/plans` - Get all plans with optional filtering
+  - Query params: operator, plan_type, data_category, price_category, validity_category
+  - Example: `/api/plans?operator=jio&data_category=high`
 
-### Porting
-- `POST /api/porting/submit` - Submit a porting request
-- `GET /api/porting/requests` - Get all porting requests for a user
-- `GET /api/porting/status/:id` - Get status of a specific porting request
-- `GET /api/porting/providers` - Get list of service providers
-- `GET /api/porting/circles` - Get list of telecom circles
+- `GET /api/plans/:id` - Get a specific plan by ID
 
-### Plans
-- `GET /api/plans` - Get all plans
-- `GET /api/plans/:id` - Get a specific plan
-- `GET /api/plans/provider/:provider` - Get plans for a specific provider
+- `GET /api/operators/:operator/plans` - Get all plans for a specific operator
+
+- `GET /api/plans/recommended` - Get recommended plans
+
 - `POST /api/plans/compare` - Compare multiple plans
+  - Body: `{ "planIds": ["id1", "id2", "id3"] }`
 
-### Contact
-- `POST /api/contact/submit` - Submit a contact form
-- `POST /api/contact/support` - Create a support ticket
-- `GET /api/contact/support` - Get all support tickets for a user
-- `GET /api/contact/faqs` - Get all FAQs
+### Admin Operations
 
-## Authentication
+- `POST /api/plans` - Create a new plan
+- `PUT /api/plans/:id` - Update an existing plan
+- `DELETE /api/plans/:id` - Delete a plan
 
-The API uses JWT (JSON Web Token) for authentication. When a user registers or logs in, the server returns a token. This token must be included in the Authorization header for protected routes:
+## Data Model
 
+The Plan schema includes:
+
+```javascript
+{
+  operator: String,         // jio, airtel, vi, bsnl
+  name: String,             // Plan name
+  price: Number,            // Plan price
+  data: String,             // Data amount (e.g., "2GB/day")
+  data_value: Number,       // Numeric value for comparison
+  validity: Number,         // Validity in days
+  voice_calls: String,      // Voice call details
+  sms: String,              // SMS details
+  has_5g: Boolean,          // Whether 5G is supported
+  subscriptions: [String],  // Bundled subscriptions
+  network_coverage: Number, // Coverage percentage
+  data_speed: Number,       // Speed in Mbps
+  extra_benefits: [String], // Additional benefits
+  plan_type: String,        // prepaid/postpaid
+  data_category: String,    // low/medium/high
+  price_category: String,   // budget/mid/premium
+  validity_category: String,// monthly/quarterly/annual
+  image: String,            // URL to operator logo
+  recommendation: String    // Best Value, Budget Choice, etc.
+}
 ```
-Authorization: Bearer <token>
+
+## Frontend Integration
+
+The frontend is already integrated with the API in the `../JS/plans.js` file, which:
+
+1. Loads plans from the API
+2. Enables filtering based on user selections
+3. Supports adding plans to a comparison cart
+4. Fetches comparison data when the user clicks "Compare Plans"
+5. Dynamically updates the comparison table with API results
+
+## Development
+
+### Seeding the Database
+
+To reset the database with fresh plan data:
+
+```bash
+npm run seed
 ```
 
-- Public routes: No authentication required
-- Protected routes: Valid JWT token required in Authorization header
-- Admin routes: Valid JWT token with admin role required 
+### Adding New Plan Features
+
+To add new plan features:
+
+1. Update the Plan schema in `models/Plan.js`
+2. Add handling in the controller methods in `controllers/planController.js`
+3. Update the comparison logic in the `comparePlans` method of the Plan model
+4. Update the frontend to display the new features
+
+### Handling New Operators
+
+To add support for new operators:
+
+1. Update the `operator` enum in the Plan schema
+2. Add operator image to the images directory
+3. Update the `getOperatorImage` function in `utils/planHelper.js`
+4. Add sample plans for the new operator in `scripts/seedPlans.js` 

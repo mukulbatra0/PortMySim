@@ -5,28 +5,104 @@ const telecomCircles = [
     name: 'Andhra Pradesh & Telangana',
     code: 'AP',
     regions: ['Andhra Pradesh', 'Telangana'],
-    major_cities: ['Hyderabad', 'Vijayawada', 'Visakhapatnam', 'Warangal']
+    major_cities: ['Hyderabad', 'Vijayawada', 'Visakhapatnam', 'Warangal'],
+    operators: ['airtel', 'jio', 'vi', 'bsnl'],
+    network_quality: {
+      airtel: 4.2,
+      jio: 4.5,
+      vi: 3.8,
+      bsnl: 3.2
+    },
+    average_data_speed: {
+      airtel: 35,
+      jio: 40,
+      vi: 30,
+      bsnl: 15
+    },
+    population_coverage: {
+      airtel: 96,
+      jio: 98,
+      vi: 90,
+      bsnl: 85
+    }
   },
   {
     id: 'assam',
     name: 'Assam',
     code: 'AS',
     regions: ['Assam'],
-    major_cities: ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat']
+    major_cities: ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat'],
+    operators: ['airtel', 'jio', 'vi', 'bsnl'],
+    network_quality: {
+      airtel: 3.8,
+      jio: 4.0,
+      vi: 3.5,
+      bsnl: 3.4
+    },
+    average_data_speed: {
+      airtel: 25,
+      jio: 30,
+      vi: 20,
+      bsnl: 15
+    },
+    population_coverage: {
+      airtel: 85,
+      jio: 90,
+      vi: 75,
+      bsnl: 80
+    }
   },
   {
     id: 'bihar',
     name: 'Bihar & Jharkhand',
     code: 'BR',
     regions: ['Bihar', 'Jharkhand'],
-    major_cities: ['Patna', 'Ranchi', 'Jamshedpur', 'Gaya']
+    major_cities: ['Patna', 'Ranchi', 'Jamshedpur', 'Gaya'],
+    operators: ['airtel', 'jio', 'vi', 'bsnl'],
+    network_quality: {
+      airtel: 3.7,
+      jio: 4.1,
+      vi: 3.4,
+      bsnl: 3.0
+    },
+    average_data_speed: {
+      airtel: 25,
+      jio: 35,
+      vi: 20,
+      bsnl: 12
+    },
+    population_coverage: {
+      airtel: 88,
+      jio: 93,
+      vi: 78,
+      bsnl: 85
+    }
   },
   {
     id: 'delhi',
     name: 'Delhi NCR',
     code: 'DL',
     regions: ['Delhi', 'Parts of Uttar Pradesh', 'Parts of Haryana'],
-    major_cities: ['New Delhi', 'Gurgaon', 'Noida', 'Faridabad']
+    major_cities: ['New Delhi', 'Gurgaon', 'Noida', 'Faridabad'],
+    operators: ['airtel', 'jio', 'vi', 'bsnl'],
+    network_quality: {
+      airtel: 4.7,
+      jio: 4.8,
+      vi: 4.3,
+      bsnl: 3.5
+    },
+    average_data_speed: {
+      airtel: 60,
+      jio: 65,
+      vi: 45,
+      bsnl: 20
+    },
+    population_coverage: {
+      airtel: 99,
+      jio: 99,
+      vi: 97,
+      bsnl: 90
+    }
   },
   {
     id: 'gujarat',
@@ -75,7 +151,26 @@ const telecomCircles = [
     name: 'Kolkata',
     code: 'KO',
     regions: ['Kolkata'],
-    major_cities: ['Kolkata']
+    major_cities: ['Kolkata'],
+    operators: ['airtel', 'jio', 'vi', 'bsnl'],
+    network_quality: {
+      airtel: 4.4,
+      jio: 4.5,
+      vi: 4.0,
+      bsnl: 3.3
+    },
+    average_data_speed: {
+      airtel: 50,
+      jio: 55,
+      vi: 38,
+      bsnl: 16
+    },
+    population_coverage: {
+      airtel: 97,
+      jio: 98,
+      vi: 94,
+      bsnl: 86
+    }
   },
   {
     id: 'maharashtra',
@@ -96,7 +191,26 @@ const telecomCircles = [
     name: 'Mumbai',
     code: 'MU',
     regions: ['Mumbai', 'Navi Mumbai', 'Thane'],
-    major_cities: ['Mumbai', 'Navi Mumbai', 'Thane']
+    major_cities: ['Mumbai', 'Navi Mumbai', 'Thane'],
+    operators: ['airtel', 'jio', 'vi', 'bsnl'],
+    network_quality: {
+      airtel: 4.6,
+      jio: 4.7,
+      vi: 4.2,
+      bsnl: 3.4
+    },
+    average_data_speed: {
+      airtel: 55,
+      jio: 60,
+      vi: 40,
+      bsnl: 18
+    },
+    population_coverage: {
+      airtel: 98,
+      jio: 99,
+      vi: 95,
+      bsnl: 88
+    }
   },
   {
     id: 'northeast',

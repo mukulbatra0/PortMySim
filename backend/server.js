@@ -1,53 +1,66 @@
+require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const dotenv = require('dotenv');
 const path = require('path');
 const connectDB = require('./config/db');
-const errorHandler = require('./middlewares/error.middleware');
+const contactRoutes = require('./routes/contact');
+const planRoutes = require('./routes/plans.routes');
 
-// Load environment variables
-dotenv.config();
-
-// Initialize Express app
 const app = express();
 
+// Connect to MongoDB with error handling
+connectDB().catch(err => {
+    console.error('Failed to connect to MongoDB:', err);
+    process.exit(1);
+});
+
+// CORS configuration
+const corsOptions = {
+    origin: '*', // Allow all origins for now
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+};
+
 // Middleware
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
-app.use(helmet());
-app.use(morgan('dev'));
 
-// Set default port
-const PORT = process.env.PORT || 5000;
+// Logging middleware
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
+
+// Serve static files from the root directory
+app.use(express.static(path.join(__dirname, '..')));
 
 // Routes
-app.use('/api/auth', require('./routes/auth.routes'));
-app.use('/api/users', require('./routes/users.routes'));
-app.use('/api/porting', require('./routes/porting.routes'));
-app.use('/api/plans', require('./routes/plans.routes'));
-app.use('/api/contact', require('./routes/contact.routes'));
+app.use('/api/contact', contactRoutes);
+app.use('/api', planRoutes);
 
-// Root route
+// Serve index.html for the root route
 app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to PortMySim API' });
+    res.sendFile(path.join(__dirname, '..', 'HTML', 'index.html'));
+});
+
+// Serve HTML files
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'HTML', req.path));
 });
 
 // Error handling middleware
-app.use(errorHandler);
-
-// Connect to MongoDB and start server
-connectDB()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+app.use((err, req, res, next) => {
+    console.error('Error:', err.stack);
+    res.status(500).json({
+        success: false,
+        message: 'Something went wrong!',
+        error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
-  })
-  .catch((error) => {
-    console.error('Database connection failed:', error);
-  });
+});
 
-module.exports = app; 
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Access the application at http://localhost:${PORT}`);
+}); 

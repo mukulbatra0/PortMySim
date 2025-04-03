@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Form Test - PortMySim</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact Form Test</h1>
+        
+        <div>
+            <button id="testRouteBtn">Test Contact Route</button>
+            <div id="routeTestResponse" class="response" style="display: none;"></div>
+        </div>
+        
+        <hr style="margin: 20px 0;">
+        
+        <form id="testContactForm">
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" id="name" name="name" value="Test User" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="test@example.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">Phone (10 digits)</label>
+                <input type="tel" id="phone" name="phone" value="9876543210" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject" required>
+                    <option value="test">Test Subject</option>
+                    <option value="porting">Porting Query</option>
+                    <option value="plans">Plans & Pricing</option>
+                    <option value="technical">Technical Support</option>
+                    <option value="feedback">Feedback</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="message">Message</label>
+                <textarea id="message" name="message" rows="4" required>This is a test message to verify that the contact form is working correctly.</textarea>
+            </div>
+            
+            <button type="submit">Submit Form</button>
+        </form>
+        
+        <div id="formResponse" class="response" style="display: none;"></div>
+        
+        <div class="log">
+            <h3>Request/Response Log</h3>
+            <pre id="logOutput"></pre>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const testContactForm = document.getElementById('testContactForm');
+            const formResponse = document.getElementById('formResponse');
+            const routeTestResponse = document.getElementById('routeTestResponse');
+            const logOutput = document.getElementById('logOutput');
+            const testRouteBtn = document.getElementById('testRouteBtn');
+            
+            // Helper function to log messages
+            function log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                logOutput.textContent += `[${timestamp}] ${message}\n`;
+                logOutput.scrollTop = logOutput.scrollHeight;
+            }
+            
+            // Test the contact route endpoint
+            testRouteBtn.addEventListener('click', async () => {
+                try {
+                    log('Testing contact route endpoint...');
+                    routeTestResponse.style.display = 'none';
+                    
+                    const response = await fetch('http://localhost:5000/api/contact/test');
+                    const data = await response.json();
+                    
+                    log(`Response status: ${response.status}`);
+                    log(`Response data: ${JSON.stringify(data)}`);
+                    
+                    routeTestResponse.textContent = JSON.stringify(data, null, 2);
+                    routeTestResponse.className = response.ok ? 'response success' : 'response error';
+                    routeTestResponse.style.display = 'block';
+                } catch (error) {
+                    log(`Error testing route: ${error.message}`);
+                    routeTestResponse.textContent = `Error: ${error.message}`;
+                    routeTestResponse.className = 'response error';
+                    routeTestResponse.style.display = 'block';
+                }
+            });
+            
+            // Handle form submission
+            testContactForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                formResponse.style.display = 'none';
+                
+                try {
+                    const formData = {
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        phone: document.getElementById('phone').value,
+                        subject: document.getElementById('subject').value,
+                        message: document.getElementById('message').value
+                    };
+                    
+                    log(`Submitting form data: ${JSON.stringify(formData)}`);
+                    
+                    const response = await fetch('http://localhost:5000/api/contact/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    const data = await response.json();
+                    
+                    log(`Response status: ${response.status}`);
+                    log(`Response data: ${JSON.stringify(data)}`);
+                    
+                    formResponse.textContent = JSON.stringify(data, null, 2);
+                    formResponse.className = response.ok ? 'response success' : 'response error';
+                    formResponse.style.display = 'block';
+                } catch (error) {
+                    log(`Error submitting form: ${error.message}`);
+                    formResponse.textContent = `Error: ${error.message}`;
+                    formResponse.className = 'response error';
+                    formResponse.style.display = 'block';
+                }
+            });
+            
+            log('Test page loaded and ready');
+        });
+    </script>
+</body>
+</html> 

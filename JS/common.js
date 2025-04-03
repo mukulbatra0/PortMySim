@@ -95,59 +95,61 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
-});
 
-// Sticky Navigation with Hide/Show on Scroll
-const navbar = document.querySelector('.navbar');
-let lastScroll = 0;
-const scrollThreshold = 100; // Minimum scroll before hiding/showing
-let isScrollingUp = false;
-let scrollTimer = null;
+    // Sticky Navigation with Hide/Show on Scroll
+    const navbar = document.querySelector('.navbar');
+    let lastScroll = 0;
+    const scrollThreshold = 100; // Minimum scroll before hiding/showing
+    let isScrollingUp = false;
+    let scrollTimer = null;
 
-window.addEventListener('scroll', () => {
-    const currentScroll = window.pageYOffset;
-    
-    // Clear the existing timer
-    if (scrollTimer !== null) {
-        clearTimeout(scrollTimer);
+    if (navbar) {
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            // Clear the existing timer
+            if (scrollTimer !== null) {
+                clearTimeout(scrollTimer);
+            }
+            
+            if (currentScroll <= 0) {
+                // At the top
+                navbar.classList.remove('scroll-up', 'scroll-down');
+                return;
+            }
+
+            if (Math.abs(currentScroll - lastScroll) < 10) {
+                // Ignore tiny changes
+                return;
+            }
+
+            if (currentScroll > lastScroll && currentScroll > scrollThreshold) {
+                // Scrolling down
+                if (!navbar.classList.contains('scroll-down')) {
+                    navbar.classList.remove('scroll-up');
+                    navbar.classList.add('scroll-down');
+                }
+            } else {
+                // Scrolling up
+                if (navbar.classList.contains('scroll-down')) {
+                    navbar.classList.remove('scroll-down');
+                    navbar.classList.add('scroll-up');
+                }
+            }
+
+            // Set a timer to check if scrolling has stopped
+            scrollTimer = setTimeout(() => {
+                navbar.classList.remove('scroll-down');
+                navbar.classList.add('scroll-up');
+            }, 150);
+
+            lastScroll = currentScroll;
+        });
     }
-    
-    if (currentScroll <= 0) {
-        // At the top
-        navbar.classList.remove('scroll-up', 'scroll-down');
-        return;
+
+    // Update current year in footer
+    const currentYearElement = document.getElementById('currentYear');
+    if (currentYearElement) {
+        currentYearElement.textContent = new Date().getFullYear();
     }
-
-    if (Math.abs(currentScroll - lastScroll) < 10) {
-        // Ignore tiny changes
-        return;
-    }
-
-    if (currentScroll > lastScroll && currentScroll > scrollThreshold) {
-        // Scrolling down
-        if (!navbar.classList.contains('scroll-down')) {
-            navbar.classList.remove('scroll-up');
-            navbar.classList.add('scroll-down');
-        }
-    } else {
-        // Scrolling up
-        if (navbar.classList.contains('scroll-down')) {
-            navbar.classList.remove('scroll-down');
-            navbar.classList.add('scroll-up');
-        }
-    }
-
-    // Set a timer to check if scrolling has stopped
-    scrollTimer = setTimeout(() => {
-        navbar.classList.remove('scroll-down');
-        navbar.classList.add('scroll-up');
-    }, 150);
-
-    lastScroll = currentScroll;
-});
-
-// Update current year in footer
-const currentYearElement = document.getElementById('currentYear');
-if (currentYearElement) {
-    currentYearElement.textContent = new Date().getFullYear();
-} 
+}); 
