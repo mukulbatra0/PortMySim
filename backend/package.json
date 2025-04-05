@@ -6,9 +6,11 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed": "node scripts/seedPlans.js",
-    "setup-plans": "node scripts/setupPlans.js",
-    "seed:plans": "node scripts/seedPlans.js"
+    "seed": "node scripts/seedDatabase.js",
+    "seed:plans": "node scripts/seedPlans.js",
+    "seed:faqs": "node scripts/seedFAQs.js",
+    "seed:circles": "node scripts/seedTelecomCircles.js",
+    "setup-plans": "node scripts/setupPlans.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

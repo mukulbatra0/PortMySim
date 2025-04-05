@@ -4,7 +4,9 @@ const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/db');
 const contactRoutes = require('./routes/contact');
-const planRoutes = require('./routes/plans.routes');
+const planRoutes = require('./routes/planRoutes');
+const telecomCirclesRoutes = require('./routes/telecomCircles.routes');
+const faqRoutes = require('./routes/faqs.routes');
 
 const app = express();
 
@@ -38,6 +40,8 @@ app.use(express.static(path.join(__dirname, '..')));
 // Routes
 app.use('/api/contact', contactRoutes);
 app.use('/api', planRoutes);
+app.use('/api', telecomCirclesRoutes);
+app.use('/api', faqRoutes);
 
 // Serve index.html for the root route
 app.get('/', (req, res) => {

@@ -184,13 +184,20 @@ export async function fetchPlans(filters = {}) {
  */
 export async function fetchPlansByOperator(operator) {
   try {
-    const response = await fetch(`${API_BASE_URL}/operators/${operator}/plans`);
+    console.log(`Fetching plans for operator: ${operator}`);
+    const url = `${API_BASE_URL}/operators/${operator}/plans`;
+    console.log(`Request URL: ${url}`);
+    
+    const response = await fetch(url);
     
     if (!response.ok) {
+      console.error(`Error status: ${response.status}`);
       throw new Error(`Error fetching operator plans: ${response.statusText}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log('Plans data received:', data);
+    return data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;
@@ -204,7 +211,12 @@ export async function fetchPlansByOperator(operator) {
  */
 export async function comparePlans(planIds) {
   try {
-    const response = await fetch(`${API_BASE_URL}/plans/compare`, {
+    console.log('Comparing plans with IDs:', planIds);
+    const url = `${API_BASE_URL}/plans/compare`;
+    console.log('Request URL:', url);
+    console.log('Request payload:', { planIds });
+    
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -213,12 +225,53 @@ export async function comparePlans(planIds) {
     });
     
     if (!response.ok) {
-      throw new Error(`Error comparing plans: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('Error response:', response.status, errorText);
+      throw new Error(`Error comparing plans: ${response.status} - ${response.statusText}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log('Comparison data received:', data);
+    
+    // Validate response data format
+    if (!data.plans || !Array.isArray(data.plans) || data.plans.length === 0) {
+      console.error('Invalid plans data format:', data);
+      throw new Error('Response missing plans data');
+    }
+    
+    // Add fallback feature data if missing
+    if (!data.features) {
+      console.warn('Features missing in API response, adding fallback data');
+      data.features = {
+        daily_data: Array(data.plans.length).fill(false),
+        validity: Array(data.plans.length).fill(false),
+        price: Array(data.plans.length).fill(false),
+        coverage: Array(data.plans.length).fill(false),
+        speed: Array(data.plans.length).fill(false)
+      };
+      
+      // Set some reasonable feature highlights
+      if (data.plans.length > 0) {
+        // Find best data plan
+        const maxDataIndex = data.plans.reduce((maxIdx, plan, idx, arr) => 
+          (plan.data_value > arr[maxIdx].data_value) ? idx : maxIdx, 0);
+        if (maxDataIndex >= 0) data.features.daily_data[maxDataIndex] = true;
+        
+        // Find best validity plan
+        const maxValidityIndex = data.plans.reduce((maxIdx, plan, idx, arr) => 
+          (plan.validity > arr[maxIdx].validity) ? idx : maxIdx, 0);
+        if (maxValidityIndex >= 0) data.features.validity[maxValidityIndex] = true;
+        
+        // Find best price plan
+        const minPriceIndex = data.plans.reduce((minIdx, plan, idx, arr) => 
+          (plan.price < arr[minIdx].price) ? idx : minIdx, 0);
+        if (minPriceIndex >= 0) data.features.price[minPriceIndex] = true;
+      }
+    }
+    
+    return data;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('API Error in comparePlans:', error);
     throw error;
   }
 }
@@ -257,15 +310,22 @@ export async function fetchSimilarPlans({ planId, priceRange, operator }) {
  */
 export async function fetchRecommendedPlans() {
   try {
-    const response = await fetch(`${API_BASE_URL}/plans/recommended`);
+    console.log('Fetching recommended plans...');
+    const url = `${API_BASE_URL}/plans/recommended`;
+    console.log(`Request URL: ${url}`);
+    
+    const response = await fetch(url);
     
     if (!response.ok) {
+      console.error(`Error status: ${response.status}`);
       throw new Error(`Error fetching recommended plans: ${response.statusText}`);
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log(`Received ${data.length} recommended plans`);
+    return data;
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('API Error fetching recommended plans:', error);
     throw error;
   }
 } 

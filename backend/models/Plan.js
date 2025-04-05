@@ -78,7 +78,7 @@ const planSchema = new mongoose.Schema({
   },
   recommendation: {
     type: String,
-    enum: ['', 'Best Value', 'Widest Coverage', 'Budget Choice', 'Best Data']
+    enum: ['', 'Best Value', 'Widest Coverage', 'Budget Choice', 'Best Data', 'Best for Music', 'Best for Students', 'Best Weekend Plan', 'Best Entertainment', 'Best Rural Coverage', 'Long Validity', 'Best Annual Value']
   },
   created_at: {
     type: Date,

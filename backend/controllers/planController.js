@@ -386,14 +386,50 @@ exports.deletePlan = async (req, res) => {
 };
 
 /**
- * Get plans with recommendations
+ * Get recommended plans
+ * @route GET /api/plans/recommended
+ * @access Public
  */
 exports.getRecommendedPlans = async (req, res) => {
   try {
-    const recommendedPlans = await Plan.find({ recommendation: { $ne: '' } });
+    // Find plans with recommendations first
+    let recommendedPlans = await Plan.find({ 
+      recommendation: { $ne: '' } 
+    }).limit(3);
+    
+    // If we don't have enough plans with recommendations, get some popular plans
+    if (recommendedPlans.length < 3) {
+      // Find plans based on a mix of operators and price categories
+      const additionalPlans = await Plan.find({
+        _id: { $nin: recommendedPlans.map(p => p._id) } // Exclude already found plans
+      }).sort({ price: -1 }).limit(3 - recommendedPlans.length);
+      
+      recommendedPlans = [...recommendedPlans, ...additionalPlans];
+    }
+    
+    // Assign recommendations if not already set
+    recommendedPlans = recommendedPlans.map(plan => {
+      if (!plan.recommendation) {
+        // Determine a recommendation based on plan attributes
+        if (plan.data_category === 'high') {
+          plan.recommendation = 'Best Data';
+        } else if (plan.price_category === 'budget') {
+          plan.recommendation = 'Budget Choice';
+        } else if (plan.network_coverage > 95) {
+          plan.recommendation = 'Widest Coverage';
+        } else {
+          plan.recommendation = 'Best Value';
+        }
+      }
+      return plan;
+    });
     
     res.status(200).json(recommendedPlans);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching recommended plans', error: error.message });
+    console.error('Error fetching recommended plans:', error);
+    res.status(500).json({ 
+      message: 'Error fetching recommended plans', 
+      error: error.message 
+    });
   }
 }; 
