@@ -10,6 +10,7 @@ This document provides instructions for setting up and using the Plans Compariso
 - [Data Model](#data-model)
 - [Frontend Integration](#frontend-integration)
 - [Development](#development)
+- [Network Coverage API](#network-coverage-api)
 
 ## Overview
 
@@ -143,4 +144,60 @@ To add support for new operators:
 1. Update the `operator` enum in the Plan schema
 2. Add operator image to the images directory
 3. Update the `getOperatorImage` function in `utils/planHelper.js`
-4. Add sample plans for the new operator in `scripts/seedPlans.js` 
+4. Add sample plans for the new operator in `scripts/seedPlans.js`
+
+## Network Coverage API
+
+The Network Coverage API provides data for comparing mobile network operators in different locations across India.
+
+### Endpoints
+
+1. **Get Locations with Coverage Data**
+   - `GET /api/network-coverage/locations`
+   - Returns a list of locations for which network coverage data is available
+
+2. **Get Network Coverage for a Location**
+   - `GET /api/network-coverage?location=Mumbai&operator=jio`
+   - Returns coverage data for all operators in the specified location
+   - Optional: Filter by operator
+
+3. **Compare Networks for a Location**
+   - `GET /api/network-coverage/compare?location=Delhi`
+   - Returns comparative data for all operators in the specified location
+
+4. **Get Best Network for a Location**
+   - `GET /api/network-coverage/best-network?location=Bangalore&criteria=speed`
+   - Returns the best network for the specified location based on criteria
+   - Supported criteria: overall, coverage, speed, callQuality, indoorReception
+
+5. **Get Tower Data Near Coordinates**
+   - `GET /api/network-coverage/tower-data?lat=28.7041&lng=77.1025&radius=5`
+   - Returns tower data for all operators near the specified coordinates
+   - radius parameter is in kilometers (default: 5)
+
+### Data Seeding
+
+To populate the database with sample network coverage data:
+
+```bash
+# Run from the backend directory
+node scripts/seedNetworkCoverage.js
+```
+
+This will create sample coverage data for major cities across India with realistic values for each operator.
+
+### Network Coverage Model
+
+The `NetworkCoverage` model stores the following data:
+
+- `location`: Name of the location
+- `locationCoordinates`: Geospatial coordinates (longitude, latitude)
+- `operator`: Network operator (jio, airtel, vi)
+- `technologyType`: Network technology (4g, 5g)
+- `signalStrength`: Signal strength (0-100)
+- `downloadSpeed`: Download speed in Mbps
+- `uploadSpeed`: Upload speed in Mbps
+- `callQuality`: Voice call quality rating (1-5)
+- `indoorReception`: Indoor signal reception rating (1-5)
+- `congestionHandling`: Network congestion handling rating (1-5)
+- `customerSatisfaction`: Overall customer satisfaction rating (1-5) 

@@ -4,19 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Compare Networks - PortMySim</title>
+    <link rel="icon" href="../images/logo.png" type="image/png" />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link
       rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
     />
     <link rel="stylesheet" href="../CSS/common.css" />
     <link rel="stylesheet" href="../CSS/compare-networks.css" />
     <link rel="stylesheet" href="../CSS/loader.css" />
     <!-- Leaflet CSS for maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Leaflet JS and Leaflet Heat for heatmap visualization -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
   </head>
   <body class="bg-dark-1">
     <header class="header">
@@ -125,6 +132,9 @@
             <button type="button" class="location-search-btn" id="location-search-btn">
               <i class="fas fa-search"></i>
             </button>
+            <button type="button" class="user-location-btn" id="user-location-btn" title="Use your current location">
+              <i class="fas fa-map-marker-alt"></i>
+            </button>
             <div class="location-suggestions" id="location-suggestions">
               <!-- Suggestions will be dynamically populated -->
               <div class="location-suggestion-item">New Delhi</div>
@@ -166,19 +176,88 @@
                 <span>5G</span>
               </label>
             </div>
+
+            <div class="tower-visualization-controls">
+              <label class="toggle-label">
+                <input type="checkbox" id="show-towers" />
+                <span>Show Nearby Towers</span>
+              </label>
+              <div class="tower-radius-control">
+                <label for="tower-radius">Search Radius (km):</label>
+                <input type="range" id="tower-radius" min="1" max="10" value="5" />
+                <span id="radius-value">5 km</span>
+              </div>
+            </div>
           </div>
           
           <div id="india-map-svg-container" class="content-transition" data-animation="fade-in" data-delay="0.6s">
             <!-- Interactive Map will be inserted here via JavaScript -->
-            <div id="coverage-map" class="coverage-map"></div>
+            <div id="coverage-map" class="coverage-map map-fixed-container"></div>
+            
+            <!-- Map Legend - nPerf style -->
+            <div class="map-legend" id="map-legend">
+              <h4>Network Coverage</h4>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #E53935;"></div>
+                <span>Jio</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #1E88E5;"></div>
+                <span>Airtel</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background-color: #7B1FA2;"></div>
+                <span>Vi</span>
+              </div>
+              <h4 style="margin-top: 10px;">Signal Strength</h4>
+              <div class="legend-item">
+                <div class="legend-color signal-strength-high"></div>
+                <span>Strong (80-100%)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color signal-strength-medium"></div>
+                <span>Medium (50-79%)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color signal-strength-low"></div>
+                <span>Weak (0-49%)</span>
+              </div>
+            </div>
+            
+            <!-- Layer Opacity Control - nPerf style -->
+            <div class="layer-opacity-control" id="layer-opacity-control">
+              <h4>Coverage Opacity</h4>
+              <input type="range" id="coverage-opacity" class="opacity-slider" min="0" max="100" value="70">
+            </div>
           </div>
           
           <div class="map-info-panel">
             <div class="selected-state-info">
               <h4>Select a location to see detailed coverage</h4>
             </div>
+
+            <div class="tower-info-panel" id="tower-info-panel">
+              <h4>Nearby Network Towers</h4>
+              <div class="tower-count-list" id="tower-count-list">
+                <div class="tower-count-item">
+                  <img src="../images/jio.jpeg" alt="Jio" class="network-icon">
+                  <div class="count" id="jio-tower-count">0</div>
+                  <div class="label">Jio Towers</div>
+                </div>
+                <div class="tower-count-item">
+                  <img src="../images/airtel.png" alt="Airtel" class="network-icon">
+                  <div class="count" id="airtel-tower-count">0</div>
+                  <div class="label">Airtel Towers</div>
+                </div>
+                <div class="tower-count-item">
+                  <img src="../images/vi.png" alt="Vi" class="network-icon">
+                  <div class="count" id="vi-tower-count">0</div>
+                  <div class="label">Vi Towers</div>
+                </div>
+              </div>
+            </div>
             
-            <div class="map-legend">
+            <div class="map-legend-secondary">
               <div class="legend-item">
                 <div class="legend-color excellent-coverage"></div>
                 <div class="legend-text">Excellent</div>
@@ -313,20 +392,20 @@
           <p>Below is a side-by-side comparison of network performance in your selected area</p>
           
           <div class="selected-networks">
-            <div class="selected-network">
+            <div class="selected-network" data-operator="jio">
               <img src="../images/jio.jpeg" alt="Jio" />
               <span>Jio</span>
-              <button type="button"><i class="fas fa-times"></i></button>
+              <button type="button" class="remove-network-btn" data-operator="jio"><i class="fas fa-times"></i></button>
             </div>
-            <div class="selected-network">
+            <div class="selected-network" data-operator="airtel">
               <img src="../images/airtel.png" alt="Airtel" />
               <span>Airtel</span>
-              <button type="button"><i class="fas fa-times"></i></button>
+              <button type="button" class="remove-network-btn" data-operator="airtel"><i class="fas fa-times"></i></button>
             </div>
-            <div class="selected-network">
+            <div class="selected-network" data-operator="vi">
               <img src="../images/vi.png" alt="Vi" />
               <span>Vi</span>
-              <button type="button"><i class="fas fa-times"></i></button>
+              <button type="button" class="remove-network-btn" data-operator="vi"><i class="fas fa-times"></i></button>
             </div>
           </div>
           
@@ -392,6 +471,11 @@
               </tbody>
             </table>
           </div>
+        </div>
+        
+        <!-- District Comparison Section (placeholder - will be populated by JavaScript) -->
+        <div class="district-comparison-section content-transition" data-animation="fade-in" data-delay="1.0s" style="display: none;">
+          <!-- Content will be dynamically generated by JavaScript -->
         </div>
         
         <!-- Network Coverage Details -->
@@ -549,246 +633,127 @@
       </div>
     </footer>
 
-    <!-- Main JS - Contains all consolidated JavaScript functionality -->
-    <script src="../JS/main.js"></script>
+    <!-- Main scripts -->
     <script src="../JS/loader.js"></script>
     <script src="../JS/transitions.js"></script>
-    <script src="../JS/api.js"></script>
-    <script src="../JS/auth.js"></script>
-    <!-- Leaflet JS for maps -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
+    <script src="../JS/common.js"></script>
+    <script type="module" src="../JS/api.js"></script>
+    <script type="module" src="../JS/compare.js"></script>
     <!-- Map initialization script -->
     <script>
-      // Map initialization
-      document.addEventListener('DOMContentLoaded', function() {
-        // Initialize the map
-        const map = L.map('coverage-map').setView([20.5937, 78.9629], 5); // Center of India
-        
-        // Add tile layer (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 18,
-          // Use dark style for map to match theme
-          className: 'dark-map-tiles'
-        }).addTo(map);
-        
-        // Network Coverage Layers
-        const jio4GLayer = createCoverageLayer('jio', '4g');
-        const airtel4GLayer = createCoverageLayer('airtel', '4g');
-        const vi4GLayer = createCoverageLayer('vi', '4g');
-        
-        const jio5GLayer = createCoverageLayer('jio', '5g');
-        const airtel5GLayer = createCoverageLayer('airtel', '5g');
-        const vi5GLayer = createCoverageLayer('vi', '5g');
-        
-        // Initially show Jio 4G
-        jio4GLayer.addTo(map);
-        
-        // Network selector event handlers
-        document.getElementById('network-select').addEventListener('change', function() {
-          updateMapLayers();
-        });
-        
-        // Coverage type (4G/5G) event handlers
-        document.querySelectorAll('input[name="coverage-type"]').forEach(radio => {
-          radio.addEventListener('change', function() {
-            updateMapLayers();
-          });
-        });
-        
-        // Update visible layers based on selections
-        function updateMapLayers() {
-          // Remove all layers
-          map.removeLayer(jio4GLayer);
-          map.removeLayer(airtel4GLayer);
-          map.removeLayer(vi4GLayer);
-          map.removeLayer(jio5GLayer);
-          map.removeLayer(airtel5GLayer);
-          map.removeLayer(vi5GLayer);
-          
-          const selectedNetwork = document.getElementById('network-select').value;
-          const coverageType = document.querySelector('input[name="coverage-type"]:checked').value;
-          
-          // Add appropriate layers
-          if (selectedNetwork === 'all') {
-            if (coverageType === '4g') {
-              jio4GLayer.addTo(map);
-              airtel4GLayer.addTo(map);
-              vi4GLayer.addTo(map);
-            } else {
-              jio5GLayer.addTo(map);
-              airtel5GLayer.addTo(map);
-              vi5GLayer.addTo(map);
-            }
-          } else {
-            if (coverageType === '4g') {
-              if (selectedNetwork === 'jio') jio4GLayer.addTo(map);
-              if (selectedNetwork === 'airtel') airtel4GLayer.addTo(map);
-              if (selectedNetwork === 'vi') vi4GLayer.addTo(map);
-            } else {
-              if (selectedNetwork === 'jio') jio5GLayer.addTo(map);
-              if (selectedNetwork === 'airtel') airtel5GLayer.addTo(map);
-              if (selectedNetwork === 'vi') vi5GLayer.addTo(map);
-            }
+      // Initialize Leaflet map
+      const coverageMap = L.map('coverage-map', {
+        center: [20.5937, 78.9629], // Center of India
+        zoom: 5,
+        zoomControl: false, // We'll use our custom zoom controls
+        attributionControl: true
+      });
+      
+      // Add tile layer (map background)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18
+      }).addTo(coverageMap);
+      
+      // Sample city data
+      const cities = [
+        { name: 'Delhi', coords: [28.7041, 77.1025] },
+        { name: 'Mumbai', coords: [19.0760, 72.8777] },
+        { name: 'Chennai', coords: [13.0827, 80.2707] },
+        { name: 'Kolkata', coords: [22.5726, 88.3639] },
+        { name: 'Bangalore', coords: [12.9716, 77.5946] },
+        { name: 'Hyderabad', coords: [17.3850, 78.4867] },
+        { name: 'Pune', coords: [18.5204, 73.8567] },
+        { name: 'Ahmedabad', coords: [23.0225, 72.5714] },
+        { name: 'Jaipur', coords: [26.9124, 75.7873] },
+        { name: 'Lucknow', coords: [26.8467, 80.9462] }
+      ];
+      
+      // Add major city markers to the map
+      cities.forEach(city => {
+        L.marker(city.coords, {
+          icon: L.divIcon({
+            className: 'city-marker',
+            html: `<div class="marker-pin"></div><span>${city.name}</span>`,
+            iconSize: [30, 42],
+            iconAnchor: [15, 42]
+          })
+        }).addTo(coverageMap).on('click', function() {
+          // When a city marker is clicked, update the location search and trigger search
+          const locationSearchInput = document.getElementById('location-search');
+          if (locationSearchInput) {
+            locationSearchInput.value = city.name;
           }
-        }
-        
-        // Create stylized coverage layer for each network
-        function createCoverageLayer(network, coverageType) {
-          // This would be replaced with actual coverage data
-          // For demonstration purposes, we're creating random circles
           
-          const layerGroup = L.layerGroup();
-          const cities = [
-            { name: 'Delhi', coords: [28.7041, 77.1025], radius: 50000 },
-            { name: 'Mumbai', coords: [19.0760, 72.8777], radius: 45000 },
-            { name: 'Chennai', coords: [13.0827, 80.2707], radius: 40000 },
-            { name: 'Kolkata', coords: [22.5726, 88.3639], radius: 42000 },
-            { name: 'Bangalore', coords: [12.9716, 77.5946], radius: 48000 },
-            { name: 'Hyderabad', coords: [17.3850, 78.4867], radius: 43000 },
-            { name: 'Pune', coords: [18.5204, 73.8567], radius: 38000 },
-            { name: 'Ahmedabad', coords: [23.0225, 72.5714], radius: 35000 },
-            { name: 'Jaipur', coords: [26.9124, 75.7873], radius: 33000 },
-            { name: 'Lucknow', coords: [26.8467, 80.9462], radius: 30000 }
-          ];
-          
-          // Coverage style based on network
-          let color;
-          if (network === 'jio') color = '#0F3CC9';
-          else if (network === 'airtel') color = '#E40000';
-          else color = '#ED1C24'; // Vi
-          
-          // 5G has smaller coverage but more transparent
-          const fillOpacity = coverageType === '5g' ? 0.3 : 0.5;
-          const radiusMultiplier = coverageType === '5g' ? 0.6 : 1;
-          
-          cities.forEach(city => {
-            // Some randomization to make each network's coverage look different
-            const networkFactor = network === 'jio' ? 1.1 : 
-                                  network === 'airtel' ? 1 : 0.9;
-            
-            const adjustedRadius = city.radius * radiusMultiplier * networkFactor;
-            
-            // Create circle for coverage area
-            const circle = L.circle(city.coords, {
-              color: color,
-              fillColor: color,
-              fillOpacity: fillOpacity,
-              radius: adjustedRadius
-            }).bindTooltip(`${network.toUpperCase()} ${coverageType.toUpperCase()} in ${city.name}`, {
-              permanent: false,
-              className: 'coverage-tooltip'
-            });
-            
-            layerGroup.addLayer(circle);
-            
-            // Add city marker
-            const marker = L.marker(city.coords, {
-              icon: L.divIcon({
-                className: 'city-marker',
-                html: `<div class="city-label">${city.name}</div>`,
-                iconSize: [100, 20],
-                iconAnchor: [50, 10]
-              })
-            });
-            
-            layerGroup.addLayer(marker);
-          });
-          
-          return layerGroup;
-        }
-        
-        // Zoom controls
-        document.getElementById('zoom-in').addEventListener('click', function() {
-          map.zoomIn();
-        });
-        
-        document.getElementById('zoom-out').addEventListener('click', function() {
-          map.zoomOut();
-        });
-        
-        // Location search functionality
-        document.getElementById('location-search-btn').addEventListener('click', function() {
-          searchLocation();
-        });
-        
-        document.getElementById('location-search').addEventListener('keyup', function(e) {
-          if (e.key === 'Enter') {
-            searchLocation();
+          // We'll look for a global searchLocation function
+          if (typeof window.searchLocation === 'function') {
+            window.searchLocation(city.name);
           } else {
-            showSuggestions();
-          }
-        });
-        
-        function showSuggestions() {
-          const suggestionElement = document.getElementById('location-suggestions');
-          suggestionElement.classList.add('show');
-          
-          // Add event listeners to suggestion items
-          document.querySelectorAll('.location-suggestion-item').forEach(item => {
-            item.addEventListener('click', function() {
-              document.getElementById('location-search').value = this.textContent;
-              suggestionElement.classList.remove('show');
-              searchLocation();
-            });
-          });
-        }
-        
-        function searchLocation() {
-          const location = document.getElementById('location-search').value.trim();
-          if (!location) return;
-          
-          // Hide suggestions
-          document.getElementById('location-suggestions').classList.remove('show');
-          
-          // Update selected location text
-          document.getElementById('selected-location').textContent = location;
-          
-          // For demo purposes, find the closest city and zoom there
-          const searchTerm = location.toLowerCase();
-          let targetCity = null;
-          
-          cities.forEach(city => {
-            if (city.name.toLowerCase().includes(searchTerm)) {
-              targetCity = city;
-            }
-          });
-          
-          if (targetCity) {
-            map.flyTo(targetCity.coords, 9, {
-              duration: 2,
-              animate: true
-            });
+            // Fallback if the function isn't available yet
+            coverageMap.flyTo(city.coords, 9);
             
-            // Show a popup at the location
             L.popup()
-              .setLatLng(targetCity.coords)
-              .setContent(`<h3>${targetCity.name}</h3><p>Showing network coverage comparison</p>`)
-              .openOn(map);
-          } else {
-            alert('Location not found. Please try another location.');
+              .setLatLng(city.coords)
+              .setContent(`<h3>${city.name}</h3><p>Click to compare networks</p>`)
+              .openOn(coverageMap);
           }
-        }
-        
-        // View details button handlers
-        document.querySelectorAll('.view-details-btn').forEach(btn => {
-          btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const network = this.closest('.network-card').getAttribute('data-operator');
-            
-            // Select this network in the dropdown
-            document.getElementById('network-select').value = network;
-            
-            // Update map layers
-            updateMapLayers();
-            
-            // Scroll to map
-            document.getElementById('india-map-svg-container').scrollIntoView({
-              behavior: 'smooth'
-            });
-          });
         });
+      });
+      
+      // Make map accessible globally for modules
+      window.coverageMap = coverageMap;
+      
+      // Add custom zoom controls
+      const zoomControl = L.control.zoom({
+        position: 'bottomright'
+      });
+      zoomControl.addTo(coverageMap);
+      
+      // Initialize network layers (will be populated by compare.js)
+      window.networkLayers = {
+        jio: L.layerGroup().addTo(coverageMap),
+        airtel: L.layerGroup().addTo(coverageMap),
+        vi: L.layerGroup().addTo(coverageMap)
+      };
+      
+      // When coverage type changes, we'll update the map layers
+      window.updateMapLayers = function() {
+        const networkSelect = document.getElementById('network-select');
+        const selectedNetwork = networkSelect ? networkSelect.value : 'all';
+        
+        const coverageType = document.querySelector('input[name="coverage-type"]:checked')?.value || '4g';
+        
+        // Logic to show/hide layers based on selection will be implemented in compare.js
+        // This is just a placeholder function that will be overridden
+      };
+    </script>
+    
+    <!-- Fix for network cards visibility issue -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Ensure networks-grid and network cards are visible
+        setTimeout(function() {
+          const networksGrid = document.querySelector('.networks-grid');
+          if (networksGrid) {
+            networksGrid.style.opacity = '1';
+            networksGrid.style.visibility = 'visible';
+            networksGrid.style.transform = 'translateY(0)';
+            
+            // Make all network cards visible
+            const cards = networksGrid.querySelectorAll('.network-card');
+            cards.forEach(function(card) {
+              card.style.opacity = '1';
+              card.style.visibility = 'visible';
+              card.style.transform = 'translateY(0)';
+              card.classList.add('in-view');
+            });
+            
+            // Set up event listeners for the view details buttons
+            if (typeof setupViewDetailsButtons === 'function') {
+              setupViewDetailsButtons();
+            }
+          }
+        }, 1000);
       });
     </script>
   </body>

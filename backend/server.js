@@ -7,6 +7,7 @@ const contactRoutes = require('./routes/contact');
 const planRoutes = require('./routes/planRoutes');
 const telecomCirclesRoutes = require('./routes/telecomCircles.routes');
 const faqRoutes = require('./routes/faqs.routes');
+const networkCoverageRoutes = require('./routes/networkCoverage.routes');
 
 const app = express();
 
@@ -42,6 +43,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api', planRoutes);
 app.use('/api', telecomCirclesRoutes);
 app.use('/api', faqRoutes);
+app.use('/api', networkCoverageRoutes);
 
 // Serve index.html for the root route
 app.get('/', (req, res) => {

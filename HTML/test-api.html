@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Network Coverage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        button {
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        input, select {
+            padding: 8px;
+            width: 200px;
+            margin-right: 10px;
+        }
+        .response {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Network Coverage API Test Page</h1>
+    <p>Use this page to test the Network Coverage API endpoints.</p>
+
+    <div class="test-section">
+        <h2>Get Locations</h2>
+        <p>Fetch all available locations with network coverage.</p>
+        <button id="locations-btn">Get Locations</button>
+        <div id="locations-response" class="response"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Get Network Coverage</h2>
+        <p>Fetch coverage data for a specific location.</p>
+        <div class="input-group">
+            <input type="text" id="coverage-location" placeholder="Enter location">
+        </div>
+        <button id="coverage-btn">Get Coverage</button>
+        <div id="coverage-response" class="response"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Compare Networks</h2>
+        <p>Compare networks for a specific location.</p>
+        <div class="input-group">
+            <input type="text" id="compare-location" placeholder="Enter location">
+        </div>
+        <button id="compare-btn">Compare Networks</button>
+        <div id="compare-response" class="response"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Get Best Network</h2>
+        <p>Find the best network for a location based on criteria.</p>
+        <div class="input-group">
+            <input type="text" id="best-location" placeholder="Enter location">
+            <select id="best-criteria">
+                <option value="overall">Overall</option>
+                <option value="coverage">Coverage</option>
+                <option value="speed">Speed</option>
+                <option value="callQuality">Call Quality</option>
+                <option value="indoorReception">Indoor Reception</option>
+            </select>
+        </div>
+        <button id="best-btn">Get Best Network</button>
+        <div id="best-response" class="response"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Get Tower Data</h2>
+        <p>Find tower data near a specific location.</p>
+        <div class="input-group">
+            <input type="text" id="tower-lat" placeholder="Latitude (e.g. 28.7041)">
+            <input type="text" id="tower-lng" placeholder="Longitude (e.g. 77.1025)">
+            <input type="number" id="tower-radius" placeholder="Radius (km)" value="5" min="1" max="20">
+        </div>
+        <button id="tower-btn">Get Tower Data</button>
+        <div id="tower-response" class="response"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Locations API
+        document.getElementById('locations-btn').addEventListener('click', async () => {
+            const responseEl = document.getElementById('locations-response');
+            responseEl.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/network-coverage/locations`);
+                const data = await response.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Coverage API
+        document.getElementById('coverage-btn').addEventListener('click', async () => {
+            const location = document.getElementById('coverage-location').value;
+            const responseEl = document.getElementById('coverage-response');
+            
+            if (!location) {
+                responseEl.textContent = 'Please enter a location';
+                return;
+            }
+
+            responseEl.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/network-coverage?location=${encodeURIComponent(location)}`);
+                const data = await response.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Compare Networks API
+        document.getElementById('compare-btn').addEventListener('click', async () => {
+            const location = document.getElementById('compare-location').value;
+            const responseEl = document.getElementById('compare-response');
+            
+            if (!location) {
+                responseEl.textContent = 'Please enter a location';
+                return;
+            }
+
+            responseEl.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/network-coverage/compare?location=${encodeURIComponent(location)}`);
+                const data = await response.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Best Network API
+        document.getElementById('best-btn').addEventListener('click', async () => {
+            const location = document.getElementById('best-location').value;
+            const criteria = document.getElementById('best-criteria').value;
+            const responseEl = document.getElementById('best-response');
+            
+            if (!location) {
+                responseEl.textContent = 'Please enter a location';
+                return;
+            }
+
+            responseEl.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/network-coverage/best-network?location=${encodeURIComponent(location)}&criteria=${criteria}`);
+                const data = await response.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Tower Data API
+        document.getElementById('tower-btn').addEventListener('click', async () => {
+            const lat = document.getElementById('tower-lat').value;
+            const lng = document.getElementById('tower-lng').value;
+            const radius = document.getElementById('tower-radius').value;
+            const responseEl = document.getElementById('tower-response');
+            
+            if (!lat || !lng) {
+                responseEl.textContent = 'Please enter latitude and longitude';
+                return;
+            }
+
+            responseEl.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/network-coverage/tower-data?lat=${lat}&lng=${lng}&radius=${radius}`);
+                const data = await response.json();
+                responseEl.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                responseEl.textContent = `Error: ${error.message}`;
+            }
+        });
+
+        // Initialize with sample data
+        document.getElementById('coverage-location').value = 'Mumbai';
+        document.getElementById('compare-location').value = 'Delhi';
+        document.getElementById('best-location').value = 'Bangalore';
+        document.getElementById('tower-lat').value = '28.7041';
+        document.getElementById('tower-lng').value = '77.1025';
+    </script>
+</body>
+</html> 

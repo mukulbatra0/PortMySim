@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('page-loaded');
             // Initialize content transitions
             initContentTransitions();
+            // Initialize scroll animations
+            initScrollAnimations();
         }, 1000); // Match with loader timing
     });
     
@@ -93,6 +95,21 @@ function initContentTransitions() {
                 // Add animation class
                 element.classList.add(animationType);
                 
+                // Force immediate visibility for networks-grid and its children
+                if (element.classList.contains('networks-grid')) {
+                    element.style.opacity = '1';
+                    element.style.visibility = 'visible';
+                    element.style.transform = 'translateY(0)';
+                    
+                    // Make sure all network cards are visible
+                    const networkCards = element.querySelectorAll('.network-card');
+                    networkCards.forEach(card => {
+                        card.style.opacity = '1';
+                        card.style.visibility = 'visible';
+                        card.style.transform = 'translateY(0)';
+                    });
+                }
+                
                 // Unobserve after animating
                 observer.unobserve(element);
             }
@@ -106,6 +123,51 @@ function initContentTransitions() {
     transitionElements.forEach(element => {
         observer.observe(element);
     });
+    
+    // Ensure networks-grid is visible after a short timeout
+    setTimeout(() => {
+        const networksGrid = document.querySelector('.networks-grid');
+        if (networksGrid) {
+            networksGrid.style.opacity = '1';
+            networksGrid.style.visibility = 'visible';
+            networksGrid.style.transform = 'translateY(0)';
+            
+            const networkCards = networksGrid.querySelectorAll('.network-card');
+            networkCards.forEach(card => {
+                card.style.opacity = '1';
+                card.style.visibility = 'visible';
+                card.style.transform = 'translateY(0)';
+            });
+        }
+    }, 1500);
+}
+
+// Initialize scroll-based animations for elements with animate-on-scroll class
+function initScrollAnimations() {
+    const scrollElements = document.querySelectorAll('.animate-on-scroll');
+    
+    const scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                scrollObserver.unobserve(entry.target);
+            }
+        });
+    }, {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    });
+    
+    scrollElements.forEach(element => {
+        scrollObserver.observe(element);
+    });
+    
+    // Fallback: make sure all scroll elements are visible after 5 seconds
+    setTimeout(() => {
+        document.querySelectorAll('.animate-on-scroll:not(.in-view)').forEach(element => {
+            element.classList.add('in-view');
+        });
+    }, 5000);
 }
 
 // Expose transition functions globally

@@ -1398,6 +1398,10 @@ function updateComparisonTable(data) {
     
     // Apply animations to table elements
     setTimeout(() => {
+        // Get the tbody element
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        
         // Add staggered animation to table rows
         const rows = tbody.querySelectorAll('tr');
         rows.forEach((row, index) => {

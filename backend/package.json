@@ -1,6 +1,7 @@
 {
   "name": "portmysim-backend",
   "version": "1.0.0",
+
   "description": "PortMySim - Mobile Number Portability Service - Backend API",
   "main": "server.js",
   "scripts": {
@@ -10,7 +11,8 @@
     "seed:plans": "node scripts/seedPlans.js",
     "seed:faqs": "node scripts/seedFAQs.js",
     "seed:circles": "node scripts/seedTelecomCircles.js",
-    "setup-plans": "node scripts/setupPlans.js"
+    "setup-plans": "node scripts/setupPlans.js",
+    "seed:coverage": "node scripts/seedNetworkCoverage.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
