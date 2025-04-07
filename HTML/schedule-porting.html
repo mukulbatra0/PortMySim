@@ -15,6 +15,162 @@
 
     <link rel="stylesheet" href="../CSS/common.css" />
     <link rel="stylesheet" href="../CSS/schedule.css" />
+    <style>
+      /* Additional Custom Styles */
+      .info-message {
+        background: rgba(var(--primary-rgb), 0.1);
+        border-left: 3px solid var(--primary-color);
+        padding: 12px 15px;
+        border-radius: 4px;
+        margin: 15px 0;
+        display: flex;
+        align-items: flex-start;
+        animation: fadeIn 0.5s ease forwards;
+      }
+      
+      .info-message i {
+        color: var(--primary-color);
+        margin-right: 10px;
+        font-size: 1.2rem;
+        margin-top: 2px;
+      }
+      
+      .info-message span {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+      
+      .info-message strong {
+        color: var(--white);
+        font-weight: 600;
+      }
+      
+      .success-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      
+      .success-info-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 8px;
+      }
+      
+      .success-info-item strong {
+        color: var(--primary-color);
+        margin-right: 5px;
+      }
+      
+      .porting-timeline {
+        margin: 30px 0;
+        position: relative;
+      }
+      
+      .timeline-item {
+        display: flex;
+        margin-bottom: 20px;
+        position: relative;
+      }
+      
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 14px;
+        width: 2px;
+        height: 100%;
+        background: var(--primary-color);
+        opacity: 0.3;
+      }
+      
+      .timeline-item:last-child::before {
+        display: none;
+      }
+      
+      .timeline-dot {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        position: relative;
+        z-index: 1;
+      }
+      
+      .timeline-dot i {
+        color: var(--white);
+        font-size: 0.8rem;
+      }
+      
+      .timeline-content {
+        flex: 1;
+      }
+      
+      .timeline-content h4 {
+        color: var(--white);
+        margin: 0 0 5px;
+        font-size: 1rem;
+      }
+      
+      .timeline-content p {
+        color: var(--text-light-muted);
+        margin: 0;
+        font-size: 0.9rem;
+      }
+      
+      .timeline-date {
+        color: var(--accent-color);
+        font-weight: 500;
+        margin-left: 10px;
+        font-size: 0.9rem;
+      }
+      
+      /* Porting Guide Section Styles */
+      .porting-guide-section {
+        padding: 20px 0 30px;
+        background: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      
+      .guide-wrapper {
+        background: var(--bg-dark-2);
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+      
+      .guide-wrapper h2 {
+        color: var(--white);
+        font-size: 1.5rem;
+        margin: 0 0 5px;
+        display: flex;
+        align-items: center;
+      }
+      
+      .guide-wrapper h2 i {
+        color: var(--accent-color);
+        margin-right: 10px;
+      }
+      
+      .guide-subtitle {
+        color: var(--text-light);
+        margin: 0 0 20px;
+        font-size: 0.95rem;
+      }
+      
+      @media (max-width: 768px) {
+        .success-info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
   </head>
   <body class="bg-dark-1">
     <header class="header">
@@ -213,6 +369,8 @@
                       id="currentPlan"
                       name="currentPlan"
                       class="date-input"
+                      placeholder="Select a date"
+                      required
                     />
                   </div>
                   <span class="error-message"></span>
@@ -222,6 +380,9 @@
                     date.</small
                   >
                 </div>
+                
+                <!-- SMS Date Info Display Area -->
+                <div id="smsDateInfo" style="display:none; margin-top: 15px; animation: fadeIn 0.5s ease-in-out;"></div>
 
                 <div class="form-buttons">
                   <button type="button" class="btn-next" data-next="2">
@@ -280,21 +441,9 @@
                   />
                   <span class="error-message"></span>
                 </div>
-
-                <div class="form-group">
-                  <label for="newPlan" class="form-label"
-                    >Desired Plan (Optional)</label
-                  >
-                  <div class="input-with-icon">
-                    <i class="fas fa-tag form-icon"></i>
-                    <input
-                      type="text"
-                      id="newPlan"
-                      name="newPlan"
-                      placeholder="E.g., Prepaid 499, Postpaid 799"
-                    />
-                  </div>
-                </div>
+                
+                <!-- Nearby Centers Info Display Area -->
+                <div id="centerInfo" style="display:none;"></div>
 
                 <div class="form-buttons">
                   <button type="button" class="btn-prev" data-prev="1">
@@ -313,40 +462,107 @@
                   Choose when you'd like to port your number
                 </p>
 
-                <div class="form-group">
-                  <label for="portingDate" class="form-label"
-                    >Preferred Date</label
-                  >
-                  <div class="input-with-icon">
-                    <i class="far fa-calendar-alt form-icon"></i>
-                    <input
-                      type="date"
-                      id="portingDate"
-                      name="portingDate"
-                      required
-                    />
+                <!-- Porting Guide Timeline -->
+                <div class="guide-wrapper">
+                  <h3><i class="fas fa-info-circle"></i> Porting Process Guide</h3>
+                  
+                  <div class="porting-timeline">
+                    <div class="timeline-item">
+                      <div class="timeline-dot">
+                        <i class="fas fa-mobile-alt"></i>
+                      </div>
+                      <div class="timeline-content">
+                        <h4>Submit Porting Request</h4>
+                        <p>Fill out the form with your current mobile number, provider, and plan end date.</p>
+                      </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                      <div class="timeline-dot">
+                        <i class="fas fa-calendar-alt"></i>
+                      </div>
+                      <div class="timeline-content">
+                        <h4>SMS Notification Date</h4>
+                        <p>You'll receive an SMS with your UPC code <strong>3 working days</strong> before your plan ends (or <strong>5 working days</strong> for Jammu & Kashmir users).</p>
+                        <p><small>Note: Working days exclude Sundays and telecom company holidays.</small></p>
+                      </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                      <div class="timeline-dot">
+                        <i class="fas fa-sms"></i>
+                      </div>
+                      <div class="timeline-content">
+                        <h4>Generate UPC Code</h4>
+                        <p>On the SMS notification date, send an SMS with "PORT" to 1900 from your current number to receive your UPC code.</p>
+                      </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                      <div class="timeline-dot">
+                        <i class="fas fa-store"></i>
+                      </div>
+                      <div class="timeline-content">
+                        <h4>Visit New Provider</h4>
+                        <p>Visit your new service provider's store with your UPC code, ID proof, and address proof. They'll verify and process your request.</p>
+                      </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                      <div class="timeline-dot">
+                        <i class="fas fa-exchange-alt"></i>
+                      </div>
+                      <div class="timeline-content">
+                        <h4>Porting Completion</h4>
+                        <p>Your number will be ported within 3-5 days. During the transition, you might experience a brief service interruption (usually less than 4 hours).</p>
+                      </div>
+                    </div>
                   </div>
-                  <span class="error-message"></span>
+                  
+                  <div class="info-message">
+                    <i class="fas fa-lightbulb"></i>
+                    <span>Our system automatically calculates the optimal SMS notification date based on your plan's end date and telecom circle rules. For Jammu & Kashmir users, we schedule notifications 5 working days before plan expiry instead of the standard 3 days.</span>
+                  </div>
                 </div>
 
-                <div class="form-group">
-                  <label for="portingTime" class="form-label"
-                    >Preferred Time Window</label
-                  >
-                  <div class="input-with-icon">
-                    <i class="far fa-clock form-icon"></i>
-                    <select id="portingTime" name="portingTime" required>
-                      <option value="" disabled selected>
-                        Select a time slot
-                      </option>
-                      <option value="morning">Morning (8 AM - 12 PM)</option>
-                      <option value="afternoon">
-                        Afternoon (12 PM - 4 PM)
-                      </option>
-                      <option value="evening">Evening (4 PM - 8 PM)</option>
-                    </select>
+                <!-- GUID Display Section -->
+                <div class="info-message">
+                  <i class="fas fa-info-circle"></i>
+                  <span>Your Porting GUID: <strong id="portingGuid">Generating...</strong></span>
+                </div>
+
+                <!-- SMS Message Date Section -->
+                <div class="info-message">
+                  <i class="fas fa-calendar-check"></i>
+                  <span>SMS will be sent on: <strong id="smsSendDate">Calculating...</strong></span>
+                </div>
+
+                <!-- Automation Options -->
+                <div class="form-group form-checkbox">
+                  <input
+                    type="checkbox"
+                    id="automatePorting"
+                    name="automatePorting"
+                  />
+                  <label for="automatePorting">Automate porting process (we'll handle the SMS and UPC code retrieval)</label>
+                </div>
+
+                <div class="form-group form-checkbox">
+                  <input
+                    type="checkbox"
+                    id="notifyUpdates"
+                    name="notifyUpdates"
+                    checked
+                  />
+                  <label for="notifyUpdates">Notify me about porting updates via SMS and email</label>
+                </div>
+
+                <!-- Nearby Centers Display -->
+                <div class="nearby-centers">
+                  <h3><i class="fas fa-map-marker-alt"></i> Nearby Porting Centers</h3>
+                  <div id="nearbyCentersList" class="centers-list">
+                    <p class="centers-loading">Loading nearby centers based on your location...</p>
                   </div>
-                  <span class="error-message"></span>
                 </div>
 
                 <div class="form-buttons">
@@ -451,14 +667,74 @@
                 <p class="confirmation-number">
                   Your reference number: <span id="refNumber">PORT-12345</span>
                 </p>
-                <div class="next-steps">
-                  <h3>Next Steps:</h3>
-                  <ol>
-                    <li>Check your email for confirmation details</li>
-                    <li>Keep your phone on to receive SMS verification</li>
-                    <li>Our team will call you for final confirmation</li>
-                  </ol>
+                
+                <div class="success-info-grid">
+                  <div class="success-info-item">
+                    <strong>Porting GUID:</strong> <span id="guidDisplay"></span>
+                  </div>
+                  <div class="success-info-item">
+                    <strong>SMS Date:</strong> <span id="smsDate"></span>
+                  </div>
+                  <div class="success-info-item">
+                    <strong>Porting Date:</strong> <span id="portingDateDisplay"></span>
+                  </div>
+                  <div class="success-info-item">
+                    <strong>Porting Center:</strong> <span id="portingCenter"></span>
+                  </div>
+                  <div class="success-info-item">
+                    <strong>Current Provider:</strong> <span id="currentProviderDisplay"></span>
+                  </div>
+                  <div class="success-info-item">
+                    <strong>Automation:</strong> <span id="automationStatus">Manual Process</span>
+                  </div>
                 </div>
+                
+                <div class="porting-timeline">
+                  <h3>Your Porting Timeline</h3>
+                  
+                  <div class="timeline-item">
+                    <div class="timeline-dot">
+                      <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="timeline-content">
+                      <h4>Send SMS to 1900<span class="timeline-date" id="timelineSmsDate"></span></h4>
+                      <p id="smsStepDescription">Send "PORT" followed by your mobile number to 1900 to get your UPC code</p>
+                    </div>
+                  </div>
+                  
+                  <div class="timeline-item">
+                    <div class="timeline-dot">
+                      <i class="fas fa-sms"></i>
+                    </div>
+                    <div class="timeline-content">
+                      <h4>Receive UPC Code</h4>
+                      <p id="upcStepDescription">You'll receive your Unique Porting Code via SMS within 24 hours</p>
+                    </div>
+                  </div>
+                  
+                  <div class="timeline-item">
+                    <div class="timeline-dot">
+                      <i class="fas fa-store"></i>
+                    </div>
+                    <div class="timeline-content">
+                      <h4>Visit Porting Center<span class="timeline-date" id="timelinePortingDate"></span></h4>
+                      <p>Visit the nearest center with your UPC code and ID proof</p>
+                    </div>
+                  </div>
+                  
+                  <div class="timeline-item">
+                    <div class="timeline-dot">
+                      <i class="fas fa-sim-card"></i>
+                    </div>
+                    <div class="timeline-content">
+                      <h4>Activate New SIM</h4>
+                      <p>Your new SIM will be activated, and your number will be ported</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <p>We'll send you reminders and notifications at each step of the process.</p>
+                
                 <a href="dashboard.html" class="btn-dashboard"
                   >Go to Dashboard</a
                 >
@@ -555,13 +831,34 @@
       </div>
     </footer>
 
-    <!-- Main JS - Contains all consolidated JavaScript functionality -->
-    <script src="../JS/dropdown-animation.js"></script>
-    <script src="../JS/api.js"></script>
-    <script src="../JS/auth.js"></script>
-    <script src="../JS/main.js"></script>
-    <script src="../JS/schedule.js"></script>
+    <!-- JavaScript Files -->
     <script src="../JS/loader.js"></script>
     <script src="../JS/transitions.js"></script>
+    <script src="../JS/main.js"></script>
+    <script src="../JS/auth.js"></script>
+    <script src="../JS/api.js" type="module"></script>
+    <script src="../JS/schedule.js" type="module"></script>
+    <script>
+      // Extra script to update displayed information in the success section
+      document.addEventListener('DOMContentLoaded', function() {
+        const portingForm = document.getElementById('portingForm');
+        if (portingForm) {
+          portingForm.addEventListener('submit', function() {
+            // Store values to display on success screen
+            const currentProvider = document.getElementById('currentProvider');
+            const selectedProviderIndex = currentProvider.selectedIndex;
+            
+            // Set values for success display
+            if (selectedProviderIndex !== -1) {
+              document.getElementById('currentProviderDisplay').textContent = 
+                currentProvider.options[selectedProviderIndex].text;
+            }
+            
+            // Porting date and SMS date will be set by the main JavaScript
+            // Porting center will be set by the backend response
+          });
+        }
+      });
+    </script>
   </body>
 </html>

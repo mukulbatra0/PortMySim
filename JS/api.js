@@ -4,7 +4,9 @@
  */
 
 // Base API URL - change this to your actual backend URL in production
-const API_BASE_URL = 'http://localhost:5000/api';
+const DEFAULT_PORT = 5000;
+let API_BASE_URL = `http://localhost:${DEFAULT_PORT}/api`;
+let API_PORT_DETECTED = false;
 
 // Auth token management
 const TOKEN_KEY = 'portmysim_auth_token';
@@ -37,6 +39,7 @@ const isAuthenticated = () => !!getToken();
 // API request helper with authentication
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  console.log('API request to:', url);
   
   // Default headers
   const headers = {
@@ -56,20 +59,25 @@ const apiRequest = async (endpoint, options = {}) => {
       headers
     });
 
-    const data = await response.json();
-
+    // First check if response is OK
     if (!response.ok) {
-      // Handle 401 Unauthorized by clearing auth and redirecting to login
-      if (response.status === 401) {
-        clearAuth();
-        // Only redirect if we're not already on the login page
-        if (!window.location.pathname.includes('login.html')) {
-          window.location.href = '/HTML/login.html';
-        }
-      }
+      // Get response as text first for debugging
+      const errorText = await response.text();
+      console.error(`API Error (${response.status}):`, errorText);
       
-      throw new Error(data.message || 'API request failed');
+      // Try to parse as JSON if possible
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+        return { success: false, message: errorData.message || 'API request failed' };
+      } catch (e) {
+        // If not valid JSON, throw error with status code
+        throw new Error(`API request failed with status ${response.status}`);
+      }
     }
+
+    // Now try to parse successful response as JSON
+    const data = await response.json();
 
     return data;
   } catch (error) {
@@ -122,18 +130,164 @@ const authAPI = {
   
   // Request password reset
   forgotPassword: async (email) => {
-    return await apiRequest('/auth/forgot-password', {
-      method: 'POST',
-      body: JSON.stringify({ email })
-    });
+    console.log('Forgot password request for:', email);
+    
+    // Ensure we have the correct port
+    await detectApiPort();
+    
+    try {
+      // Log the full request URL for debugging
+      const url = `${API_BASE_URL}/auth/forgot-password`;
+      console.log('Full request URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+      
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
+      // Check if response looks like HTML
+      if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+        console.error('Server returned HTML instead of JSON. The auth API route may not be configured correctly.');
+        
+        // Try a fallback with a different port
+        const fallbackPort = API_BASE_URL.includes('5001') ? '5000' : '5001';
+        const fallbackUrl = `http://localhost:${fallbackPort}/api/auth/forgot-password`;
+        console.log('Trying fallback URL:', fallbackUrl);
+        
+        const fallbackResponse = await fetch(fallbackUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        });
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          console.log('Fallback response successful:', fallbackData);
+          return fallbackData;
+        }
+        
+        return {
+          success: false,
+          message: 'Password reset system is currently unavailable. Please try again later or contact support.'
+        };
+      }
+      
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (err) {
+        console.error('Error parsing response as JSON:', err);
+        throw new Error('Invalid response format from server');
+      }
+      
+      if (!response.ok) {
+        console.error('Error response:', data);
+        return {
+          success: false,
+          message: data.message || 'Failed to send password reset email.'
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      return {
+        success: false,
+        message: 'Failed to send password reset email. Please try again later.'
+      };
+    }
   },
   
   // Reset password with token
   resetPassword: async (resetToken, password) => {
-    return await apiRequest(`/auth/reset-password/${resetToken}`, {
-      method: 'PUT',
-      body: JSON.stringify({ password })
-    });
+    console.log('Attempting to reset password with token:', resetToken);
+    
+    // Ensure we have the correct port
+    await detectApiPort();
+    
+    try {
+      // Log the full request URL for debugging
+      const url = `${API_BASE_URL}/auth/reset-password/${resetToken}`;
+      console.log('Full request URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ password })
+      });
+      
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
+      // Check if response looks like HTML
+      if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
+        console.error('Server returned HTML instead of JSON. The auth API route may not be configured correctly.');
+        
+        // Try a fallback with a different port
+        const fallbackPort = API_BASE_URL.includes('5001') ? '5000' : '5001';
+        const fallbackUrl = `http://localhost:${fallbackPort}/api/auth/reset-password/${resetToken}`;
+        console.log('Trying fallback URL:', fallbackUrl);
+        
+        const fallbackResponse = await fetch(fallbackUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ password })
+        });
+        
+        if (fallbackResponse.ok) {
+          const fallbackData = await fallbackResponse.json();
+          console.log('Fallback response successful:', fallbackData);
+          return fallbackData;
+        }
+        
+        return {
+          success: false,
+          message: 'Password reset system is currently unavailable. Please try again later or contact support.'
+        };
+      }
+      
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (err) {
+        console.error('Error parsing response as JSON:', err);
+        throw new Error('Invalid response format from server');
+      }
+      
+      if (!response.ok) {
+        console.error('Error response:', data);
+        return {
+          success: false,
+          message: data.message || 'Failed to reset password. The link may have expired or is invalid.'
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Reset password error:', error);
+      return {
+        success: false,
+        message: 'Failed to reset password. The link may have expired or is invalid.'
+      };
+    }
   }
 };
 
@@ -141,7 +295,8 @@ const authAPI = {
 window.PortMySimAPI = {
   auth: authAPI,
   isAuthenticated,
-  getUser
+  getUser,
+  getApiBaseUrl: () => API_BASE_URL
 };
 
 /**
@@ -153,7 +308,7 @@ window.PortMySimAPI = {
  * @param {Object} filters - Query parameters for filtering
  * @returns {Promise} - Resolves to plans data
  */
-export async function fetchPlans(filters = {}) {
+async function fetchPlans(filters = {}) {
   try {
     // Build query string from filters
     const queryParams = new URLSearchParams();
@@ -182,7 +337,7 @@ export async function fetchPlans(filters = {}) {
  * @param {string} operator - Operator name (jio, airtel, vi, bsnl)
  * @returns {Promise} - Resolves to plans data for the operator
  */
-export async function fetchPlansByOperator(operator) {
+async function fetchPlansByOperator(operator) {
   try {
     console.log(`Fetching plans for operator: ${operator}`);
     const url = `${API_BASE_URL}/operators/${operator}/plans`;
@@ -474,88 +629,50 @@ function getLocalOperatorPlans(operator) {
 }
 
 /**
- * Compare multiple plans
+ * Compare multiple plans by IDs
  * @param {Array} planIds - Array of plan IDs to compare
  * @returns {Promise} - Resolves to comparison data
  */
-export async function comparePlans(planIds) {
+async function comparePlans(planIds) {
   try {
-    console.log('Comparing plans with IDs:', planIds);
-    const url = `${API_BASE_URL}/plans/compare`;
-    console.log('Request URL:', url);
-    console.log('Request payload:', { planIds });
+    if (!planIds || !Array.isArray(planIds) || planIds.length === 0) {
+      throw new Error('No plan IDs provided for comparison');
+    }
+    
+    console.log(`Comparing ${planIds.length} plans:`, planIds);
     
     // Add timeout to the fetch request
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
     
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ planIds }),
+    const queryParams = new URLSearchParams();
+    planIds.forEach(id => queryParams.append('ids', id));
+    
+    const response = await fetch(`${API_BASE_URL}/plans/compare?${queryParams.toString()}`, {
       signal: controller.signal
     });
     
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Error response:', response.status, errorText);
+      console.error(`Error status: ${response.status}`);
       
-      // For 500 errors, fall back to local processing instead of throwing an error
+      // For 500 errors, fall back to local processing
       if (response.status === 500) {
-        console.warn('Server error occurred, falling back to local data processing');
+        console.warn('Server error occurred, falling back to local comparison');
         return processPlanComparisonLocally(planIds);
       }
       
-      throw new Error(`Error comparing plans: ${response.status} - ${response.statusText}`);
+      throw new Error(`Error comparing plans: ${response.statusText}`);
     }
     
     const data = await response.json();
     console.log('Comparison data received:', data);
-    
-    // Validate response data format
-    if (!data.plans || !Array.isArray(data.plans) || data.plans.length === 0) {
-      console.error('Invalid plans data format:', data);
-      throw new Error('Response missing plans data');
-    }
-    
-    // Add fallback feature data if missing
-    if (!data.features) {
-      console.warn('Features missing in API response, adding fallback data');
-      data.features = {
-        daily_data: Array(data.plans.length).fill(false),
-        validity: Array(data.plans.length).fill(false),
-        price: Array(data.plans.length).fill(false),
-        coverage: Array(data.plans.length).fill(false),
-        speed: Array(data.plans.length).fill(false)
-      };
-      
-      // Set some reasonable feature highlights
-      if (data.plans.length > 0) {
-        // Find best data plan
-        const maxDataIndex = data.plans.reduce((maxIdx, plan, idx, arr) => 
-          (plan.data_value > arr[maxIdx].data_value) ? idx : maxIdx, 0);
-        if (maxDataIndex >= 0) data.features.daily_data[maxDataIndex] = true;
-        
-        // Find best validity plan
-        const maxValidityIndex = data.plans.reduce((maxIdx, plan, idx, arr) => 
-          (plan.validity > arr[maxIdx].validity) ? idx : maxIdx, 0);
-        if (maxValidityIndex >= 0) data.features.validity[maxValidityIndex] = true;
-        
-        // Find best price plan
-        const minPriceIndex = data.plans.reduce((minIdx, plan, idx, arr) => 
-          (plan.price < arr[minIdx].price) ? idx : minIdx, 0);
-        if (minPriceIndex >= 0) data.features.price[minPriceIndex] = true;
-      }
-    }
-    
     return data;
   } catch (error) {
-    console.error('API Error in comparePlans:', error);
-    throw error;
+    console.error('API Error:', error);
+    console.warn('Using local fallback for plan comparison');
+    return processPlanComparisonLocally(planIds);
   }
 }
 
@@ -671,14 +788,11 @@ function processPlanComparisonLocally(planIds) {
 }
 
 /**
- * Fetch similar plans for comparison
- * @param {Object} options - Options for finding similar plans
- * @param {string} options.planId - Base plan ID
- * @param {number} options.priceRange - Price range for finding similar plans
- * @param {string} options.operator - Operator to filter plans
+ * Fetch similar plans 
+ * @param {Object} params - Search parameters
  * @returns {Promise} - Resolves to similar plans data
  */
-export async function fetchSimilarPlans({ planId, priceRange, operator }) {
+async function fetchSimilarPlans({ planId, priceRange, operator }) {
   try {
     const queryParams = new URLSearchParams();
     if (planId) queryParams.append('planId', planId);
@@ -702,41 +816,23 @@ export async function fetchSimilarPlans({ planId, priceRange, operator }) {
  * Fetch recommended plans
  * @returns {Promise} - Resolves to recommended plans data
  */
-export async function fetchRecommendedPlans() {
+async function fetchRecommendedPlans() {
   try {
-    console.log('Fetching recommended plans...');
-    const url = `${API_BASE_URL}/plans/recommended`;
-    console.log(`Request URL: ${url}`);
-    
-    // Add timeout to the fetch request
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
-    
-    const response = await fetch(url, {
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
+    const response = await fetch(`${API_BASE_URL}/plans/recommended`);
     
     if (!response.ok) {
-      console.error(`Error status: ${response.status}`);
-      
-      // For 500 errors, fall back to local processing
-      if (response.status === 500) {
-        console.warn('Server error occurred, falling back to local recommended plans data');
+      // For errors, fall back to local recommendations
+      if (response.status === 500 || response.status === 404) {
+        console.warn('Server error occurred, falling back to local recommendations');
         return getLocalRecommendedPlans();
       }
       
       throw new Error(`Error fetching recommended plans: ${response.statusText}`);
     }
     
-    const data = await response.json();
-    console.log(`Received ${data.length} recommended plans`);
-    return data;
+    return await response.json();
   } catch (error) {
-    console.error('API Error fetching recommended plans:', error);
-    // For any kind of fetch error (including timeout), fall back to local data
-    console.warn('Using local fallback data for recommended plans');
+    console.error('API Error:', error);
     return getLocalRecommendedPlans();
   }
 }
@@ -818,18 +914,12 @@ function getLocalRecommendedPlans() {
 }
 
 /**
- * Fetch network coverage data for a location
+ * Fetch network coverage data
  * @param {Object} params - Query parameters
- * @param {string} params.location - Location name
- * @param {number} params.lat - Latitude
- * @param {number} params.lng - Longitude
- * @param {string} params.operator - Operator name
- * @param {string} params.technology - Technology type (4g or 5g)
- * @returns {Promise} - Resolves to coverage data
+ * @returns {Promise} - Resolves to network coverage data
  */
-export async function fetchNetworkCoverage(params = {}) {
+async function fetchNetworkCoverage(params = {}) {
   try {
-    // Build query string from params
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
@@ -838,10 +928,7 @@ export async function fetchNetworkCoverage(params = {}) {
     });
     
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    const url = `${API_BASE_URL}/network-coverage${queryString}`;
-    console.log(`Fetching network coverage data: ${url}`);
-    
-    const response = await fetch(url);
+    const response = await fetch(`${API_BASE_URL}/network-coverage${queryString}`);
     
     if (!response.ok) {
       throw new Error(`Error fetching network coverage: ${response.statusText}`);
@@ -855,17 +942,12 @@ export async function fetchNetworkCoverage(params = {}) {
 }
 
 /**
- * Compare networks for a specific location
+ * Compare networks by various parameters
  * @param {Object} params - Query parameters
- * @param {string} params.location - Location name
- * @param {number} params.lat - Latitude
- * @param {number} params.lng - Longitude
- * @param {string} params.operators - Comma-separated list of operators
- * @returns {Promise} - Resolves to comparison data
+ * @returns {Promise} - Resolves to network comparison data
  */
-export async function compareNetworks(params = {}) {
+async function compareNetworks(params = {}) {
   try {
-    // Build query string from params
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
@@ -874,10 +956,7 @@ export async function compareNetworks(params = {}) {
     });
     
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    const url = `${API_BASE_URL}/network-coverage/compare${queryString}`;
-    console.log(`Comparing networks: ${url}`);
-    
-    const response = await fetch(url);
+    const response = await fetch(`${API_BASE_URL}/network-comparison${queryString}`);
     
     if (!response.ok) {
       throw new Error(`Error comparing networks: ${response.statusText}`);
@@ -893,15 +972,10 @@ export async function compareNetworks(params = {}) {
 /**
  * Get the best network for a location
  * @param {Object} params - Query parameters
- * @param {string} params.location - Location name
- * @param {number} params.lat - Latitude
- * @param {number} params.lng - Longitude
- * @param {string} params.criteria - Ranking criteria (overall, coverage, speed, callQuality, indoorReception)
  * @returns {Promise} - Resolves to best network data
  */
-export async function getBestNetwork(params = {}) {
+async function getBestNetwork(params = {}) {
   try {
-    // Build query string from params
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
       if (value) {
@@ -910,10 +984,7 @@ export async function getBestNetwork(params = {}) {
     });
     
     const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    const url = `${API_BASE_URL}/network-coverage/best-network${queryString}`;
-    console.log(`Getting best network: ${url}`);
-    
-    const response = await fetch(url);
+    const response = await fetch(`${API_BASE_URL}/best-network${queryString}`);
     
     if (!response.ok) {
       throw new Error(`Error fetching best network: ${response.statusText}`);
@@ -927,15 +998,12 @@ export async function getBestNetwork(params = {}) {
 }
 
 /**
- * Get available locations for network coverage data
- * @returns {Promise} - Resolves to list of locations
+ * Get all locations with network coverage
+ * @returns {Promise} - Resolves to locations data
  */
-export async function getLocationsWithCoverage() {
+async function getLocationsWithCoverage() {
   try {
-    const url = `${API_BASE_URL}/network-coverage/locations`;
-    console.log(`Fetching locations: ${url}`);
-    
-    const response = await fetch(url);
+    const response = await fetch(`${API_BASE_URL}/locations-with-coverage`);
     
     if (!response.ok) {
       throw new Error(`Error fetching locations: ${response.statusText}`);
@@ -946,4 +1014,123 @@ export async function getLocationsWithCoverage() {
     console.error('API Error:', error);
     throw error;
   }
-} 
+}
+
+// Add all functions to the global API object for non-module usage
+window.PortMySimAPI = {
+  ...window.PortMySimAPI,
+  fetchPlans,
+  fetchPlansByOperator,
+  comparePlans,
+  fetchSimilarPlans,
+  fetchRecommendedPlans,
+  fetchNetworkCoverage,
+  compareNetworks,
+  getBestNetwork,
+  getLocationsWithCoverage
+};
+
+// Support ES module exports if in a module context
+if (typeof exports !== 'undefined') {
+  exports.fetchPlans = fetchPlans;
+  exports.fetchPlansByOperator = fetchPlansByOperator;
+  exports.comparePlans = comparePlans;
+  exports.fetchSimilarPlans = fetchSimilarPlans;
+  exports.fetchRecommendedPlans = fetchRecommendedPlans;
+  exports.fetchNetworkCoverage = fetchNetworkCoverage;
+  exports.compareNetworks = compareNetworks;
+  exports.getBestNetwork = getBestNetwork;
+  exports.getLocationsWithCoverage = getLocationsWithCoverage;
+}
+
+// Also support ES module export syntax directly
+if (typeof exports === 'undefined' && typeof window !== 'undefined') {
+  // Create a module object with all exports
+  const apiModule = {
+    fetchPlans,
+    fetchPlansByOperator,
+    comparePlans,
+    fetchSimilarPlans,
+    fetchRecommendedPlans,
+    fetchNetworkCoverage,
+    compareNetworks,
+    getBestNetwork,
+    getLocationsWithCoverage
+  };
+  
+  // Export it for ES modules
+  if (typeof window !== 'undefined') {
+    window.__API_MODULE__ = apiModule;
+  }
+}
+
+// Add a function to check server connectivity
+async function testServerConnection() {
+  try {
+    console.log('Testing server connection to:', API_BASE_URL);
+    
+    const response = await fetch(`${API_BASE_URL}/auth/ping`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (response.ok) {
+      console.log('Server connection successful');
+      return true;
+    }
+    
+    console.warn('Server connection failed with status:', response.status);
+    return false;
+  } catch (error) {
+    console.error('Server connectivity test failed:', error);
+    return false;
+  }
+}
+
+// Test the connection when the script loads
+testServerConnection();
+
+// Function to detect the correct port
+async function detectApiPort() {
+  if (API_PORT_DETECTED) {
+    return API_BASE_URL;
+  }
+  
+  // Try multiple ports
+  const portsToTry = [5000, 5001, 3000, 8080];
+  
+  for (const port of portsToTry) {
+    const testUrl = `http://localhost:${port}/api/auth/ping`;
+    try {
+      console.log(`Testing API availability on port ${port}...`);
+      const response = await fetch(testUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if (response.ok) {
+        try {
+          const data = await response.json();
+          if (data.success) {
+            console.log(`✅ Auth API detected on port ${port}`);
+            API_BASE_URL = `http://localhost:${port}/api`;
+            API_PORT_DETECTED = true;
+            return API_BASE_URL;
+          }
+        } catch (e) {
+          console.log(`Port ${port} responded but didn't return valid JSON`);
+        }
+      }
+    } catch (error) {
+      console.log(`Port ${port} not available:`, error.message);
+    }
+  }
+  
+  console.warn('Could not auto-detect API port. Using default port:', DEFAULT_PORT);
+  return API_BASE_URL;
+}
+
+// Auto-detect the port when the script loads
+detectApiPort().then(baseUrl => {
+  console.log('Using API base URL:', baseUrl);
+}); 

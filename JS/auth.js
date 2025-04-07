@@ -266,7 +266,7 @@ if (signupForm) {
             showError(phone, 'Phone number is required');
             isValid = false;
         } else if (!validatePhone(phone.value)) {
-            showError(phone, 'Please enter a valid 10-digit phone number');
+            showError(phone, 'Please enter a valid Indian mobile number (10 digits starting with 6-9)');
             isValid = false;
         } else {
             clearError(phone);
@@ -296,12 +296,10 @@ if (signupForm) {
         
         // Validate Terms
         if (!terms.checked) {
-            const errorElement = terms.parentElement.nextElementSibling;
-            errorElement.textContent = 'You must agree to the Terms of Service and Privacy Policy';
+            showError(terms, 'You must agree to the Terms of Service and Privacy Policy');
             isValid = false;
         } else {
-            const errorElement = terms.parentElement.nextElementSibling;
-            errorElement.textContent = '';
+            clearError(terms);
         }
         
         if (isValid && window.PortMySimAPI) {
@@ -310,16 +308,13 @@ if (signupForm) {
                 submitButton.disabled = true;
                 submitButton.textContent = 'Creating Account...';
                 
-                // Prepare user data
-                const userData = {
+                // Call register API
+                const response = await window.PortMySimAPI.auth.register({
                     name: name.value.trim(),
                     email: email.value.trim(),
                     phone: phone.value.trim(),
                     password: password.value.trim()
-                };
-                
-                // Call register API
-                const response = await window.PortMySimAPI.auth.register(userData);
+                });
                 
                 if (response.success) {
                     // Show success message
@@ -328,7 +323,7 @@ if (signupForm) {
                     // Redirect to schedule-porting page
                     setTimeout(() => {
                         window.location.href = '/HTML/schedule-porting.html';
-                    }, 1000);
+                    }, 1500);
                 } else {
                     // Show error
                     showFormMessage(signupForm, response.message || 'Registration failed. Please try again.');
@@ -339,7 +334,137 @@ if (signupForm) {
             } finally {
                 // Re-enable button
                 submitButton.disabled = false;
-                submitButton.textContent = 'Sign Up';
+                submitButton.textContent = 'Create Account';
+            }
+        }
+    });
+}
+
+// Add forgot password functionality
+const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+
+if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let isValid = true;
+        
+        const email = forgotPasswordForm.querySelector('#email');
+        const submitButton = forgotPasswordForm.querySelector('button[type="submit"]');
+        
+        // Validate Email
+        if (!email.value.trim()) {
+            showError(email, 'Email is required');
+            isValid = false;
+        } else if (!validateEmail(email.value)) {
+            showError(email, 'Please enter a valid email address');
+            isValid = false;
+        } else {
+            clearError(email);
+        }
+        
+        if (isValid && window.PortMySimAPI) {
+            try {
+                // Disable button and show loading
+                submitButton.disabled = true;
+                submitButton.textContent = 'Processing...';
+                
+                // Call forgot password API
+                const response = await window.PortMySimAPI.auth.forgotPassword(email.value.trim());
+                
+                if (response.success) {
+                    // Show success message
+                    showFormMessage(forgotPasswordForm, 'Password reset email sent! Check your inbox.', true);
+                    email.value = ''; // Clear the email field
+                } else {
+                    // Show error
+                    showFormMessage(forgotPasswordForm, response.message || 'Request failed. Please try again.');
+                }
+            } catch (error) {
+                // Show error message
+                showFormMessage(forgotPasswordForm, error.message || 'Request failed. Please try again.');
+            } finally {
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Reset Password';
+            }
+        }
+    });
+}
+
+// Add reset password functionality
+const resetPasswordForm = document.getElementById('resetPasswordForm');
+
+if (resetPasswordForm) {
+    resetPasswordForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let isValid = true;
+        
+        const password = resetPasswordForm.querySelector('#password');
+        const confirmPassword = resetPasswordForm.querySelector('#confirm-password');
+        const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
+        
+        // Get reset token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const resetToken = urlParams.get('token');
+        
+        if (!resetToken) {
+            showFormMessage(resetPasswordForm, 'Invalid or missing reset token. Please request a new password reset.');
+            return;
+        }
+        
+        // Validate Password
+        if (!password.value.trim()) {
+            showError(password, 'Password is required');
+            isValid = false;
+        } else if (!validatePassword(password.value)) {
+            showError(password, 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number');
+            isValid = false;
+        } else {
+            clearError(password);
+        }
+        
+        // Validate Confirm Password
+        if (!confirmPassword.value.trim()) {
+            showError(confirmPassword, 'Please confirm your password');
+            isValid = false;
+        } else if (confirmPassword.value !== password.value) {
+            showError(confirmPassword, 'Passwords do not match');
+            isValid = false;
+        } else {
+            clearError(confirmPassword);
+        }
+        
+        if (isValid && window.PortMySimAPI) {
+            try {
+                // Disable button and show loading
+                submitButton.disabled = true;
+                submitButton.textContent = 'Updating Password...';
+                
+                // Call reset password API
+                const response = await window.PortMySimAPI.auth.resetPassword(
+                    resetToken,
+                    password.value.trim()
+                );
+                
+                if (response.success) {
+                    // Show success message
+                    showFormMessage(resetPasswordForm, 'Password updated successfully! Redirecting to login...', true);
+                    
+                    // Redirect to login page
+                    setTimeout(() => {
+                        window.location.href = '/HTML/login.html';
+                    }, 2000);
+                } else {
+                    // Show error
+                    showFormMessage(resetPasswordForm, response.message || 'Password reset failed. Please try again.');
+                }
+            } catch (error) {
+                // Show error message
+                showFormMessage(resetPasswordForm, error.message || 'Password reset failed. Please try again.');
+            } finally {
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Update Password';
             }
         }
     });

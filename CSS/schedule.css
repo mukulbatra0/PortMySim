@@ -929,30 +929,40 @@
 input[type="date"].date-input {
     appearance: none;
     padding-right: 30px; /* Space for the calendar icon */
-    color: var(--text-color);
+    color: var(--text-light);
     font-family: 'Inter', sans-serif;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234B5563' class='bi bi-calendar' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: calc(100% - 10px) center;
+    display: block;
+    width: 100%;
+    background-color: var(--bg-dark-2);
 }
 
 input[type="date"].date-input::-webkit-calendar-picker-indicator {
-    opacity: 0; /* Hide the default calendar icon */
-    width: 100%;
-    height: 100%;
+    opacity: 0.3; /* Make the calendar icon slightly visible */
+    width: 20px;
+    height: 20px;
     position: absolute;
-    top: 0;
-    left: 0;
+    right: 10px;
     cursor: pointer;
 }
 
-input[type="date"].date-input:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+input[type="date"]:not(:placeholder-shown) {
+    color: var(--text-light);
 }
 
-.input-with-icon input[type="date"] {
-    padding-left: 48px; /* Make room for the icon */
+input[type="date"]::-webkit-datetime-edit {
+    color: var(--text-light);
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    color: var(--text-light);
+}
+
+/* Fix for Firefox */
+input[type="date"] {
+    color: var(--text-light);
 }
 
 /* Form help text */
@@ -964,4 +974,413 @@ input[type="date"].date-input:focus {
     font-style: italic;
     line-height: 1.4;
     opacity: 0.8;
+}
+
+/* Form Error Alert */
+.form-error-alert {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  max-width: 100%;
+}
+
+.form-error-alert.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.form-error-alert i {
+  margin-right: 10px;
+  font-size: 18px;
+  color: #e74c3c;
+}
+
+/* Loading Spinner */
+.btn-submit .fa-spinner {
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Auto-detection styles */
+.detection-message {
+    color: var(--accent-color);
+    font-size: 0.85rem;
+    margin-top: 10px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    font-weight: 500;
+    background: rgba(var(--accent-rgb), 0.08);
+    padding: 10px 12px;
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--accent-color);
+}
+
+/* Loading message styles */
+.loading-message {
+    border-left-color: var(--secondary-light);
+    background: rgba(var(--secondary-rgb), 0.08);
+    color: var(--text-light);
+}
+
+.loading-message .fa-spinner {
+    margin-right: 8px;
+    animation: spin 1s linear infinite;
+}
+
+.detection-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.detection-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-confirm-detection,
+.btn-wrong-detection {
+    border: none;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-confirm-detection {
+    background: rgba(var(--success-rgb), 0.2);
+    color: var(--success-color);
+    border: 1px solid rgba(var(--success-rgb), 0.3);
+}
+
+.btn-wrong-detection {
+    background: rgba(var(--danger-rgb), 0.2);
+    color: var(--danger-color);
+    border: 1px solid rgba(var(--danger-rgb), 0.3);
+}
+
+.btn-confirm-detection:hover {
+    background: rgba(var(--success-rgb), 0.3);
+}
+
+.btn-wrong-detection:hover {
+    background: rgba(var(--danger-rgb), 0.3);
+}
+
+.detection-disclaimer {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: normal;
+    margin-top: 5px;
+    color: var(--text-light-muted);
+    opacity: 0.8;
+}
+
+/* Confidence level indicators */
+.confidence {
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin: 0 3px;
+}
+
+.high-confidence {
+    background-color: rgba(var(--success-rgb), 0.2);
+    color: var(--success-color);
+}
+
+.medium-confidence {
+    background-color: rgba(var(--accent-rgb), 0.2);
+    color: var(--accent-color);
+}
+
+.low-confidence {
+    background-color: rgba(var(--warning-color-rgb, 253, 203, 110), 0.2);
+    color: var(--warning-color);
+}
+
+.very-low-confidence {
+    background-color: rgba(var(--danger-rgb), 0.2);
+    color: var(--danger-color);
+}
+
+.detection-message::before {
+    content: '\f58e';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    margin-right: 8px;
+    font-size: 0.9rem;
+    float: left;
+}
+
+.detection-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Auto-detected field highlight effect */
+select.auto-detected,
+input.auto-detected {
+    animation: autofill-pulse 1.5s ease;
+    border-color: var(--accent-color);
+}
+
+@keyframes autofill-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(var(--accent-rgb), 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0);
+    }
+}
+
+/* Style for date inputs with selected values */
+input[type="date"].has-value {
+    color: var(--text-light) !important;
+    background-color: var(--bg-dark-2);
+}
+
+/* Ensure date inputs match other form inputs */
+.input-with-icon input[type="date"] {
+    padding-left: 48px; /* Make room for the icon */
+    height: 50px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-dark-2);
+    transition: all 0.3s ease;
+}
+
+.input-with-icon input[type="date"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Info Message Styles */
+.info-message {
+  background: rgba(var(--primary-rgb), 0.1);
+  border-left: 3px solid var(--primary-color);
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  display: flex;
+  align-items: flex-start;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+/* Specific style for SMS Date Info in Step 1 */
+#smsDateInfo .info-message {
+  background: rgba(var(--accent-rgb), 0.1);
+  border-left: 3px solid var(--accent-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+#smsDateInfo .info-message i {
+  color: var(--accent-color);
+}
+
+#smsDateInfo .info-message strong {
+  color: var(--accent-color);
+}
+
+.info-message i {
+  color: var(--primary-color);
+  margin-right: 12px;
+  font-size: 1.2rem;
+  margin-top: 2px;
+}
+
+.info-message span {
+  color: var(--text-light);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.info-message strong {
+  color: var(--white);
+  font-weight: 600;
+  margin-left: 5px;
+}
+
+/* Nearby Centers Styling */
+.nearby-centers {
+  margin-top: 2rem;
+  background: var(--bg-dark-2);
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.nearby-centers h3 {
+  display: flex;
+  align-items: center;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--text-color-primary);
+}
+
+.nearby-centers h3 i {
+  margin-right: 0.5rem;
+  color: var(--accent-color);
+}
+
+.nearby-centers h4 {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  margin: 1rem 0;
+  color: var(--text-color-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.nearby-centers h4 i {
+  margin-right: 0.5rem;
+  color: var(--accent-color);
+}
+
+.centers-list {
+  max-height: 400px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-color) var(--bg-dark-3);
+}
+
+.centers-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.centers-list::-webkit-scrollbar-track {
+  background: var(--bg-dark-3);
+  border-radius: 4px;
+}
+
+.centers-list::-webkit-scrollbar-thumb {
+  background-color: var(--accent-color);
+  border-radius: 4px;
+}
+
+.center-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 8px;
+  background: var(--bg-dark-1);
+  margin-bottom: 0.75rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+}
+
+.center-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.center-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-dark-3);
+  margin-right: 1rem;
+  flex-shrink: 0;
+}
+
+.center-icon i {
+  font-size: 1.2rem;
+}
+
+.center-info {
+  flex: 1;
+}
+
+.center-name {
+  font-weight: 600;
+  color: var(--text-color-primary);
+  margin-bottom: 0.25rem;
+}
+
+.center-address {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.center-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.service-badge {
+  display: inline-block;
+  background: var(--bg-dark-3);
+  color: var(--text-color-secondary);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.center-distance {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-left: 1rem;
+  white-space: nowrap;
+}
+
+.centers-loading {
+  padding: 1rem;
+  color: var(--text-color-secondary);
+  text-align: center;
+  font-style: italic;
+}
+
+.centers-loading i {
+  margin-right: 0.5rem;
+  color: var(--accent-color);
+}
+
+/* Provider-specific colors */
+.center-icon i[style*="color: #e40000"] ~ .center-info .center-name {
+  color: #e40000;
+}
+
+.center-icon i[style*="color: #0f3cc9"] ~ .center-info .center-name {
+  color: #0f3cc9;
+}
+
+.center-icon i[style*="color: #ee008c"] ~ .center-info .center-name {
+  color: #ee008c;
+}
+
+.center-icon i[style*="color: #1d8a13"] ~ .center-info .center-name {
+  color: #1d8a13;
+}
+
+.center-icon i[style*="color: #ff6a00"] ~ .center-info .center-name {
+  color: #ff6a00;
 } 

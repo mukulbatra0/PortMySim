@@ -83,60 +83,134 @@ exports.getMe = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 exports.forgotPassword = asyncHandler(async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
-
-  if (!user) {
-    return res.status(404).json({
+  console.log('Forgot password request received:', req.body);
+  
+  // Validate email
+  if (!req.body.email) {
+    return res.status(400).json({
       success: false,
-      message: 'No user found with that email'
+      message: 'Please provide an email address'
     });
   }
 
-  // Get reset token
-  const resetToken = user.getResetPasswordToken();
+  try {
+    // Find user with that email
+    const user = await User.findOne({ email: req.body.email });
 
-  await user.save({ validateBeforeSave: false });
-
-  // In a real application, you would send an email here
-  // For now, we'll just return the token in the response
-  res.status(200).json({
-    success: true,
-    message: 'Password reset initiated. In production, an email would be sent.',
-    data: {
-      resetToken
+    if (!user) {
+      console.log('No user found with email:', req.body.email);
+      // Still return success to prevent email enumeration attacks
+      return res.status(200).json({
+        success: true,
+        message: 'If an account with that email exists, a password reset link has been sent.'
+      });
     }
-  });
+
+    // Get reset token
+    const resetToken = user.getResetPasswordToken();
+    
+    console.log('Generated reset token for user:', user._id);
+
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset URL (in production this would be sent in an email)
+    const resetUrl = `${req.protocol}://${req.get('host')}/HTML/reset-password.html?token=${resetToken}`;
+    
+    console.log('Reset URL (would be sent in email):', resetUrl);
+
+    // In a real application, you would send an email here
+    // For now, we'll just return the token in the response
+    res.status(200).json({
+      success: true,
+      message: 'Password reset initiated. In production, an email would be sent.',
+      data: {
+        resetToken,
+        resetUrl
+      }
+    });
+  } catch (error) {
+    console.error('Error in forgot password process:', error);
+    
+    // If there was an error, clean up the reset token fields
+    if (req.body.email) {
+      const user = await User.findOne({ email: req.body.email });
+      if (user) {
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        await user.save({ validateBeforeSave: false });
+      }
+    }
+    
+    return res.status(500).json({
+      success: false,
+      message: 'Could not send password reset email. Please try again later.'
+    });
+  }
 });
 
 // @desc    Reset password
 // @route   PUT /api/auth/reset-password/:resetToken
 // @access  Public
 exports.resetPassword = asyncHandler(async (req, res) => {
-  // Get hashed token
-  const resetPasswordToken = crypto
-    .createHash('sha256')
-    .update(req.params.resetToken)
-    .digest('hex');
-
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() }
-  });
-
-  if (!user) {
+  console.log('Reset password request received for token:', req.params.resetToken);
+  
+  // Validate request parameters
+  if (!req.params.resetToken) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid token or token has expired'
+      message: 'Reset token is required'
     });
   }
+  
+  // Validate password
+  if (!req.body.password) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a new password'
+    });
+  }
+  
+  try {
+    // Get hashed token
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(req.params.resetToken)
+      .digest('hex');
+      
+    console.log('Looking for user with hashed token:', resetPasswordToken);
 
-  // Set new password
-  user.password = req.body.password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
-  await user.save();
+    // Find user with valid token
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
 
-  sendTokenResponse(user, 200, res);
+    if (!user) {
+      console.log('No user found with valid reset token');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid token or token has expired'
+      });
+    }
+
+    console.log('Found user, resetting password:', user._id);
+    
+    // Set new password
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    
+    await user.save();
+
+    // Generate new auth token for auto-login
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    console.error('Error in reset password process:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to reset password. Please try again.'
+    });
+  }
 });
 
 // Helper function to get token from model, create cookie and send response

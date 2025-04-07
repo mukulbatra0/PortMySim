@@ -8,6 +8,11 @@ const planRoutes = require('./routes/planRoutes');
 const telecomCirclesRoutes = require('./routes/telecomCircles.routes');
 const faqRoutes = require('./routes/faqs.routes');
 const networkCoverageRoutes = require('./routes/networkCoverage.routes');
+const portingRoutes = require('./routes/porting.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
+const mobileSmsRoutes = require('./routes/mobileSms.routes');
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/users.routes');
 
 const app = express();
 
@@ -39,11 +44,16 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, '..')));
 
 // Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api', planRoutes);
 app.use('/api', telecomCirclesRoutes);
 app.use('/api', faqRoutes);
 app.use('/api', networkCoverageRoutes);
+app.use('/api/porting', portingRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use('/api/mobile-sms', mobileSmsRoutes);
 
 // Serve index.html for the root route
 app.get('/', (req, res) => {

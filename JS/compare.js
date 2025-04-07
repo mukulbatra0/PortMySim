@@ -358,7 +358,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   // Network selector event handlers
   const networkSelect = document.getElementById('network-select');
   if (networkSelect) {
@@ -2662,27 +2662,10 @@ function setupViewDetailsButtons() {
         ? locationInput.value.trim() 
         : 'My Current Location';
       
-      // Show loading state first
-      showLoadingState();
-      
-      try {
-        // Use fallback data directly without making API call to prevent 404 errors
-        console.log('Using fallback network data for', location);
-        const fallbackData = getFallbackNetworkData(location);
-        console.log('Generated fallback data:', fallbackData);
-        
-        // Hide loading state
-        hideLoadingState();
-        
-        // Update UI with fallback data
-        updateBestNetworkUI(fallbackData);
-        updateNetworkRankings(fallbackData.rankings);
-        highlightBestNetwork(operator); // Always highlight the selected operator
-        updateDetailedComparisonTable(fallbackData);
-        
-        // Generate and show fallback district data
-        const fallbackDistrictData = generateFallbackDistrictData(location);
-        updateDistrictComparison(fallbackDistrictData);
+      // Compare networks with this operator highlighted
+      compareNetworksAction(location).then(() => {
+        // After comparison is done, highlight this operator
+        highlightBestNetwork(operator);
         
         // Scroll to map
         const mapContainer = document.getElementById('india-map-svg-container');
@@ -2691,11 +2674,7 @@ function setupViewDetailsButtons() {
             behavior: 'smooth'
           });
         }
-      } catch (error) {
-        // Hide loading state if there's an error
-        hideLoadingState();
-        console.error('Error handling view details action:', error);
-      }
+      });
     });
   });
 }

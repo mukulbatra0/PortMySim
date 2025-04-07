@@ -1,7 +1,6 @@
 {
   "name": "portmysim-backend",
   "version": "1.0.0",
-
   "description": "PortMySim - Mobile Number Portability Service - Backend API",
   "main": "server.js",
   "scripts": {
@@ -12,16 +11,20 @@
     "seed:faqs": "node scripts/seedFAQs.js",
     "seed:circles": "node scripts/seedTelecomCircles.js",
     "setup-plans": "node scripts/setupPlans.js",
-    "seed:coverage": "node scripts/seedNetworkCoverage.js"
+    "seed:coverage": "node scripts/seedNetworkCoverage.js",
+    "seed:porting-rules": "node scripts/seedPortingRules.js",
+    "seed:porting-centers": "node scripts/seedPortingCenters.js"
   },
   "dependencies": {
+    "axios": "^1.6.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mongoose": "^8.13.1",
-    "node-fetch": "^2.6.12"
+    "node-fetch": "^2.6.12",
+    "nodemailer": "^6.9.12"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.1.9"
   }
-} 
+}

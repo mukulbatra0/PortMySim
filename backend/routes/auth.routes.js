@@ -37,4 +37,15 @@ router.post('/forgot-password', forgotPassword);
 // @access  Public
 router.put('/reset-password/:resetToken', resetPassword);
 
+// @route   GET /api/auth/ping
+// @desc    Simple endpoint to test API connectivity
+// @access  Public
+router.get('/ping', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Auth API is available',
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = router; 

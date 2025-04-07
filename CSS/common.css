@@ -7,10 +7,10 @@
     --primary-rgb: 240, 182, 127;   /* RGB values for Warm Orange */
     
     /* Secondary Colors */
-    --secondary-color: #5B7C99;     /* Muted Blue */
-    --secondary-light: #7A97B0;     /* Light Blue */
-    --secondary-dark: #426380;      /* Dark Blue */
-    --secondary-rgb: 91, 124, 153;  /* RGB values for Muted Blue */
+    --secondary-color: #46484B;     /* Dark Gray */
+    --secondary-light: #6F7177;     /* Medium Gray */
+    --secondary-dark: #2D2F34;      /* Very Dark Gray */
+    --secondary-rgb: 111, 113, 119;  /* RGB values for Medium Gray */
     
     /* Background Colors */
     --bg-dark-1: #1A1C22;           /* Nearly Black */
@@ -38,9 +38,20 @@
     --accent-light: #A29BFE;        /* Light Purple */
     --accent-dark: #4834D4;         /* Dark Purple */
     --accent-rgb: 108, 92, 231;     /* RGB values for Vibrant Purple */
+    
+    /* Feedback Colors */
     --success-color: #00B894;       /* Mint */
+    --success-rgb: 0, 184, 148;
+    --success-light: #34d399;
+    --success-dark: #059669;
+    
     --warning-color: #FDCB6E;       /* Yellow */
+    
     --danger-color: #FF7675;        /* Coral */
+    --danger-rgb: 255, 118, 117;
+    --danger-light: #f87171;
+    --danger-dark: #dc2626;
+    
     --error: #dc3545;
     
     /* UI Elements */
