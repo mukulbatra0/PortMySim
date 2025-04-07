@@ -80,11 +80,19 @@ function createLoader() {
     loader.appendChild(logo);
     loaderContainer.appendChild(loader);
     loaderContainer.appendChild(loadingText);
-    document.body.appendChild(progressBar);
-    document.body.appendChild(loaderContainer);
+    
+    // Insert progress bar and loader container before the footer
+    const footer = document.querySelector('footer');
+    if (footer) {
+        document.body.insertBefore(progressBar, footer);
+        document.body.insertBefore(loaderContainer, footer);
+    } else {
+        // Fallback to appending to body if footer not found
+        document.body.appendChild(progressBar);
+        document.body.appendChild(loaderContainer);
+    }
     
     // Ensure the progress bar is initially hidden until needed
-    // This prevents the flash of the progress bar on page load
     requestAnimationFrame(() => {
         if (!progressBar.classList.contains('hidden')) {
             progressBar.style.width = '0%';
