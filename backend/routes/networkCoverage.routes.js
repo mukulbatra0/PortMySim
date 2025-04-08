@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import networkCoverageController from '../controllers/networkCoverageController.js';
+
 const router = express.Router();
-const networkCoverageController = require('../controllers/networkCoverageController');
 
 // Get network coverage data for a specific location
 router.get('/network-coverage', networkCoverageController.getNetworkCoverage);
@@ -17,4 +18,4 @@ router.get('/network-coverage/locations', networkCoverageController.getLocations
 // Get tower data for a location
 router.get('/network-coverage/tower-data', networkCoverageController.getTowerData);
 
-module.exports = router; 
+export default router; 

@@ -1,5 +1,5 @@
-const PortingCenter = require('../models/PortingCenter.model');
-const axios = require('axios');
+import PortingCenter from '../models/PortingCenter.model.js';
+import axios from 'axios';
 
 /**
  * Geocode an address to get latitude and longitude
@@ -98,7 +98,7 @@ const getPortingCenterById = async (centerId) => {
   }
 };
 
-module.exports = {
+export {
   geocodeAddress,
   findNearbyPortingCenters,
   getPortingCenterById

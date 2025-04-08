@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User.model');
-const asyncHandler = require('./async.middleware');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.model.js';
+import asyncHandler from './async.middleware.js';
 
 /**
  * Middleware to protect routes - validates JWT token and adds user info to request
@@ -8,7 +8,7 @@ const asyncHandler = require('./async.middleware');
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-const protect = asyncHandler(async (req, res, next) => {
+export const protect = asyncHandler(async (req, res, next) => {
     let token;
 
     // Check if token exists in headers
@@ -86,7 +86,7 @@ const protect = asyncHandler(async (req, res, next) => {
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
-const admin = asyncHandler(async (req, res, next) => {
+export const admin = asyncHandler(async (req, res, next) => {
     // Check if user is admin
     if (req.userRole !== 'admin') {
         return res.status(403).json({
@@ -104,7 +104,7 @@ const admin = asyncHandler(async (req, res, next) => {
  * @param {String[]} roles - Array of allowed roles
  * @returns {Function} Middleware function
  */
-const authorize = (roles) => {
+export const authorize = (roles) => {
     return (req, res, next) => {
         if (!roles.includes(req.userRole)) {
             return res.status(403).json({
@@ -114,6 +114,4 @@ const authorize = (roles) => {
         }
         next();
     };
-};
-
-module.exports = { protect, admin, authorize }; 
+}; 

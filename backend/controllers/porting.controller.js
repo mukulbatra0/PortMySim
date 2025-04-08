@@ -1,16 +1,16 @@
-const PortingRequest = require('../models/PortingRequest.model');
-const PortingRules = require('../models/PortingRules.model');
-const PortingCenter = require('../models/PortingCenter.model');
-const User = require('../models/User.model');
-const mongoose = require('mongoose');
-const portingCenterService = require('../utils/portingCenterService');
+import PortingRequest from '../models/PortingRequest.model.js';
+import PortingRules from '../models/PortingRules.model.js';
+import PortingCenter from '../models/PortingCenter.model.js';
+import User from '../models/User.model.js';
+import mongoose from 'mongoose';
+import * as portingCenterService from '../utils/portingCenterService.js';
 
 /**
  * @desc    Submit a new porting request
  * @route   POST /api/porting/submit
  * @access  Private
  */
-exports.submitPortingRequest = async (req, res) => {
+const submitPortingRequest = async (req, res) => {
   try {
     const {
       mobileNumber,
@@ -129,7 +129,7 @@ exports.submitPortingRequest = async (req, res) => {
  * @route   GET /api/porting/requests
  * @access  Private
  */
-exports.getUserPortingRequests = async (req, res) => {
+const getUserPortingRequests = async (req, res) => {
   try {
     // Get user ID from req.userId set by auth middleware
     const userId = req.userId;
@@ -157,7 +157,7 @@ exports.getUserPortingRequests = async (req, res) => {
  * @route   GET /api/porting/status/:id
  * @access  Private
  */
-exports.getPortingStatus = async (req, res) => {
+const getPortingStatus = async (req, res) => {
   try {
     const portingRequest = await PortingRequest.findById(req.params.id)
       .select('mobileNumber currentProvider newProvider scheduledDate smsDate status statusHistory createdAt portingCenterDetails notifications');
@@ -218,7 +218,7 @@ exports.getPortingStatus = async (req, res) => {
  * @route   POST /api/porting/centers/nearby
  * @access  Private
  */
-exports.findNearbyPortingCenters = async (req, res) => {
+const findNearbyPortingCenters = async (req, res) => {
   try {
     const { lat, lng, provider, radius = 10 } = req.body;
 
@@ -255,7 +255,7 @@ exports.findNearbyPortingCenters = async (req, res) => {
  * @route   POST /api/porting/calculate-dates
  * @access  Public
  */
-exports.calculatePortingDates = async (req, res) => {
+const calculatePortingDates = async (req, res) => {
   try {
     const { planEndDate, circleId } = req.body;
 
@@ -294,7 +294,7 @@ exports.calculatePortingDates = async (req, res) => {
  * @route   GET /api/porting/rules/:circleId
  * @access  Public
  */
-exports.getPortingRules = async (req, res) => {
+const getPortingRules = async (req, res) => {
   try {
     const rules = await PortingRules.findOne({ 
       circle: req.params.circleId,
@@ -326,7 +326,7 @@ exports.getPortingRules = async (req, res) => {
  * @route   GET /api/porting/providers
  * @access  Public
  */
-exports.getServiceProviders = async (req, res) => {
+const getServiceProviders = async (req, res) => {
   try {
     // In a real app, you would fetch this from a database
     const providers = [
@@ -356,7 +356,7 @@ exports.getServiceProviders = async (req, res) => {
  * @route   GET /api/porting/circles
  * @access  Public
  */
-exports.getTelecomCircles = async (req, res) => {
+const getTelecomCircles = async (req, res) => {
   try {
     // In a real app, you would fetch this from a database
     const circles = [
@@ -403,7 +403,7 @@ exports.getTelecomCircles = async (req, res) => {
  * @route   PUT /api/porting/automation/:id
  * @access  Private
  */
-exports.toggleAutomatedPorting = async (req, res) => {
+const toggleAutomatedPorting = async (req, res) => {
   try {
     const { automatePorting } = req.body;
     
@@ -495,4 +495,16 @@ exports.toggleAutomatedPorting = async (req, res) => {
       error: 'Server Error'
     });
   }
+};
+
+export {
+  submitPortingRequest,
+  getUserPortingRequests,
+  getPortingStatus,
+  findNearbyPortingCenters,
+  calculatePortingDates,
+  getPortingRules,
+  getServiceProviders,
+  getTelecomCircles,
+  toggleAutomatedPorting
 }; 

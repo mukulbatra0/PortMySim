@@ -1,10 +1,10 @@
-const Plan = require('../models/Plan');
-const planHelper = require('../utils/planHelper');
+import Plan from '../models/Plan.js';
+import * as planHelper from '../utils/planHelper.js';
 
 /**
  * Get all plans with optional filtering
  */
-exports.getPlans = async (req, res) => {
+const getPlans = async (req, res) => {
   try {
     const filters = {};
     
@@ -53,7 +53,7 @@ exports.getPlans = async (req, res) => {
 /**
  * Get a single plan by ID
  */
-exports.getPlanById = async (req, res) => {
+const getPlanById = async (req, res) => {
   try {
     const plan = await Plan.findById(req.params.id);
     
@@ -70,7 +70,7 @@ exports.getPlanById = async (req, res) => {
 /**
  * Get plans by operator
  */
-exports.getPlansByOperator = async (req, res) => {
+const getPlansByOperator = async (req, res) => {
   try {
     const operator = req.params.operator;
     
@@ -90,9 +90,10 @@ exports.getPlansByOperator = async (req, res) => {
 /**
  * Compare multiple plans
  */
-exports.comparePlans = async (req, res) => {
+const comparePlans = async (req, res) => {
   try {
-    const { planIds } = req.body;
+    // Get plan IDs from either query params or request body
+    const planIds = req.query.ids ? req.query.ids.split(',') : req.body.planIds;
     
     if (!planIds || !Array.isArray(planIds) || planIds.length < 2) {
       return res.status(400).json({ 
@@ -111,7 +112,8 @@ exports.comparePlans = async (req, res) => {
     
     if (plans.length !== planIds.length) {
       return res.status(400).json({ 
-        message: 'One or more plan IDs are invalid' 
+        message: 'One or more plan IDs are invalid',
+        invalidIds: planIds.filter(id => !plans.some(p => p._id.toString() === id))
       });
     }
     
@@ -142,14 +144,19 @@ exports.comparePlans = async (req, res) => {
       summary
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error comparing plans', error: error.message });
+    console.error('Error comparing plans:', error);
+    res.status(500).json({ 
+      message: 'Error comparing plans', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
 
 /**
  * Get plans for comparison based on criteria
  */
-exports.getSimilarPlans = async (req, res) => {
+const getSimilarPlans = async (req, res) => {
   try {
     const { planId, priceRange = 200, operator } = req.query;
     
@@ -267,7 +274,7 @@ function generateComparisonSummary(plans, valueScores, features) {
 /**
  * Create a new plan
  */
-exports.createPlan = async (req, res) => {
+const createPlan = async (req, res) => {
   try {
     const {
       operator,
@@ -327,7 +334,7 @@ exports.createPlan = async (req, res) => {
 /**
  * Update an existing plan
  */
-exports.updatePlan = async (req, res) => {
+const updatePlan = async (req, res) => {
   try {
     const planId = req.params.id;
     const updateData = { ...req.body };
@@ -369,7 +376,7 @@ exports.updatePlan = async (req, res) => {
 /**
  * Delete a plan
  */
-exports.deletePlan = async (req, res) => {
+const deletePlan = async (req, res) => {
   try {
     const planId = req.params.id;
     
@@ -390,26 +397,43 @@ exports.deletePlan = async (req, res) => {
  * @route GET /api/plans/recommended
  * @access Public
  */
-exports.getRecommendedPlans = async (req, res) => {
+const getRecommendedPlans = async (req, res) => {
   try {
     // Find plans with recommendations first
-    let recommendedPlans = await Plan.find({ 
-      recommendation: { $ne: '' } 
-    }).limit(3);
+    let recommendedPlans = [];
     
-    // If we don't have enough plans with recommendations, get some popular plans
-    if (recommendedPlans.length < 3) {
-      // Find plans based on a mix of operators and price categories
-      const additionalPlans = await Plan.find({
-        _id: { $nin: recommendedPlans.map(p => p._id) } // Exclude already found plans
-      }).sort({ price: -1 }).limit(3 - recommendedPlans.length);
+    try {
+      recommendedPlans = await Plan.find({ 
+        recommendation: { $ne: '' } 
+      }).limit(3);
       
-      recommendedPlans = [...recommendedPlans, ...additionalPlans];
+      // If we don't have enough plans with recommendations, get some popular plans
+      if (recommendedPlans.length < 3) {
+        // Find plans based on a mix of operators and price categories
+        const additionalPlans = await Plan.find({
+          _id: { $nin: recommendedPlans.map(p => p._id) } // Exclude already found plans
+        }).sort({ price: -1 }).limit(3 - recommendedPlans.length);
+        
+        recommendedPlans = [...recommendedPlans, ...additionalPlans];
+      }
+    } catch (dbError) {
+      console.warn('Database error in getRecommendedPlans:', dbError.message);
+      // Use fallback static data if database is not available
+      const fallbackPlans = require('../data/plans');
+      // Find plans with recommendations in the fallback data
+      const plansWithRecommendations = fallbackPlans.filter(p => p.recommendation && p.recommendation !== '');
+      // Ensure we have at least 3 plans, use any plan if not enough recommended ones exist
+      recommendedPlans = plansWithRecommendations.length >= 3 
+        ? plansWithRecommendations.slice(0, 3) 
+        : [...plansWithRecommendations, ...fallbackPlans.filter(p => !p.recommendation || p.recommendation === '').slice(0, 3 - plansWithRecommendations.length)];
+      
+      // Convert plain objects to Plan models
+      recommendedPlans = recommendedPlans.map(plan => new Plan(plan));
     }
     
     // Assign recommendations if not already set
     recommendedPlans = recommendedPlans.map(plan => {
-      if (!plan.recommendation) {
+      if (!plan.recommendation || plan.recommendation === '') {
         // Determine a recommendation based on plan attributes
         if (plan.data_category === 'high') {
           plan.recommendation = 'Best Data';
@@ -424,6 +448,11 @@ exports.getRecommendedPlans = async (req, res) => {
       return plan;
     });
     
+    // Ensure we never return fewer than 3 plans
+    if (recommendedPlans.length < 3) {
+      console.warn("Not enough plans found, returning available plans");
+    }
+    
     res.status(200).json(recommendedPlans);
   } catch (error) {
     console.error('Error fetching recommended plans:', error);
@@ -432,4 +461,16 @@ exports.getRecommendedPlans = async (req, res) => {
       error: error.message 
     });
   }
+};
+
+export default {
+  getPlans,
+  getPlanById,
+  getPlansByOperator,
+  comparePlans,
+  getSimilarPlans,
+  createPlan,
+  updatePlan,
+  deletePlan,
+  getRecommendedPlans
 }; 

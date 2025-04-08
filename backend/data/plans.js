@@ -18,7 +18,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/airtel.png',
+    image: '/images/airtel.png',
     recommendation: ''
   },
   {
@@ -39,7 +39,7 @@ const plans = [
     data_category: 'high',
     price_category: 'mid',
     validity_category: 'monthly',
-    image: '../images/airtel.png',
+    image: '/images/airtel.png',
     recommendation: 'Best Data'
   },
   {
@@ -60,7 +60,7 @@ const plans = [
     data_category: 'high',
     price_category: 'premium',
     validity_category: 'quarterly',
-    image: '../images/airtel.png',
+    image: '/images/airtel.png',
     recommendation: 'Widest Coverage'
   },
   {
@@ -81,7 +81,7 @@ const plans = [
     data_category: 'low',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/jio.jpeg',
+    image: '/images/jio.jpeg',
     recommendation: 'Budget Choice'
   },
   {
@@ -102,7 +102,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'mid',
     validity_category: 'monthly',
-    image: '../images/jio.jpeg',
+    image: '/images/jio.jpeg',
     recommendation: 'Best Value'
   },
   {
@@ -123,7 +123,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'premium',
     validity_category: 'quarterly',
-    image: '../images/jio.jpeg',
+    image: '/images/jio.jpeg',
     recommendation: ''
   },
   {
@@ -144,7 +144,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/vi.png',
+    image: '/images/vi.png',
     recommendation: ''
   },
   {
@@ -165,7 +165,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'mid',
     validity_category: 'monthly',
-    image: '../images/vi.png',
+    image: '/images/vi.png',
     recommendation: ''
   },
   {
@@ -186,7 +186,7 @@ const plans = [
     data_category: 'high',
     price_category: 'premium',
     validity_category: 'quarterly',
-    image: '../images/vi.png',
+    image: '/images/vi.png',
     recommendation: ''
   },
   {
@@ -207,7 +207,7 @@ const plans = [
     data_category: 'low',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/bsnl.png',
+    image: '/images/bsnl.png',
     recommendation: ''
   },
   {
@@ -228,7 +228,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'mid',
     validity_category: 'monthly',
-    image: '../images/bsnl.png',
+    image: '/images/bsnl.png',
     recommendation: ''
   },
   {
@@ -249,7 +249,7 @@ const plans = [
     data_category: 'high',
     price_category: 'premium',
     validity_category: 'quarterly',
-    image: '../images/bsnl.png',
+    image: '/images/bsnl.png',
     recommendation: ''
   },
   {
@@ -270,7 +270,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/airtel.png',
+    image: '/images/airtel.png',
     recommendation: 'Best for Music'
   },
   {
@@ -291,7 +291,7 @@ const plans = [
     data_category: 'low',
     price_category: 'premium',
     validity_category: 'annual',
-    image: '../images/airtel.png',
+    image: '/images/airtel.png',
     recommendation: 'Long Validity'
   },
   {
@@ -312,7 +312,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'premium',
     validity_category: 'annual',
-    image: '../images/jio.jpeg',
+    image: '/images/jio.jpeg',
     recommendation: 'Best Annual Value'
   },
   {
@@ -333,7 +333,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/jio.jpeg',
+    image: '/images/jio.jpeg',
     recommendation: 'Best for Students'
   },
   {
@@ -354,7 +354,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/vi.png',
+    image: '/images/vi.png',
     recommendation: 'Best Weekend Plan'
   },
   {
@@ -375,7 +375,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'premium',
     validity_category: 'annual',
-    image: '../images/vi.png',
+    image: '/images/vi.png',
     recommendation: 'Best Entertainment'
   },
   {
@@ -396,7 +396,7 @@ const plans = [
     data_category: 'medium',
     price_category: 'budget',
     validity_category: 'monthly',
-    image: '../images/bsnl.png',
+    image: '/images/bsnl.png',
     recommendation: 'Best Rural Coverage'
   }
 ];

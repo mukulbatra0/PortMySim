@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import planController from '../controllers/planController.js';
+
 const router = express.Router();
-const planController = require('../controllers/planController');
 
 // Get all plans with filtering
 router.get('/plans', planController.getPlans);
@@ -25,4 +26,4 @@ router.delete('/plans/:id', planController.deletePlan);
 // Create a new plan
 router.post('/plans', planController.createPlan);
 
-module.exports = router; 
+export default router; 

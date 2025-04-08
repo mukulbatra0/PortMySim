@@ -1,10 +1,10 @@
-const User = require('../models/User.model');
-const asyncHandler = require('../middlewares/async.middleware');
+import User from '../models/User.model.js';
+import asyncHandler from '../middlewares/async.middleware.js';
 
 // @desc    Get all users
 // @route   GET /api/users
 // @access  Private/Admin
-exports.getUsers = asyncHandler(async (req, res) => {
+export const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find();
   
   res.status(200).json({
@@ -17,13 +17,13 @@ exports.getUsers = asyncHandler(async (req, res) => {
 // @desc    Get single user
 // @route   GET /api/users/:id
 // @access  Private/Admin
-exports.getUser = asyncHandler(async (req, res) => {
+export const getUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: `No user found with id ${req.params.id}`
+      message: 'User not found'
     });
   }
   
@@ -36,7 +36,7 @@ exports.getUser = asyncHandler(async (req, res) => {
 // @desc    Update user
 // @route   PUT /api/users/:id
 // @access  Private
-exports.updateUser = asyncHandler(async (req, res) => {
+export const updateUser = asyncHandler(async (req, res) => {
   // Extract updateable fields
   const { name, email, phone } = req.body;
   const updateData = { name, email, phone };
@@ -74,13 +74,13 @@ exports.updateUser = asyncHandler(async (req, res) => {
 // @desc    Delete user
 // @route   DELETE /api/users/:id
 // @access  Private/Admin
-exports.deleteUser = asyncHandler(async (req, res) => {
+export const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndDelete(req.params.id);
   
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: `No user found with id ${req.params.id}`
+      message: 'User not found'
     });
   }
   

@@ -1,31 +1,10 @@
-// Form Validation Functions
-const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-};
+import { validateEmail, validatePhone, showError, clearError } from './utils.js';
 
+// Form Validation Functions
 const validatePassword = (password) => {
     // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
     const re = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     return re.test(password);
-};
-
-const validatePhone = (phone) => {
-    // Basic Indian phone number validation (10 digits)
-    const re = /^[6-9]\d{9}$/;
-    return re.test(phone);
-};
-
-const showError = (input, message) => {
-    const errorElement = input.parentElement.nextElementSibling;
-    input.classList.add('error');
-    errorElement.textContent = message;
-};
-
-const clearError = (input) => {
-    const errorElement = input.parentElement.nextElementSibling;
-    input.classList.remove('error');
-    errorElement.textContent = '';
 };
 
 // Show form message (success or error)

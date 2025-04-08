@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const automatedSmsQueueSchema = new mongoose.Schema({
   user: {
@@ -37,4 +37,6 @@ const automatedSmsQueueSchema = new mongoose.Schema({
 // Index for faster queries
 automatedSmsQueueSchema.index({ user: 1, status: 1 });
 
-module.exports = mongoose.model('AutomatedSmsQueue', automatedSmsQueueSchema); 
+const AutomatedSmsQueue = mongoose.model('AutomatedSmsQueue', automatedSmsQueueSchema);
+
+export default AutomatedSmsQueue; 

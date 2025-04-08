@@ -1,11 +1,11 @@
-const FAQ = require('../models/FAQ.model');
+import FAQ from '../models/FAQ.model.js';
 
 /**
  * Get all FAQs
  * @route GET /api/faqs
  * @access Public
  */
-exports.getAllFAQs = async (req, res) => {
+const getAllFAQs = async (req, res) => {
   try {
     let query = {};
     
@@ -31,7 +31,7 @@ exports.getAllFAQs = async (req, res) => {
  * @route GET /api/faqs/categories/:category
  * @access Public
  */
-exports.getFAQsByCategory = async (req, res) => {
+const getFAQsByCategory = async (req, res) => {
   try {
     const { category } = req.params;
     
@@ -58,7 +58,7 @@ exports.getFAQsByCategory = async (req, res) => {
  * @route GET /api/faqs/search
  * @access Public
  */
-exports.searchFAQs = async (req, res) => {
+const searchFAQs = async (req, res) => {
   try {
     const { query } = req.query;
     
@@ -96,7 +96,7 @@ exports.searchFAQs = async (req, res) => {
  * @route GET /api/faqs/top
  * @access Public
  */
-exports.getTopFAQs = async (req, res) => {
+const getTopFAQs = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 5;
     
@@ -116,4 +116,11 @@ exports.getTopFAQs = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error fetching top FAQs', error: error.message });
   }
+};
+
+export default {
+  getAllFAQs,
+  getFAQsByCategory,
+  searchFAQs,
+  getTopFAQs
 }; 

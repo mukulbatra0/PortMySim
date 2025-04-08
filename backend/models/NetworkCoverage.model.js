@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Schema for network coverage data by location
 const networkCoverageSchema = new mongoose.Schema(
@@ -87,4 +87,4 @@ networkCoverageSchema.index({ locationCoordinates: '2dsphere' });
 
 const NetworkCoverage = mongoose.model('NetworkCoverage', networkCoverageSchema);
 
-module.exports = NetworkCoverage; 
+export default NetworkCoverage; 

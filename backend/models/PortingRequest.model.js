@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Porting Request Schema
 const portingRequestSchema = new mongoose.Schema(
@@ -225,4 +225,4 @@ portingRequestSchema.methods.scheduleNotifications = function () {
 
 const PortingRequest = mongoose.model('PortingRequest', portingRequestSchema);
 
-module.exports = PortingRequest; 
+export default PortingRequest; 

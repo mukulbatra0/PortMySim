@@ -1,4 +1,4 @@
-const NetworkCoverage = require('../models/NetworkCoverage.model');
+import NetworkCoverage from '../models/NetworkCoverage.model.js';
 
 /**
  * Network Coverage Controller
@@ -10,7 +10,7 @@ const NetworkCoverage = require('../models/NetworkCoverage.model');
  * @route GET /api/network-coverage/locations
  * @returns {array} - List of location names
  */
-exports.getLocationsWithCoverage = async (req, res) => {
+const getLocationsWithCoverage = async (req, res) => {
   try {
     // Query unique locations from the database
     const locations = await NetworkCoverage.aggregate([
@@ -35,7 +35,7 @@ exports.getLocationsWithCoverage = async (req, res) => {
  * @param {string} location - Location name
  * @returns {object} - Network coverage data
  */
-exports.getNetworkCoverage = async (req, res) => {
+const getNetworkCoverage = async (req, res) => {
   try {
     const { location, operator } = req.query;
     
@@ -106,7 +106,7 @@ exports.getNetworkCoverage = async (req, res) => {
  * @param {string} location - Location name
  * @returns {object} - Comparative network data
  */
-exports.compareNetworks = async (req, res) => {
+const compareNetworks = async (req, res) => {
   try {
     const { location } = req.query;
     
@@ -189,7 +189,7 @@ exports.compareNetworks = async (req, res) => {
  * @param {string} criteria - Criteria for comparison (overall, coverage, speed, callQuality, indoorReception)
  * @returns {object} - Best network data
  */
-exports.getBestNetwork = async (req, res) => {
+const getBestNetwork = async (req, res) => {
   try {
     const { location, lat, lng, criteria = 'overall' } = req.query;
     
@@ -253,7 +253,7 @@ exports.getBestNetwork = async (req, res) => {
           );
           return {
             operator: op,
-            score: opData ? Math.round(opData.downloadSpeed * 2.5) : 0
+            score: opData ? Math.round(opData.downloadSpeed) : 0
           };
         });
         break;
@@ -264,7 +264,7 @@ exports.getBestNetwork = async (req, res) => {
           );
           return {
             operator: op,
-            score: opData ? Math.round(opData.callQuality * 20) : 0
+            score: opData ? Math.round(opData.callQuality * 100) : 0
           };
         });
         break;
@@ -275,120 +275,96 @@ exports.getBestNetwork = async (req, res) => {
           );
           return {
             operator: op,
-            score: opData ? Math.round(opData.indoorReception * 20) : 0
+            score: opData ? Math.round(opData.indoorReception * 100) : 0
           };
         });
         break;
-      default: // overall
+      default:  // overall
         rankings = operators.map(op => {
           const opData = coverageData.find(
             item => item.operator === op && item.technologyType === techType
           );
           if (!opData) return { operator: op, score: 0 };
           
-          return {
-            operator: op,
-            score: Math.round(
-              (opData.signalStrength * 0.3) +
-              (opData.downloadSpeed * 1.5) +
-              (opData.callQuality * 10) +
-              (opData.indoorReception * 10)
-            )
-          };
+          // Calculate weighted score
+          const score = Math.round(
+            (opData.signalStrength * 0.3) +
+            (opData.downloadSpeed * 1.5) +
+            (opData.callQuality * 10) +
+            (opData.indoorReception * 10)
+          );
+          
+          return { operator: op, score };
         });
     }
     
-    // Sort rankings by score (highest first)
+    // Sort by score descending
     rankings.sort((a, b) => b.score - a.score);
-    
-    // Ensure scores are within 0-100 range
-    rankings.forEach(rank => {
-      rank.score = Math.min(100, Math.max(0, rank.score));
-    });
     
     return res.status(200).json({
       location: locationName,
-      bestNetwork: rankings[0],
-      rankings,
-      criteria
+      criteria,
+      rankings
     });
   } catch (error) {
-    console.error('Error determining best network:', error);
-    return res.status(500).json({ error: 'Failed to determine best network' });
+    console.error('Error finding best network:', error);
+    return res.status(500).json({ error: 'Failed to find best network' });
   }
 };
 
 /**
- * Get tower data for a specific location
+ * Get tower data for a location
  * @route GET /api/network-coverage/tower-data
- * @param {number} lat - Latitude
- * @param {number} lng - Longitude
- * @param {number} radius - Radius in kilometers
+ * @param {string} location - Location name
  * @returns {object} - Tower data
  */
-exports.getTowerData = async (req, res) => {
+const getTowerData = async (req, res) => {
   try {
-    const { lat, lng, radius = 5 } = req.query;
+    const { location, operator } = req.query;
     
-    if (!lat || !lng) {
-      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    if (!location) {
+      return res.status(400).json({ error: 'Location parameter is required' });
     }
     
-    // Convert to numbers
-    const latitude = parseFloat(lat);
-    const longitude = parseFloat(lng);
-    const searchRadius = parseFloat(radius);
+    // Create query filter
+    const filter = { location: new RegExp(location, 'i') };
+    if (operator) {
+      filter.operator = operator;
+    }
     
-    // Create geospatial query
-    const point = {
-      type: 'Point',
-      coordinates: [longitude, latitude]  // MongoDB uses [lng, lat]
-    };
+    // Find coverage data from database
+    const coverageData = await NetworkCoverage.find(filter);
     
-    // Find coverage data within radius
-    const coverageData = await NetworkCoverage.find({
-      locationCoordinates: {
-        $near: {
-          $geometry: point,
-          $maxDistance: searchRadius * 1000  // Convert km to meters
-        }
-      }
-    });
+    if (coverageData.length === 0) {
+      return res.status(404).json({ error: 'No tower data found for this location' });
+    }
     
-    // Process data to create tower data response
-  const networks = ['jio', 'airtel', 'vi'];
-  const towerData = {};
-  
-  networks.forEach(network => {
-      // Filter coverage data by operator
-      const operatorData = coverageData.filter(item => item.operator === network);
-      
-      // Create tower points from the coverage data
-      const towers = operatorData.map(data => {
-        const [lng, lat] = data.locationCoordinates.coordinates;
-        return {
-          lat,
-          lng,
-          strength: data.signalStrength,
-        frequency: network === 'jio' ? '850MHz/1800MHz' : 
-                  network === 'airtel' ? '900MHz/1800MHz' : '900MHz/2100MHz'
-        };
-      });
+    // Process and format the tower data
+    const towerData = coverageData.map(data => ({
+      operator: data.operator,
+      technologyType: data.technologyType,
+      location: data.location,
+      coordinates: data.locationCoordinates.coordinates.reverse(),  // Convert to [lat, lng]
+      signalStrength: data.signalStrength,
+      downloadSpeed: data.downloadSpeed,
+      uploadSpeed: data.uploadSpeed,
+      latency: data.latency,
+      callQuality: data.callQuality,
+      indoorReception: data.indoorReception,
+      lastUpdated: data.updatedAt
+    }));
     
-    towerData[network] = {
-      count: towers.length,
-      towers
-    };
-  });
-  
-    return res.status(200).json({
-    latitude,
-    longitude,
-      radius: searchRadius,
-    towerData
-    });
+    return res.status(200).json(towerData);
   } catch (error) {
     console.error('Error fetching tower data:', error);
     return res.status(500).json({ error: 'Failed to fetch tower data' });
   }
-  };
+};
+
+export default {
+  getLocationsWithCoverage,
+  getNetworkCoverage,
+  compareNetworks,
+  getBestNetwork,
+  getTowerData
+};

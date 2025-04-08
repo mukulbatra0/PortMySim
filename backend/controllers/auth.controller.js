@@ -1,11 +1,11 @@
-const User = require('../models/User.model');
-const asyncHandler = require('../middlewares/async.middleware');
-const crypto = require('crypto');
+import User from '../models/User.model.js';
+import asyncHandler from '../middlewares/async.middleware.js';
+import crypto from 'crypto';
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
-exports.register = asyncHandler(async (req, res) => {
+export const register = asyncHandler(async (req, res) => {
   const { name, email, phone, password } = req.body;
 
   // Check if user already exists
@@ -32,7 +32,7 @@ exports.register = asyncHandler(async (req, res) => {
 // @desc    Login user and return JWT token
 // @route   POST /api/auth/login
 // @access  Public
-exports.login = asyncHandler(async (req, res) => {
+export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   // Validate email & password
@@ -70,7 +70,7 @@ exports.login = asyncHandler(async (req, res) => {
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private
-exports.getMe = asyncHandler(async (req, res) => {
+export const getMe = asyncHandler(async (req, res) => {
   const user = await User.findById(req.userId);
 
   res.status(200).json({
@@ -82,7 +82,7 @@ exports.getMe = asyncHandler(async (req, res) => {
 // @desc    Forgot password
 // @route   POST /api/auth/forgot-password
 // @access  Public
-exports.forgotPassword = asyncHandler(async (req, res) => {
+export const forgotPassword = asyncHandler(async (req, res) => {
   console.log('Forgot password request received:', req.body);
   
   // Validate email
@@ -151,7 +151,7 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
 // @desc    Reset password
 // @route   PUT /api/auth/reset-password/:resetToken
 // @access  Public
-exports.resetPassword = asyncHandler(async (req, res) => {
+export const resetPassword = asyncHandler(async (req, res) => {
   console.log('Reset password request received for token:', req.params.resetToken);
   
   // Validate request parameters
@@ -189,7 +189,7 @@ exports.resetPassword = asyncHandler(async (req, res) => {
       console.log('No user found with valid reset token');
       return res.status(400).json({
         success: false,
-        message: 'Invalid token or token has expired'
+        message: 'Password reset link has expired. Please request a new password reset link.'
       });
     }
 
@@ -201,12 +201,16 @@ exports.resetPassword = asyncHandler(async (req, res) => {
     user.resetPasswordExpire = undefined;
     
     await user.save();
-
-    // Generate new auth token for auto-login
-    sendTokenResponse(user, 200, res);
+    
+    console.log('Password reset successful for user:', user._id);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Password has been reset successfully'
+    });
   } catch (error) {
-    console.error('Error in reset password process:', error);
-    return res.status(500).json({
+    console.error('Error resetting password:', error);
+    res.status(500).json({
       success: false,
       message: 'Failed to reset password. Please try again.'
     });

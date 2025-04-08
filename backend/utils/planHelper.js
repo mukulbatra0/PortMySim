@@ -69,7 +69,7 @@ function getValidityCategory(days) {
  * @returns {string} - Image URL
  */
 function getOperatorImage(operator) {
-  const baseUrl = '../images/';
+  const baseUrl = '/images/';
   
   switch (operator.toLowerCase()) {
     case 'jio':
@@ -85,7 +85,7 @@ function getOperatorImage(operator) {
   }
 }
 
-module.exports = {
+export {
   parseDataValue,
   getDataCategory,
   getPriceCategory,

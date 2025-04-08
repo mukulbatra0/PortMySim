@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import Contact from '../models/Contact.model.js';
+
 const router = express.Router();
-const Contact = require('../models/Contact.model');
 
 // Contact form submission endpoint
 router.post('/submit', async (req, res) => {
@@ -81,4 +82,4 @@ router.get('/test', (req, res) => {
   });
 });
 
-module.exports = router; 
+export default router; 

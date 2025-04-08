@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Contact Form Schema
 const contactSchema = new mongoose.Schema(
@@ -69,4 +69,4 @@ try {
   Contact = mongoose.model('Contact', contactSchema);
 }
 
-module.exports = Contact; 
+export default Contact; 

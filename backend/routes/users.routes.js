@@ -1,12 +1,8 @@
-const express = require('express');
+import express from 'express';
+import { protect, admin } from '../middlewares/auth.middleware.js';
+import { getUsers, getUser, deleteUser } from '../controllers/users.controller.js';
+
 const router = express.Router();
-const {
-  getUsers,
-  getUser,
-  updateUser,
-  deleteUser
-} = require('../controllers/users.controller');
-const { protect, admin } = require('../middlewares/auth.middleware');
 
 // @route   GET /api/users
 // @desc    Get all users
@@ -18,14 +14,9 @@ router.get('/', protect, admin, getUsers);
 // @access  Private/Admin
 router.get('/:id', protect, admin, getUser);
 
-// @route   PUT /api/users/:id 
-// @desc    Update user
-// @access  Private
-router.put('/:id', protect, updateUser);
-
 // @route   DELETE /api/users/:id
 // @desc    Delete user
 // @access  Private/Admin
 router.delete('/:id', protect, admin, deleteUser);
 
-module.exports = router; 
+export default router; 

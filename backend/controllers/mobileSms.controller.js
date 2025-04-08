@@ -1,13 +1,13 @@
-const { getPendingAutomatedSms, updateAutomatedSmsStatus } = require('../utils/notificationService');
-const AutomatedSmsQueue = require('../models/AutomatedSmsQueue.model');
-const PortingRequest = require('../models/PortingRequest.model');
+import { getPendingAutomatedSms, updateAutomatedSmsStatus } from '../utils/notificationService.js';
+import AutomatedSmsQueue from '../models/AutomatedSmsQueue.model.js';
+import PortingRequest from '../models/PortingRequest.model.js';
 
 /**
  * @desc    Get pending automated SMS for mobile app to send
  * @route   GET /api/mobile-sms/pending
  * @access  Private
  */
-exports.getPendingSms = async (req, res) => {
+const getPendingSms = async (req, res) => {
   try {
     const userId = req.userId;
     
@@ -38,7 +38,7 @@ exports.getPendingSms = async (req, res) => {
  * @route   PUT /api/mobile-sms/:smsId
  * @access  Private
  */
-exports.updateSmsStatus = async (req, res) => {
+const updateSmsStatus = async (req, res) => {
   try {
     const { smsId } = req.params;
     const { success, error } = req.body;
@@ -109,4 +109,9 @@ exports.updateSmsStatus = async (req, res) => {
       error: 'Server Error'
     });
   }
+};
+
+export default {
+  getPendingSms,
+  updateSmsStatus
 }; 

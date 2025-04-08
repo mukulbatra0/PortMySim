@@ -1,20 +1,20 @@
-const PortingRequest = require('../models/PortingRequest.model');
-const User = require('../models/User.model');
-const { 
+import PortingRequest from '../models/PortingRequest.model.js';
+import User from '../models/User.model.js';
+import { 
   sendSMS, 
   sendEmail, 
   sendAppNotification, 
   generateReminderMessage,
   scheduleReminders,
   cancelAllPendingNotifications
-} = require('../utils/notificationService');
+} from '../utils/notificationService.js';
 
 /**
  * @desc    Create a new manual reminder notification
  * @route   POST /api/notifications/reminder
  * @access  Private
  */
-exports.createReminderNotification = async (req, res) => {
+const createReminderNotification = async (req, res) => {
   try {
     const { portingRequestId, type, message, scheduledFor } = req.body;
 
@@ -92,7 +92,7 @@ exports.createReminderNotification = async (req, res) => {
  * @route   GET /api/notifications/pending/:portingRequestId
  * @access  Private
  */
-exports.getPendingNotifications = async (req, res) => {
+const getPendingNotifications = async (req, res) => {
   try {
     const portingRequest = await PortingRequest.findById(req.params.portingRequestId);
 
@@ -149,7 +149,7 @@ exports.getPendingNotifications = async (req, res) => {
  * @route   DELETE /api/notifications/:portingRequestId/:notificationId
  * @access  Private
  */
-exports.cancelNotification = async (req, res) => {
+const cancelNotification = async (req, res) => {
   try {
     const { portingRequestId, notificationId } = req.params;
 
@@ -222,7 +222,7 @@ exports.cancelNotification = async (req, res) => {
  * @route   POST /api/notifications/send-now
  * @access  Private
  */
-exports.sendNotificationNow = async (req, res) => {
+const sendNotificationNow = async (req, res) => {
   try {
     const { portingRequestId, type, message } = req.body;
 
@@ -328,7 +328,7 @@ exports.sendNotificationNow = async (req, res) => {
  * @route   PUT /api/notifications/:portingRequestId/:notificationId
  * @access  Private
  */
-exports.updateNotification = async (req, res) => {
+const updateNotification = async (req, res) => {
   try {
     const { portingRequestId, notificationId } = req.params;
     const { message, scheduledFor, type } = req.body;
@@ -410,7 +410,7 @@ exports.updateNotification = async (req, res) => {
  * @route   POST /api/notifications/schedule-reminders
  * @access  Private
  */
-exports.scheduleReminders = async (req, res) => {
+const scheduleMultipleReminders = async (req, res) => {
   try {
     const { portingRequestId, reminders } = req.body;
 
@@ -470,7 +470,7 @@ exports.scheduleReminders = async (req, res) => {
  * @route   DELETE /api/notifications/cancel-all/:portingRequestId
  * @access  Private
  */
-exports.cancelAllNotifications = async (req, res) => {
+const cancelAllNotifications = async (req, res) => {
   try {
     const { portingRequestId } = req.params;
 
@@ -515,4 +515,14 @@ exports.cancelAllNotifications = async (req, res) => {
       error: 'Server Error'
     });
   }
+};
+
+export {
+  createReminderNotification,
+  getPendingNotifications,
+  cancelNotification,
+  sendNotificationNow,
+  updateNotification,
+  scheduleMultipleReminders,
+  cancelAllNotifications
 }; 

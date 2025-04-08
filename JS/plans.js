@@ -289,8 +289,8 @@ function loadPlansForComparison() {
                 return comparePlans(planIds);
             } else {
                 console.warn('Not enough recommended plans available, using sample data');
-                // Not enough plans, throw error to trigger sample data fallback
-                throw new Error('Not enough recommended plans available');
+                // Use sample data instead of throwing an error
+                return Promise.reject({message: 'Not enough recommended plans available', useSampleData: true});
             }
         })
         .then(comparisonData => {
@@ -319,7 +319,7 @@ function loadPlansForComparison() {
                         subscriptions: ['JioTV', 'JioCinema'],
                         network_coverage: 98,
                         data_speed: 50,
-                        image: '../images/jio.jpeg',
+                        image: '/images/jio.jpeg',
                         recommendation: 'Best Value'
                     },
                     {
@@ -336,7 +336,7 @@ function loadPlansForComparison() {
                         subscriptions: ['Amazon Prime'],
                         network_coverage: 99,
                         data_speed: 100,
-                        image: '../images/airtel.png',
+                        image: '/images/airtel.png',
                         recommendation: 'Best Data'
                     },
                     {
@@ -353,7 +353,7 @@ function loadPlansForComparison() {
                         subscriptions: ['Vi Movies & TV'],
                         network_coverage: 92,
                         data_speed: 45,
-                        image: '../images/vi.png',
+                        image: '/images/vi.png',
                         recommendation: 'Budget Choice'
                     }
                 ],
@@ -641,7 +641,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'medium',
                 price_category: 'mid',
-                operator: 'jio'
+                operator: 'jio',
+                image: '/images/jio.jpeg'
             },
             { 
                 _id: 'jio2', 
@@ -660,7 +661,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'high',
                 price_category: 'mid',
-                operator: 'jio'
+                operator: 'jio',
+                image: '/images/jio.jpeg'
             },
             { 
                 _id: 'jio3', 
@@ -679,7 +681,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'high',
                 price_category: 'premium',
-                operator: 'jio'
+                operator: 'jio',
+                image: '/images/jio.jpeg'
             }
         ],
         'airtel': [
@@ -700,7 +703,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'medium',
                 price_category: 'budget',
-                operator: 'airtel'
+                operator: 'airtel',
+                image: '/images/airtel.png'
             },
             { 
                 _id: 'airtel2', 
@@ -719,7 +723,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'high',
                 price_category: 'mid',
-                operator: 'airtel'
+                operator: 'airtel',
+                image: '/images/airtel.png'
             },
             { 
                 _id: 'airtel3', 
@@ -738,7 +743,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'high',
                 price_category: 'premium',
-                operator: 'airtel'
+                operator: 'airtel',
+                image: '/images/airtel.png'
             }
         ],
         'vi': [
@@ -759,7 +765,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'low',
                 price_category: 'budget',
-                operator: 'vi'
+                operator: 'vi',
+                image: '/images/vi.png'
             },
             { 
                 _id: 'vi2', 
@@ -778,7 +785,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'medium',
                 price_category: 'mid',
-                operator: 'vi'
+                operator: 'vi',
+                image: '/images/vi.png'
             },
             { 
                 _id: 'vi3', 
@@ -797,7 +805,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'high',
                 price_category: 'premium',
-                operator: 'vi'
+                operator: 'vi',
+                image: '/images/vi.png'
             }
         ],
         'bsnl': [
@@ -818,7 +827,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'low',
                 price_category: 'budget',
-                operator: 'bsnl'
+                operator: 'bsnl',
+                image: '/images/bsnl.png'
             },
             { 
                 _id: 'bsnl2', 
@@ -837,7 +847,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'medium',
                 price_category: 'mid',
-                operator: 'bsnl'
+                operator: 'bsnl',
+                image: '/images/bsnl.png'
             },
             { 
                 _id: 'bsnl3', 
@@ -856,7 +867,8 @@ function addSamplePlans(dropdown, operator) {
                 plan_type: 'prepaid',
                 data_category: 'high',
                 price_category: 'premium',
-                operator: 'bsnl'
+                operator: 'bsnl',
+                image: '/images/bsnl.png'
             }
         ]
     };
@@ -961,7 +973,7 @@ function updateComparisonTable(data) {
                 headerCell.className = `plan-header plan-${index + 1}`;
                 headerCell.innerHTML = `
                     <div class="plan-header-content">
-                        <img src="${plan.image || `../images/${plan.operator}.png`}" alt="${plan.operator}" class="operator-icon">
+                        <img src="${plan.image || `/images/${plan.operator}.png`}" alt="${plan.operator}" class="operator-icon">
                         <div class="plan-info">
                             <h3>${plan.name}</h3>
                             <div class="price">₹${plan.price} <span>/${plan.validity_category || 'month'}</span></div>
@@ -1076,10 +1088,10 @@ function updateComparisonTable(data) {
     // Update value meters
     plans.forEach((plan, index) => {
         if (valueScores && valueScores[index]) {
-            const score = valueScores[index].score;
+            const score = parseFloat(valueScores[index].score) || 0;
             const meterFill = metersContainer.querySelector(`.value-meter.${plan.operator} .meter-fill`);
             if (meterFill) {
-                meterFill.style.width = `${score * 10}%`;
+                meterFill.style.width = `${Math.min(score * 10, 100)}%`;
             }
             
             const meterValue = metersContainer.querySelector(`.value-meter.${plan.operator} .meter-value`);

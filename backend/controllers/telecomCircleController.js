@@ -1,11 +1,11 @@
-const TelecomCircle = require('../models/TelecomCircle.model');
+import TelecomCircle from '../models/TelecomCircle.model.js';
 
 /**
  * Get all telecom circles
  * @route GET /api/telecom-circles
  * @access Public
  */
-exports.getTelecomCircles = async (req, res) => {
+const getTelecomCircles = async (req, res) => {
   try {
     const circles = await TelecomCircle.find({});
     res.status(200).json(circles);
@@ -19,7 +19,7 @@ exports.getTelecomCircles = async (req, res) => {
  * @route GET /api/telecom-circles/:id
  * @access Public
  */
-exports.getTelecomCircleById = async (req, res) => {
+const getTelecomCircleById = async (req, res) => {
   try {
     const circle = await TelecomCircle.findOne({ id: req.params.id });
     
@@ -38,7 +38,7 @@ exports.getTelecomCircleById = async (req, res) => {
  * @route GET /api/telecom-circles/:id/compare
  * @access Public
  */
-exports.compareOperators = async (req, res) => {
+const compareOperators = async (req, res) => {
   try {
     const { id } = req.params;
     const circle = await TelecomCircle.findOne({ id });
@@ -72,7 +72,7 @@ exports.compareOperators = async (req, res) => {
  * @route GET /api/telecom-circles/:id/best-operator
  * @access Public
  */
-exports.getBestOperator = async (req, res) => {
+const getBestOperator = async (req, res) => {
   try {
     const { id } = req.params;
     const { priority } = req.query; // 'coverage', 'speed', or 'quality'
@@ -185,4 +185,11 @@ function findBestOperator(circle, priority) {
     value: maxValue,
     metric: priority
   };
-} 
+}
+
+export {
+  getTelecomCircles,
+  getTelecomCircleById,
+  compareOperators,
+  getBestOperator
+}; 

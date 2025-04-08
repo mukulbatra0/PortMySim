@@ -1,6 +1,5 @@
-const express = require('express');
-const router = express.Router();
-const {
+import express from 'express';
+import {
   submitPortingRequest,
   getUserPortingRequests,
   getPortingStatus,
@@ -10,8 +9,10 @@ const {
   calculatePortingDates,
   getPortingRules,
   toggleAutomatedPorting
-} = require('../controllers/porting.controller');
-const { protect } = require('../middlewares/auth.middleware');
+} from '../controllers/porting.controller.js';
+import { protect } from '../middlewares/auth.middleware.js';
+
+const router = express.Router();
 
 // Define porting routes
 // These will be fully implemented in Step 5
@@ -61,4 +62,4 @@ router.get('/circles', getTelecomCircles);
 // @access  Private
 router.put('/automation/:id', protect, toggleAutomatedPorting);
 
-module.exports = router; 
+export default router; 

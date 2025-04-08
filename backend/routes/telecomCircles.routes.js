@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import * as telecomCircleController from '../controllers/telecomCircleController.js';
+
 const router = express.Router();
-const telecomCircleController = require('../controllers/telecomCircleController');
 
 // Get all telecom circles
 router.get('/telecom-circles', telecomCircleController.getTelecomCircles);
@@ -14,4 +15,4 @@ router.get('/telecom-circles/:id/compare', telecomCircleController.compareOperat
 // Get best operator for a circle based on criteria
 router.get('/telecom-circles/:id/best-operator', telecomCircleController.getBestOperator);
 
-module.exports = router; 
+export default router; 

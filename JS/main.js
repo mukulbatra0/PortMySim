@@ -21,7 +21,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // Basic initialization
   document.body.classList.add("js-loaded");
 
-    // Common elements
+  // Detect API server and initialize connection
+  if (typeof detectApiPort === 'function') {
+    detectApiPort().then(() => {
+      // After checking for API connection, show error if needed
+      if (typeof showConnectionError === 'function') {
+        showConnectionError();
+      }
+    });
+  }
+
+  // Common elements
   const header =
     document.querySelector(".header") || document.querySelector("header");
   const hamburger =

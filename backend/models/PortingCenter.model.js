@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Porting Center Schema
 const portingCenterSchema = new mongoose.Schema(
@@ -89,4 +89,4 @@ portingCenterSchema.statics.findNearby = async function(lat, lng, radius, provid
 
 const PortingCenter = mongoose.model('PortingCenter', portingCenterSchema);
 
-module.exports = PortingCenter; 
+export default PortingCenter; 

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const planSchema = new mongoose.Schema({
   operator: {
@@ -165,4 +165,5 @@ function determineBest(plans, feature, mode) {
   return plans.map(() => false);
 }
 
-module.exports = mongoose.model('Plan', planSchema); 
+const Plan = mongoose.model('Plan', planSchema);
+export default Plan; 

@@ -1,28 +1,7 @@
 // Contact Form Validation and Submission
+import { validateEmail, validatePhone, showError, clearError } from './utils.js';
+
 const contactForm = document.getElementById('contactForm');
-
-const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-};
-
-const validatePhone = (phone) => {
-    // Basic Indian phone number validation (10 digits)
-    const re = /^[6-9]\d{9}$/;
-    return re.test(phone);
-};
-
-const showError = (input, message) => {
-    const errorElement = input.parentElement.querySelector('.error-message');
-    input.classList.add('error');
-    errorElement.textContent = message;
-};
-
-const clearError = (input) => {
-    const errorElement = input.parentElement.querySelector('.error-message');
-    input.classList.remove('error');
-    errorElement.textContent = '';
-};
 
 const showSuccessMessage = (message) => {
     const successMessage = document.createElement('div');

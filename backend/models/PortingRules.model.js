@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Porting Rules Schema
 const portingRulesSchema = new mongoose.Schema(
@@ -138,4 +138,4 @@ portingRulesSchema.statics.calculatePortingDate = async function(smsDate, circle
 
 const PortingRules = mongoose.model('PortingRules', portingRulesSchema);
 
-module.exports = PortingRules; 
+export default PortingRules; 

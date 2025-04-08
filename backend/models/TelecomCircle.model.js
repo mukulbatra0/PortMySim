@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 // Schema for network quality by operator
 const networkQualitySchema = new mongoose.Schema({
@@ -131,4 +131,4 @@ const telecomCircleSchema = new mongoose.Schema(
 
 const TelecomCircle = mongoose.model('TelecomCircle', telecomCircleSchema);
 
-module.exports = TelecomCircle; 
+export default TelecomCircle; 
