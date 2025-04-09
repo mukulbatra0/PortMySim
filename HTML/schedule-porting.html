@@ -15,7 +15,8 @@
 
     <link rel="stylesheet" href="../CSS/common.css" />
     <link rel="stylesheet" href="../CSS/schedule.css" />
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg&libraries=places"></script>
+    <link rel="stylesheet" href="../CSS/loader.css">
+    <!-- Google Maps will be loaded dynamically via JavaScript -->
     <style>
       /* Additional Custom Styles */
       .info-message {
@@ -469,13 +470,24 @@
                     <input
                       type="tel"
                       id="currentNumber"
-                      name="currentNumber"
+                      name="mobileNumber"
                       placeholder="Enter your 10-digit mobile number"
                       required
-                      pattern="[0-9]{10}"
+                      pattern="[6-9][0-9]{9}"
+                      maxlength="10"
                     />
                   </div>
                   <span class="error-message"></span>
+                  <div id="providerDetection" class="detection-message" style="display: none;">
+                    <div class="detection-header">
+                      <span>We detected your provider is <strong id="detectedProvider"></strong></span>
+                      <span class="confidence" id="confidenceLevel"></span>
+                    </div>
+                    <div class="detection-actions">
+                      <button type="button" class="btn-confirm-detection">Yes, that's correct</button>
+                      <button type="button" class="btn-wrong-detection">No, let me select</button>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-group">
@@ -551,7 +563,7 @@
                     <input
                       type="date"
                       id="currentPlan"
-                      name="currentPlan"
+                      name="planEndDate"
                       class="date-input"
                       placeholder="Select a date"
                       required
@@ -566,7 +578,16 @@
                 </div>
                 
                 <!-- SMS Date Info Display Area -->
-                <div id="smsDateInfo" style="display:none; margin-top: 15px; animation: fadeIn 0.5s ease-in-out;"></div>
+                <div id="smsDateInfo" class="info-message" style="display:none;">
+                  <i class="fas fa-info-circle"></i>
+                  <span>Based on your plan end date and circle regulations, you should send PORT SMS on <strong id="calculatedSmsDate">--/--/----</strong></span>
+                </div>
+
+                <!-- Loading indicator for API calls -->
+                <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                  <div class="spinner"></div>
+                  <span>Checking eligibility...</span>
+                </div>
 
                 <div class="form-buttons">
                   <button type="button" class="btn-next" data-next="2">
@@ -729,6 +750,7 @@
                     name="automatePorting"
                   />
                   <label for="automatePorting">Automate porting process (we'll handle the SMS and UPC code retrieval)</label>
+                  <small class="form-help-text">When enabled, we'll automatically send the PORT SMS to 1900 for you on the optimal date and retrieve the UPC code.</small>
                 </div>
 
                 <div class="form-group form-checkbox">
@@ -750,20 +772,59 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="portingDate">Select Porting Date</label>
-                    <input type="date" id="portingDate" name="portingDate" required>
+                    <label for="scheduledDate" class="form-label">Select Porting Date</label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-calendar-check form-icon"></i>
+                      <input 
+                        type="date" 
+                        id="scheduledDate" 
+                        name="scheduledDate" 
+                        class="date-input"
+                        placeholder="Select a date"
+                        required
+                      >
+                    </div>
+                    <span class="error-message"></span>
+                    <small class="form-help-text">Choose a date to visit the porting center. The date should be after your SMS date.</small>
                 </div>
 
                 <div class="form-group">
-                    <label for="location">Enter Your Location</label>
-                    <input type="text" id="location" name="location" placeholder="Enter your city, area, or landmark" required>
-                    <small class="form-text">Enter your location to find nearby porting centers</small>
+                    <label for="timeSlot" class="form-label">Preferred Time Slot</label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-clock form-icon"></i>
+                      <select id="timeSlot" name="timeSlot" required>
+                        <option value="" disabled selected>Select preferred time</option>
+                        <option value="morning">Morning (9 AM - 12 PM)</option>
+                        <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
+                        <option value="evening">Evening (4 PM - 8 PM)</option>
+                      </select>
+                    </div>
+                    <span class="error-message"></span>
                 </div>
 
+                <div class="form-group">
+                    <label for="location" class="form-label">Your Location</label>
+                    <div class="input-with-icon">
+                      <i class="fas fa-map-marker-alt form-icon"></i>
+                      <input 
+                        type="text" 
+                        id="location" 
+                        name="location" 
+                        placeholder="Enter your city, area, or landmark" 
+                        required
+                      >
+                    </div>
+                    <span class="error-message"></span>
+                    <small class="form-help-text">Enter your location to find nearby porting centers</small>
+                </div>
+
+                <!-- Improved map container for porting centers -->
                 <div class="porting-centers-container">
                     <div class="centers-list-container">
-                        <h3>Nearby Porting Centers</h3>
-                        <div id="nearbyCentersList" class="centers-list"></div>
+                        <h4><i class="fas fa-store"></i> Nearby Porting Centers</h4>
+                        <div id="nearbyCentersList" class="centers-list">
+                          <p class="centers-loading"><i class="fas fa-spinner fa-spin"></i> Enter your location above to find nearby centers</p>
+                        </div>
                     </div>
                     <div class="map-container">
                         <div id="centersMap"></div>
@@ -795,11 +856,12 @@
                       type="text"
                       id="fullName"
                       name="fullName"
-                      placeholder="Enter your full name"
+                      placeholder="Enter your full name as per ID proof"
                       required
                     />
                   </div>
                   <span class="error-message"></span>
+                  <small class="form-help-text">Please enter your name exactly as it appears on your ID proof</small>
                 </div>
 
                 <div class="form-group">
@@ -812,26 +874,30 @@
                       name="email"
                       placeholder="Enter your email address"
                       required
+                      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                     />
                   </div>
                   <span class="error-message"></span>
+                  <small class="form-help-text">We'll send porting updates to this email</small>
                 </div>
 
                 <div class="form-group">
-                  <label for="altNumber" class="form-label"
+                  <label for="alternateNumber" class="form-label"
                     >Alternate Contact Number (Optional)</label
                   >
                   <div class="input-with-icon">
                     <i class="fas fa-phone-alt form-icon"></i>
                     <input
                       type="tel"
-                      id="altNumber"
-                      name="altNumber"
+                      id="alternateNumber"
+                      name="alternateNumber"
                       placeholder="Enter an alternate number"
-                      pattern="[0-9]{10}"
+                      pattern="[6-9][0-9]{9}"
+                      maxlength="10"
                     />
                   </div>
                   <span class="error-message"></span>
+                  <small class="form-help-text">Provide an alternate number in case we need to reach you</small>
                 </div>
 
                 <div class="form-group form-checkbox">

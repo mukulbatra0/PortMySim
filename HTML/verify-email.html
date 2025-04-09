@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification | PortMySim</title>
+    <link rel="stylesheet" href="../CSS/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="../CSS/loader.css">
+    <link rel="stylesheet" href="../CSS/common.css">
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 100px auto;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .status-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .success .status-icon {
+            color: var(--success);
+        }
+
+        .error .status-icon {
+            color: var(--error);
+        }
+
+        .loading .status-icon {
+            color: var(--primary);
+            animation: spin 1.5s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            margin-bottom: 30px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--primary);
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="../index.html">
+                <img src="../images/logo.png" alt="PortMySim Logo">
+                <span>PortMySim</span>
+            </a>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../HTML/how-it-works.html">How It Works</a></li>
+                <li><a href="../HTML/plans.html">Plans</a></li>
+                <li><a href="../HTML/contact.html">Contact</a></li>
+                <li><a href="../HTML/about.html">About</a></li>
+            </ul>
+        </nav>
+        <div class="auth-btns">
+            <a href="../HTML/login.html" class="btn-login">Login</a>
+            <a href="../HTML/signup.html" class="btn-signup">Sign Up</a>
+        </div>
+        <div class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <main>
+        <div class="container loading" id="verificationContainer">
+            <div class="status-icon">
+                <i class="fas fa-spinner" id="statusIcon"></i>
+            </div>
+            <h1 id="statusTitle">Verifying Your Email</h1>
+            <p class="message" id="statusMessage">Please wait while we verify your email address...</p>
+            <div id="actionButton" style="display: none;">
+                <a href="../HTML/login.html" class="btn">Go to Login</a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>PortMySim</h3>
+                <p>Making mobile network switching simple and hassle-free.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../HTML/how-it-works.html">How It Works</a></li>
+                    <li><a href="../HTML/plans.html">Compare Plans</a></li>
+                    <li><a href="../HTML/contact.html">Contact Us</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="../HTML/terms.html">Terms of Service</a></li>
+                    <li><a href="../HTML/privacyPolicy.html">Privacy Policy</a></li>
+                    <li><a href="../HTML/refundPolicy.html">Refund Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect With Us</h3>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2023 PortMySim. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            const verificationContainer = document.getElementById('verificationContainer');
+            const statusIcon = document.getElementById('statusIcon');
+            const statusTitle = document.getElementById('statusTitle');
+            const statusMessage = document.getElementById('statusMessage');
+            const actionButton = document.getElementById('actionButton');
+
+            // If no token, show error
+            if (!token) {
+                verificationContainer.className = 'container error';
+                statusIcon.className = 'fas fa-times-circle';
+                statusTitle.textContent = 'Verification Failed';
+                statusMessage.textContent = 'The verification link is invalid or has expired. Please request a new verification email.';
+                actionButton.style.display = 'block';
+                return;
+            }
+
+            // Process verification
+            try {
+                // Call the verify email API
+                const response = await fetch(`${window.PortMySimAPI?.apiUrl || 'http://localhost:5000/api'}/auth/verify-email/${token}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Success
+                    verificationContainer.className = 'container success';
+                    statusIcon.className = 'fas fa-check-circle';
+                    statusTitle.textContent = 'Email Verified!';
+                    statusMessage.textContent = 'Your email has been successfully verified. You can now log in to your account.';
+                } else {
+                    // API error
+                    verificationContainer.className = 'container error';
+                    statusIcon.className = 'fas fa-times-circle';
+                    statusTitle.textContent = 'Verification Failed';
+                    statusMessage.textContent = data.message || 'The verification link is invalid or has expired. Please request a new verification email.';
+                }
+            } catch (error) {
+                // Network or other error
+                console.error('Verification error:', error);
+                verificationContainer.className = 'container error';
+                statusIcon.className = 'fas fa-times-circle';
+                statusTitle.textContent = 'Verification Failed';
+                statusMessage.textContent = 'An error occurred while verifying your email. Please try again later.';
+            }
+
+            // Show action button
+            actionButton.style.display = 'block';
+        });
+    </script>
+    <script src="../JS/api.js"></script>
+    <script src="../JS/loader.js"></script>
+</body>
+</html> 

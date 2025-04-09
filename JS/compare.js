@@ -1,9 +1,8 @@
-// Import API functions from api.js
-import { 
-  fetchNetworkCoverage,
-  compareNetworks,
-  getLocationsWithCoverage
-} from './api.js';
+// Use the global PortMySimAPI object instead of importing functions
+// The following functions are available through window.PortMySimAPI:
+// - fetchNetworkCoverage
+// - compareNetworks
+// - getLocationsWithCoverage
 
 // Global variables
 let map;
@@ -813,8 +812,8 @@ async function compareNetworksAction(location) {
     console.log('Fetching network comparison data for:', location);
     
     try {
-      // Call the API function directly to get comparison data
-      const comparisonData = await compareNetworks(params);
+      // Use the global PortMySimAPI object to call the API function
+      const comparisonData = await window.PortMySimAPI.compareNetworks(location);
       
       // Hide loading state
       hideLoadingState();

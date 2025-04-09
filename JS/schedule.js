@@ -6,7 +6,12 @@ const API_BASE_URL = 'http://localhost:5000/api';
 // Import the mobile number database
 import { mobileOperatorData, specificPrefixes, firstDigitOperators, priorityPrefixes } from "./data/mobileLookup.js";
 import { lookupPhoneNumber } from "./truecallerHelper.js";
-import { lookupMobileNumber, getNearbyPortingCenters } from "./api.js";
+import { 
+    lookupMobileNumber, 
+    getNearbyPortingCenters, 
+    getFallbackPortingCenters 
+} from "./api.js";
+import CONFIG from './config.js';
 
 // Get user's location if allowed
 let userLocation = null;
@@ -32,43 +37,56 @@ function getUserLocation() {
 
 // Setup special form fields
 function setupSpecialFields() {
-    // Initialize location input with Google Places Autocomplete
-    const locationInput = document.getElementById('location');
-    if (locationInput) {
-        const autocomplete = new google.maps.places.Autocomplete(locationInput, {
-            types: ['(cities)'],
-            componentRestrictions: { country: 'in' }
-        });
-
-        // When a place is selected, find nearby porting centers
-        autocomplete.addListener('place_changed', () => {
-            const place = autocomplete.getPlace();
-            if (place.geometry) {
-                userLocation = {
-                    lat: place.geometry.location.lat(),
-                    lng: place.geometry.location.lng()
-                };
-                findNearbyPortingCenters();
+    try {
+        // Setup Google Places Autocomplete for location field
+        const locationInput = document.getElementById('location');
+        if (locationInput && window.google && window.google.maps && window.google.maps.places) {
+            console.log('Setting up Google Places Autocomplete');
+            
+            const autocomplete = new google.maps.places.Autocomplete(locationInput, {
+                types: ['geocode'],
+                fields: ['address_components', 'formatted_address', 'geometry', 'name']
+            });
+            
+            // Set the autocomplete bias to the user's country if available
+            if (navigator.language) {
+                const countryCode = navigator.language.split('-')[1];
+                if (countryCode) {
+                    autocomplete.setComponentRestrictions({
+                        country: countryCode
+                    });
+                }
             }
-        });
-    }
-
-    // Setup porting date input
-    const portingDateInput = document.getElementById('portingDate');
-    if (portingDateInput) {
-        // Set minimum date to tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        portingDateInput.min = tomorrow.toISOString().split('T')[0];
-        
-        // Set maximum date to 30 days from now
-        const maxDate = new Date();
-        maxDate.setDate(maxDate.getDate() + 30);
-        portingDateInput.max = maxDate.toISOString().split('T')[0];
+            
+            // Listen for place selection
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                
+                if (!place.geometry) {
+                    console.warn('No geometry found for selected place');
+                    return;
+                }
+                
+                // Automatically search for porting centers when location is selected
+                setTimeout(() => {
+                    findNearbyPortingCenters();
+                }, 500);
+            });
+            
+            console.log('Google Places Autocomplete initialized successfully');
+        } else {
+            console.warn('Google Maps Places API not available');
+        }
+    } catch (error) {
+        console.error('Error setting up special fields:', error);
     }
 }
 
+// Initialize all functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize step navigation
+    setupStepNavigation();
+    
     initScheduleForm();
     setupProgressSteps();
     setupProviderSelection();
@@ -81,6 +99,30 @@ document.addEventListener('DOMContentLoaded', function() {
     setupSpecialFields();
     generatePortingGuid();
     setupAutomationOptions();
+    
+    // Add a div for Google Maps error
+    const mapsErrorDiv = document.createElement('div');
+    mapsErrorDiv.id = 'mapsLoadingError';
+    mapsErrorDiv.className = 'error-message';
+    mapsErrorDiv.style.display = 'none';
+    mapsErrorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Failed to load mapping service. Some features may not work properly.';
+    
+    const formContainer = document.querySelector('.form-container');
+    if (formContainer) {
+        formContainer.prepend(mapsErrorDiv);
+    } else {
+        // Fallback - append to body if form-container doesn't exist
+        document.body.appendChild(mapsErrorDiv);
+    }
+    
+    // Load Google Maps API
+    loadGoogleMapsAPI();
+    
+    // Setup form listeners
+    setupFormListeners();
+    
+    // Add custom styles for porting tracker and status indicators
+    addPortingStyles();
 });
 
 // Generate GUID for porting identification
@@ -330,6 +372,49 @@ function initScheduleForm() {
             }
         }
     });
+
+    // Initialize porting tracker UI
+    const trackerContainer = document.createElement('div');
+    trackerContainer.id = 'portingTracker';
+    trackerContainer.className = 'porting-tracker';
+    
+    const formContainer = document.querySelector('.schedule-form');
+    if (formContainer) {
+        formContainer.insertBefore(trackerContainer, formContainer.firstChild);
+        updatePortingTrackerUI();
+    }
+    
+    // Add eligibility checking for the current number
+    const mobileInput = document.getElementById('currentNumber');
+    const formGroup = mobileInput ? mobileInput.closest('.form-group') : null;
+    
+    if (formGroup) {
+        // Add status display area
+        const statusDiv = document.createElement('div');
+        statusDiv.id = 'portingStatus';
+        statusDiv.className = 'porting-status';
+        formGroup.appendChild(statusDiv);
+        
+        // Add eligibility check button
+        const checkButton = document.createElement('button');
+        checkButton.type = 'button';
+        checkButton.id = 'checkEligibility';
+        checkButton.className = 'btn btn-secondary btn-sm';
+        checkButton.innerText = 'Check Eligibility';
+        checkButton.addEventListener('click', () => {
+            if (mobileInput && mobileInput.value) {
+                if (/^[6-9]\d{9}$/.test(mobileInput.value)) {
+                    checkPortingEligibility(mobileInput.value);
+                } else {
+                    showError("Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9");
+                }
+            } else {
+                showError("Please enter your mobile number first");
+            }
+        });
+        
+        formGroup.appendChild(checkButton);
+    }
 }
 
 // Set up the progress steps indicators
@@ -371,6 +456,9 @@ function updateProgressSteps(currentStep) {
             line.classList.remove('active');
         }
     });
+    
+    // Update the porting tracker UI
+    updatePortingTrackerUI();
 }
 
 // Navigate between form steps
@@ -392,362 +480,1214 @@ function goToStep(stepNumber) {
             step.classList.remove('active');
         }
     });
+    
+    // Update the porting tracker UI
+    updatePortingTrackerUI();
 }
 
-// Validate each step before proceeding
+// Validate step
 function validateStep(stepNumber) {
-    const currentStep = document.querySelector(`.form-step[data-step="${stepNumber}"]`);
-    if (!currentStep) return true;
+    const formStep = document.querySelector(`.form-step[data-step="${stepNumber}"]`);
+    if (!formStep) return false;
     
-    const requiredInputs = currentStep.querySelectorAll('input[required], select[required]');
+    const inputs = formStep.querySelectorAll('input, select');
     let isValid = true;
     
-    requiredInputs.forEach(input => {
-        if (!validateInput(input)) {
+    inputs.forEach(input => {
+        // Skip validation for non-required fields
+        if (!input.required && !input.value) return;
+        
+        // Skip hidden inputs
+        if (input.type === 'hidden' && !input.required) return;
+        
+        const isInputValid = validateInput(input);
+        if (!isInputValid) {
             isValid = false;
         }
     });
     
-    // Special handling for step 2 (provider selection)
+    // Special validation for step 2 (provider selection)
     if (stepNumber === 2) {
-        const newProvider = document.getElementById('newProvider');
-        if (!newProvider.value) {
-            const errorMsg = document.querySelector('.selected-provider .error-message');
-            errorMsg.textContent = 'Please select a new service provider';
-            errorMsg.classList.add('show');
+        const newProviderInput = document.getElementById('newProvider');
+        if (!newProviderInput || !newProviderInput.value) {
+            const errorMessage = formStep.querySelector('.selected-provider .error-message');
+            if (errorMessage) {
+                errorMessage.textContent = 'Please select a new service provider';
+                errorMessage.style.display = 'block';
+            }
             isValid = false;
+        }
+    }
+    
+    // Special validation for step 3 (porting center)
+    if (stepNumber === 3) {
+        const selectedCenterId = localStorage.getItem('selectedCenterId');
+        if (!selectedCenterId) {
+            showError('Please select a porting center before proceeding');
+            isValid = false;
+        }
+    }
+    
+    // Additional validation for mobile number
+    if (stepNumber === 1) {
+        const mobileNumberInput = document.getElementById('currentNumber');
+        if (mobileNumberInput && mobileNumberInput.value) {
+            const mobileNumber = mobileNumberInput.value;
+            
+            // Check if number starts with 6-9 and has 10 digits
+            if (!/^[6-9]\d{9}$/.test(mobileNumber)) {
+                const errorMessage = mobileNumberInput.parentElement.nextElementSibling;
+                if (errorMessage) {
+                    errorMessage.textContent = 'Please enter a valid 10-digit mobile number starting with 6-9';
+                    errorMessage.style.display = 'block';
+                }
+                isValid = false;
+            }
+        }
+        
+        // Call the date calculation API when step 1 is validated
+        if (isValid) {
+            calculatePortingDates();
         }
     }
     
     return isValid;
 }
 
-// Validate individual input fields
+// Validate a single input field
 function validateInput(input) {
-    const formGroup = input.closest('.form-group');
-    const errorMessage = formGroup ? formGroup.querySelector('.error-message') : null;
     let isValid = true;
-    let message = '';
+    let errorMessage = '';
     
-    // Reset error message
-    if (errorMessage) {
-        errorMessage.textContent = '';
-        errorMessage.classList.remove('show');
+    // Skip validation for checkbox that isn't required
+    if (input.type === 'checkbox' && !input.required) {
+        return true;
     }
     
-    // Required field validation
-    if (input.hasAttribute('required') && !input.value.trim()) {
+    // Check if field is empty but required
+    if (input.required && !input.value) {
         isValid = false;
-        message = 'This field is required';
-    }
-    
-    // Email validation
-    if (input.type === 'email' && input.value.trim()) {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailPattern.test(input.value)) {
-            isValid = false;
-            message = 'Please enter a valid email address';
-        }
-    }
-    
-    // Phone number validation
-    if (input.id === 'currentNumber' && input.value.trim()) {
-        const phonePattern = /^[0-9]{10}$/;
-        if (!phonePattern.test(input.value)) {
-            isValid = false;
-            message = 'Please enter a valid 10-digit mobile number';
+        errorMessage = 'This field is required';
+    } 
+    // Check if pattern validation fails
+    else if (input.pattern && input.value && !new RegExp(input.pattern).test(input.value)) {
+        isValid = false;
+        
+        // Custom error messages based on field
+        if (input.id === 'currentNumber' || input.id === 'alternateNumber') {
+            errorMessage = 'Please enter a valid 10-digit mobile number starting with 6-9';
+        } else if (input.id === 'email') {
+            errorMessage = 'Please enter a valid email address';
         } else {
-            // Valid mobile number - attempt to detect operator and circle
-            detectOperatorAndCircle(input.value);
+            errorMessage = 'Please enter a valid value';
         }
     }
-    
-    // End of Recharge Date validation
-    if (input.id === 'currentPlan' && input.value.trim()) {
+    // Special validation for date inputs
+    else if (input.type === 'date' && input.value) {
         const selectedDate = new Date(input.value);
         const today = new Date();
-        
-        // Clear time part for comparison
         today.setHours(0, 0, 0, 0);
         
-        if (selectedDate < today) {
-            isValid = false;
-            message = 'Please select a current or future date';
+        if (input.id === 'currentPlan') {
+            // Plan end date should be in the future
+            if (selectedDate < today) {
+                isValid = false;
+                errorMessage = 'Plan end date should be in the future';
+            }
+        } else if (input.id === 'scheduledDate') {
+            // Porting date should be after SMS date
+            const smsDateStr = localStorage.getItem('calculatedSmsDate');
+            if (smsDateStr) {
+                const smsDate = new Date(smsDateStr);
+                smsDate.setHours(0, 0, 0, 0);
+                
+                if (selectedDate <= smsDate) {
+                    isValid = false;
+                    errorMessage = 'Porting date should be after the SMS date';
+                }
+            }
+            
+            // Porting date should be in the future
+            if (selectedDate < today) {
+                isValid = false;
+                errorMessage = 'Porting date should be in the future';
+            }
         }
     }
     
-    // Display error message if any
-    if (!isValid && errorMessage) {
-        errorMessage.textContent = message;
-        errorMessage.classList.add('show');
-        input.classList.add('invalid');
-    } else {
-        input.classList.remove('invalid');
-        input.classList.add('valid');
+    // Find and display error message
+    const errorElement = input.parentElement.nextElementSibling;
+    
+    if (errorElement && errorElement.classList.contains('error-message')) {
+        if (!isValid) {
+            errorElement.textContent = errorMessage;
+            errorElement.style.display = 'block';
+            input.classList.add('invalid');
+            input.classList.remove('valid');
+        } else {
+            errorElement.textContent = '';
+            errorElement.style.display = 'none';
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+        }
     }
     
     return isValid;
 }
 
-// Set up service provider selection cards
-function setupProviderSelection() {
+// Validate all steps
+function validateAllSteps() {
+    let isValid = true;
+    
+    for (let i = 1; i <= 4; i++) {
+        if (!validateStep(i)) {
+            isValid = false;
+        }
+    }
+    
+    return isValid;
+}
+
+// Setup form listeners
+function setupFormListeners() {
+    const form = document.getElementById('portingForm');
+    if (!form) return;
+    
+    // Form submission
+    form.addEventListener('submit', submitForm);
+    
+    // Plan end date change
+    const planEndDateInput = document.getElementById('currentPlan');
+    if (planEndDateInput) {
+        planEndDateInput.addEventListener('change', calculatePortingDates);
+    }
+    
+    // Circle change
+    const circleSelect = document.getElementById('currentCircle');
+    if (circleSelect) {
+        circleSelect.addEventListener('change', function() {
+            if (planEndDateInput && planEndDateInput.value) {
+                calculatePortingDates();
+            }
+        });
+    }
+    
+    // Location change
+    const locationInput = document.getElementById('location');
+    if (locationInput) {
+        locationInput.addEventListener('change', debounce(function() {
+            if (locationInput.value) {
+                findNearbyPortingCenters();
+            }
+        }, 500));
+    }
+    
+    // New provider selection
     const providerCards = document.querySelectorAll('.provider-card');
-    const providerInput = document.getElementById('newProvider');
+    const newProviderInput = document.getElementById('newProvider');
     
     providerCards.forEach(card => {
-        card.addEventListener('click', () => {
-            const provider = card.getAttribute('data-provider');
-            
-            // Remove selection from all cards
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
             providerCards.forEach(c => c.classList.remove('selected'));
             
-            // Select clicked card
-            card.classList.add('selected');
+            // Add selected class to clicked card
+            this.classList.add('selected');
             
-            // Update hidden input
-            if (providerInput) {
-                providerInput.value = provider;
+            // Set hidden input value
+            if (newProviderInput) {
+                const provider = this.getAttribute('data-provider');
+                newProviderInput.value = provider;
                 
-                // Refresh nearby centers when provider changes
+                // Clear error message
+                const errorMessage = document.querySelector('.selected-provider .error-message');
+                if (errorMessage) {
+                    errorMessage.textContent = '';
+                    errorMessage.style.display = 'none';
+                }
+                
+                // Find nearby centers if location is already entered
+                if (locationInput && locationInput.value) {
+                    findNearbyPortingCenters();
+                }
+            }
+        });
+    });
+    
+    // Automate porting toggle
+    const automatePortingCheckbox = document.getElementById('automatePorting');
+    if (automatePortingCheckbox) {
+        automatePortingCheckbox.addEventListener('change', function() {
+            updateAutomationDisplay();
+        });
+    }
+    
+    // Add input validation on blur
+    const allInputs = form.querySelectorAll('input, select');
+    allInputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateInput(this);
+        });
+        
+        // Also validate on change for select elements
+        if (input.tagName.toLowerCase() === 'select') {
+            input.addEventListener('change', function() {
+                validateInput(this);
+            });
+        }
+    });
+}
+
+// Update display based on automation toggle
+function updateAutomationDisplay() {
+    const automatePortingCheckbox = document.getElementById('automatePorting');
+    const smsSendDateElement = document.getElementById('smsSendDate');
+    const portingGuidElement = document.getElementById('portingGuid');
+    
+    if (!automatePortingCheckbox || !smsSendDateElement || !portingGuidElement) return;
+    
+    if (automatePortingCheckbox.checked) {
+        // If automation is checked, show "Automated" for SMS date
+        smsSendDateElement.innerHTML = '<span style="color: var(--accent-color);">Automated by PortMySim</span>';
+        
+        // Highlight the GUID as it will be used for automation
+        portingGuidElement.style.color = 'var(--accent-color)';
+    } else {
+        // If unchecked, show the normal calculated date
+        calculateSmsSendDate();
+        
+        // Reset GUID style
+        portingGuidElement.style.color = '';
+    }
+}
+
+// Initialize map with porting centers
+function initializeMap(centers, userCoordinates) {
+    const mapContainer = document.getElementById('centersMap');
+    if (!mapContainer || !window.google || !window.google.maps) return;
+    
+    // Create map centered at user location
+    const map = new google.maps.Map(mapContainer, {
+        center: userCoordinates,
+        zoom: 12,
+        styles: [
+            {
+                "featureType": "all",
+                "elementType": "labels.text.fill",
+                "stylers": [{"color": "#ffffff"}]
+            },
+            {
+                "featureType": "all",
+                "elementType": "labels.text.stroke",
+                "stylers": [{"visibility": "on"}, {"color": "#3e606f"}, {"weight": 2}, {"gamma": 0.84}]
+            },
+            {
+                "featureType": "all",
+                "elementType": "labels.icon",
+                "stylers": [{"visibility": "off"}]
+            },
+            {
+                "featureType": "administrative",
+                "elementType": "geometry",
+                "stylers": [{"weight": 0.6}, {"color": "#1a3541"}]
+            },
+            {
+                "featureType": "landscape",
+                "elementType": "geometry",
+                "stylers": [{"color": "#2c5a71"}]
+            },
+            {
+                "featureType": "poi",
+                "elementType": "geometry",
+                "stylers": [{"color": "#406d80"}]
+            },
+            {
+                "featureType": "poi.park",
+                "elementType": "geometry",
+                "stylers": [{"color": "#2c5a71"}]
+            },
+            {
+                "featureType": "road",
+                "elementType": "geometry",
+                "stylers": [{"color": "#29768a"}, {"lightness": -37}]
+            },
+            {
+                "featureType": "transit",
+                "elementType": "geometry",
+                "stylers": [{"color": "#406d80"}]
+            },
+            {
+                "featureType": "water",
+                "elementType": "geometry",
+                "stylers": [{"color": "#193341"}]
+            }
+        ]
+    });
+    
+    // Add user marker
+    new google.maps.Marker({
+        position: userCoordinates,
+        map: map,
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: "#4285F4",
+            fillOpacity: 1,
+            strokeColor: "#FFFFFF",
+            strokeWeight: 2
+        },
+        title: "Your Location"
+    });
+    
+    // Add markers for centers
+    const markers = centers.map((center, i) => {
+        if (!center.location || !center.location.coordinates) return null;
+        
+        const position = {
+            lat: center.location.coordinates[1] || 0,
+            lng: center.location.coordinates[0] || 0
+        };
+        
+        // Get provider-specific icon
+        const icon = {
+            url: getProviderIcon(center.provider),
+            scaledSize: new google.maps.Size(32, 32)
+        };
+        
+        const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: center.name,
+            icon: icon
+        });
+        
+        // Info window content
+        const infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div class="map-info-window">
+                    <h4>${center.name}</h4>
+                    <p>${center.address?.formattedAddress || center.address || 'Address not available'}</p>
+                    ${center.openingHours ? `<p><small>${center.openingHours}</small></p>` : ''}
+                    ${center.phone ? `<p><small>${center.phone}</small></p>` : ''}
+                </div>
+            `
+        });
+        
+        // Open info window on click
+        marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+            
+            // Select the corresponding item in the list
+            const centerItems = document.querySelectorAll('.center-item');
+            centerItems.forEach(item => {
+                if (item.getAttribute('data-center-id') === center._id) {
+                    item.click();
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+        });
+        
+        return marker;
+    }).filter(Boolean);
+    
+    // Create bounds to fit all markers
+    if (markers.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(userCoordinates);
+        
+        markers.forEach(marker => {
+            bounds.extend(marker.getPosition());
+        });
+        
+        map.fitBounds(bounds);
+        
+        // Adjust zoom if too close
+        const listener = google.maps.event.addListener(map, 'idle', function() {
+            if (map.getZoom() > 15) {
+                map.setZoom(15);
+            }
+            google.maps.event.removeListener(listener);
+        });
+    }
+}
+
+// Show a specific location on the map
+function showOnMap(lat, lng, name) {
+    const mapContainer = document.getElementById('centersMap');
+    if (!mapContainer || !window.google || !window.google.maps) return;
+    
+    // Get existing map
+    const map = mapContainer.map;
+    
+    if (map) {
+        const position = { lat, lng };
+        map.panTo(position);
+        map.setZoom(15);
+    }
+}
+
+// Find nearby porting centers based on location and selected provider
+async function findNearbyPortingCenters() {
+    const locationInput = document.getElementById('location');
+    const newProviderInput = document.getElementById('newProvider');
+    const centersList = document.getElementById('nearbyCentersList');
+    const mapContainer = document.getElementById('centersMap');
+    
+    if (!locationInput || !locationInput.value || !newProviderInput || !newProviderInput.value || !centersList) {
+        if (centersList) {
+            centersList.innerHTML = '<p class="centers-empty">Please select a provider and enter your location first.</p>';
+        }
+        return;
+    }
+    
+    // Show loading
+    centersList.innerHTML = '<p class="centers-loading"><i class="fas fa-spinner fa-spin"></i> Searching for nearby centers...</p>';
+    
+    // Get coordinates from Google Places API if available
+    let coordinates = null;
+    
+    if (window.google && window.google.maps && window.google.maps.places) {
+        const geocoder = new google.maps.Geocoder();
+        try {
+            const results = await new Promise((resolve, reject) => {
+                geocoder.geocode({ address: locationInput.value }, (results, status) => {
+                    if (status === google.maps.GeocoderStatus.OK) {
+                        resolve(results);
+                    } else {
+                        reject(status);
+                    }
+                });
+            });
+            
+            if (results && results.length > 0) {
+                const location = results[0].geometry.location;
+                coordinates = {
+                    lat: location.lat(),
+                    lng: location.lng()
+                };
+            }
+        } catch (error) {
+            console.error('Geocoding error:', error);
+        }
+    } else if (userLocation) {
+        // Fallback to user's location if available
+        coordinates = userLocation;
+    }
+    
+    if (!coordinates) {
+        centersList.innerHTML = '<p class="centers-empty">Unable to determine location. Please try again or select a different location.</p>';
+        return;
+    }
+    
+    // Fetch nearby centers from the API
+    try {
+        const token = localStorage.getItem('authToken') || '';
+        
+        const response = await fetch(`${API_BASE_URL}/porting/centers/nearby`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                lat: coordinates.lat,
+                lng: coordinates.lng,
+                provider: newProviderInput.value,
+                radius: 10 // 10km radius
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+            displayPortingCenters(data.data, coordinates);
+        } else {
+            // Try fallback centers if no centers found
+            const fallbackResponse = await getFallbackPortingCenters(newProviderInput.value);
+            
+            if (fallbackResponse.success && fallbackResponse.data && fallbackResponse.data.length > 0) {
+                displayPortingCenters(fallbackResponse.data, coordinates);
+            } else {
+                centersList.innerHTML = '<p class="centers-empty">No porting centers found in your area. Please try a different location or contact customer support.</p>';
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching nearby centers:', error);
+        centersList.innerHTML = '<p class="error-message"><i class="fas fa-exclamation-circle"></i> Failed to fetch nearby centers. Please try again later.</p>';
+    }
+}
+
+// Display porting centers on the list and map
+function displayPortingCenters(centers, userCoordinates) {
+    const centersList = document.getElementById('nearbyCentersList');
+    if (!centersList) return;
+    
+    // Clear previous content
+    centersList.innerHTML = '';
+    
+    // Create and add center items
+    centers.forEach((center, index) => {
+        const distance = calculateDistance(
+            userCoordinates.lat, 
+            userCoordinates.lng,
+            center.location?.coordinates[1] || 0,
+            center.location?.coordinates[0] || 0
+        );
+        
+        const centerItem = document.createElement('div');
+        centerItem.className = 'center-item';
+        centerItem.setAttribute('data-center-id', center._id);
+        centerItem.setAttribute('data-lat', center.location?.coordinates[1] || 0);
+        centerItem.setAttribute('data-lng', center.location?.coordinates[0] || 0);
+        
+        // Get provider-specific color
+        const providerColor = getProviderColor(center.provider);
+        
+        centerItem.innerHTML = `
+            <div class="center-icon">
+                <i class="fas fa-store" style="color: ${providerColor};"></i>
+            </div>
+            <div class="center-info">
+                <h4 class="center-name">${center.name}</h4>
+                <p class="center-address">${center.address?.formattedAddress || center.address || 'Address not available'}</p>
+                <div class="center-meta">
+                    <span class="provider-badge ${center.provider.toLowerCase()}">${center.provider}</span>
+                    <span class="distance">${distance.toFixed(1)} km away</span>
+                    ${center.isOpen ? '<span class="open-now">Open Now</span>' : ''}
+                </div>
+                ${center.openingHours ? `<p class="opening-hours">${center.openingHours}</p>` : ''}
+                ${center.phone ? `<p class="center-phone"><i class="fas fa-phone-alt"></i> ${center.phone}</p>` : ''}
+                <button type="button" class="btn-map" data-center-id="${center._id}">
+                    <i class="fas fa-map-marker-alt"></i> View on Map
+                </button>
+            </div>
+        `;
+        
+        // Add click handler for center selection
+        centerItem.addEventListener('click', function() {
+            // Remove selected class from all items
+            document.querySelectorAll('.center-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selected class to this item
+            this.classList.add('selected');
+            
+            // Store selected center
+            const centerId = this.getAttribute('data-center-id');
+            const centerName = this.querySelector('.center-name').textContent;
+            const centerAddress = this.querySelector('.center-address').textContent;
+            
+            // Save selected center data
+            if (typeof(Storage) !== "undefined") {
+                localStorage.setItem('selectedCenterId', centerId);
+                localStorage.setItem('selectedCenterName', centerName);
+                localStorage.setItem('selectedCenterAddress', centerAddress);
+            }
+            
+            // Show on map
+            const lat = parseFloat(this.getAttribute('data-lat'));
+            const lng = parseFloat(this.getAttribute('data-lng'));
+            
+            if (!isNaN(lat) && !isNaN(lng)) {
+                showOnMap(lat, lng, centerName);
+            }
+        });
+        
+        // Add map button handler
+        const mapButton = centerItem.querySelector('.btn-map');
+        if (mapButton) {
+            mapButton.addEventListener('click', function(e) {
+                e.stopPropagation(); // Prevent item click
+                
+                const lat = parseFloat(centerItem.getAttribute('data-lat'));
+                const lng = parseFloat(centerItem.getAttribute('data-lng'));
+                
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    showOnMap(lat, lng, center.name);
+                }
+            });
+        }
+        
+        centersList.appendChild(centerItem);
+    });
+    
+    // Initialize map with centers
+    initializeMap(centers, userCoordinates);
+    
+    // Select first center by default
+    const firstCenter = centersList.querySelector('.center-item');
+    if (firstCenter) {
+        firstCenter.click();
+    }
+}
+
+// Calculate distance between two coordinates in kilometers
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    return R * c; // Distance in km
+}
+
+function deg2rad(deg) {
+    return deg * (Math.PI/180);
+}
+
+// Get color based on provider name
+function getProviderColor(provider) {
+    const providerLower = provider.toLowerCase();
+    
+    if (providerLower.includes('airtel')) {
+        return '#e40000'; // Airtel red
+    } else if (providerLower.includes('jio')) {
+        return '#0f3cc9'; // Jio blue
+    } else if (providerLower.includes('vi') || providerLower.includes('vodafone')) {
+        return '#ee008c'; // Vi pink
+    } else if (providerLower.includes('bsnl')) {
+        return '#1d8a13'; // BSNL green
+    } else if (providerLower.includes('mtnl')) {
+        return '#ff6a00'; // MTNL orange
+    }
+    
+    return '#666666'; // Default grey
+}
+
+// Setup mobile number detection
+function setupMobileNumberDetection() {
+    const mobileNumberInput = document.getElementById('currentNumber');
+    if (!mobileNumberInput) return;
+    
+    mobileNumberInput.addEventListener('input', debounce(function(e) {
+        const number = e.target.value;
+        
+        // Clear detection if number is less than 10 digits
+        if (number.length < 10) {
+            hideDetectionMessage();
+            return;
+        }
+        
+        // Validate 10-digit number and starting with 6-9
+        if (number.length === 10 && /^[6-9]\d{9}$/.test(number)) {
+            detectMobileProvider(number);
+        }
+    }, 500));
+}
+
+// Detect mobile provider from number
+async function detectMobileProvider(number) {
+    showLoadingIndicator();
+    
+    try {
+        // First try API lookup
+        const apiData = await lookupMobileNumber(number);
+        
+        if (apiData && apiData.success && apiData.data.operator) {
+            displayDetectedProvider(apiData.data.operator, apiData.data.circle, 'high');
+            return;
+        }
+        
+        // Fall back to local detection
+        const result = detectProviderFromNumber(number);
+        if (result && result.provider) {
+            displayDetectedProvider(result.provider, result.circle || 'Unknown', 'medium');
+            return;
+        }
+        
+        // If both fail, hide detection
+        hideDetectionMessage();
+    } catch (error) {
+        console.error('Error detecting provider:', error);
+        
+        // Fall back to local detection on API error
+        const result = detectProviderFromNumber(number);
+        if (result && result.provider) {
+            displayDetectedProvider(result.provider, result.circle || 'Unknown', 'low');
+            return;
+        }
+        
+        hideDetectionMessage();
+    } finally {
+        hideLoadingIndicator();
+    }
+}
+
+// Local detection using the imported database
+function detectProviderFromNumber(number) {
+    // Check first for specific prefixes (highest priority)
+    const prefix4 = number.substring(0, 4);
+    const prefix3 = number.substring(0, 3);
+    
+    // Check for specific 4-digit prefixes
+    for (const prefixObj of priorityPrefixes) {
+        if (prefixObj.prefix === prefix4) {
+            return {
+                provider: prefixObj.operator,
+                circle: prefixObj.circle || null,
+                confidence: 'high'
+            };
+        }
+    }
+    
+    // Check for specific 3-digit prefixes
+    for (const prefix in specificPrefixes) {
+        if (prefix === prefix3) {
+            return {
+                provider: specificPrefixes[prefix],
+                confidence: 'medium'
+            };
+        }
+    }
+    
+    // Check first digit (lowest priority)
+    const firstDigit = number.charAt(0);
+    if (firstDigitOperators[firstDigit]) {
+        return {
+            provider: firstDigitOperators[firstDigit],
+            confidence: 'low'
+        };
+    }
+    
+    return null;
+}
+
+// Show detected provider
+function displayDetectedProvider(provider, circle, confidence) {
+    const detectionDiv = document.getElementById('providerDetection');
+    const providerText = document.getElementById('detectedProvider');
+    const confidenceElement = document.getElementById('confidenceLevel');
+    const currentProviderSelect = document.getElementById('currentProvider');
+    const currentCircleSelect = document.getElementById('currentCircle');
+    
+    if (!detectionDiv || !providerText || !confidenceElement) return;
+    
+    // Format provider name for display (capitalize first letter)
+    let formattedProvider = provider.toLowerCase();
+    formattedProvider = formattedProvider.charAt(0).toUpperCase() + formattedProvider.slice(1);
+    
+    // Special case for Vi
+    if (formattedProvider.toLowerCase() === 'vodafone idea' || formattedProvider.toLowerCase() === 'vodafone-idea') {
+        formattedProvider = 'Vi (Vodafone Idea)';
+    }
+    
+    // Display provider
+    providerText.textContent = formattedProvider;
+    
+    // Set confidence class
+    confidenceElement.className = 'confidence';
+    confidenceElement.classList.add(`${confidence}-confidence`);
+    
+    // Set confidence text
+    switch (confidence) {
+        case 'high':
+            confidenceElement.textContent = 'High Confidence';
+            break;
+        case 'medium':
+            confidenceElement.textContent = 'Medium Confidence';
+            break;
+        case 'low':
+            confidenceElement.textContent = 'Low Confidence';
+            break;
+        default:
+            confidenceElement.textContent = '';
+    }
+    
+    // Show detection message
+    detectionDiv.style.display = 'block';
+    detectionDiv.classList.add('show');
+    
+    // Setup buttons
+    const confirmBtn = detectionDiv.querySelector('.btn-confirm-detection');
+    const wrongBtn = detectionDiv.querySelector('.btn-wrong-detection');
+    
+    if (confirmBtn) {
+        confirmBtn.onclick = function() {
+            // Map the provider name to the select option value
+            let selectValue = '';
+            
+            if (formattedProvider.toLowerCase().includes('airtel')) {
+                selectValue = 'airtel';
+            } else if (formattedProvider.toLowerCase().includes('jio')) {
+                selectValue = 'jio';
+            } else if (formattedProvider.toLowerCase().includes('vi') || 
+                       formattedProvider.toLowerCase().includes('vodafone')) {
+                selectValue = 'vi';
+            } else if (formattedProvider.toLowerCase().includes('bsnl')) {
+                selectValue = 'bsnl';
+            } else if (formattedProvider.toLowerCase().includes('mtnl')) {
+                selectValue = 'mtnl';
+            } else {
+                selectValue = 'other';
+            }
+            
+            // Set the provider dropdown value
+            if (currentProviderSelect) {
+                currentProviderSelect.value = selectValue;
+                currentProviderSelect.classList.add('auto-detected');
+                
+                // Trigger change event
+                const event = new Event('change');
+                currentProviderSelect.dispatchEvent(event);
+            }
+            
+            // Set circle if available
+            if (circle && circle !== 'Unknown' && currentCircleSelect) {
+                // Map circle name to select option value
+                let circleValue = '';
+                
+                // Simple mapping - can be expanded for more complex cases
+                const circleName = circle.toLowerCase();
+                
+                // Map common circle names
+                if (circleName.includes('delhi')) {
+                    circleValue = 'delhi';
+                } else if (circleName.includes('mumbai')) {
+                    circleValue = 'mumbai';
+                } else if (circleName.includes('kolkata')) {
+                    circleValue = 'kolkata';
+                } else if (circleName.includes('maharashtra')) {
+                    circleValue = 'maharashtra';
+                } else if (circleName.includes('gujarat')) {
+                    circleValue = 'gujarat';
+                } else if (circleName.includes('andhra')) {
+                    circleValue = 'andhra-pradesh';
+                } else if (circleName.includes('karnataka')) {
+                    circleValue = 'karnataka';
+                } else if (circleName.includes('tamil')) {
+                    circleValue = 'tamil-nadu';
+                } else if (circleName.includes('kerala')) {
+                    circleValue = 'kerala';
+                } else if (circleName.includes('punjab')) {
+                    circleValue = 'punjab';
+                } else if (circleName.includes('haryana')) {
+                    circleValue = 'haryana';
+                } else if (circleName.includes('up-east') || circleName.includes('up east')) {
+                    circleValue = 'up-east';
+                } else if (circleName.includes('up-west') || circleName.includes('up west')) {
+                    circleValue = 'up-west';
+                } else if (circleName.includes('west bengal')) {
+                    circleValue = 'west-bengal';
+                } else if (circleName.includes('assam')) {
+                    circleValue = 'assam';
+                } else if (circleName.includes('bihar')) {
+                    circleValue = 'bihar';
+                } else if (circleName.includes('orissa')) {
+                    circleValue = 'orissa';
+                } else if (circleName.includes('jammu')) {
+                    circleValue = 'jammu';
+                } else if (circleName.includes('himachal')) {
+                    circleValue = 'himachal';
+                } else if (circleName.includes('northeast')) {
+                    circleValue = 'northeast';
+                }
+                
+                if (circleValue) {
+                    currentCircleSelect.value = circleValue;
+                    currentCircleSelect.classList.add('auto-detected');
+                    
+                    // Trigger change event
+                    const event = new Event('change');
+                    currentCircleSelect.dispatchEvent(event);
+                }
+            }
+            
+            // Hide detection message
+            hideDetectionMessage();
+        };
+    }
+    
+    if (wrongBtn) {
+        wrongBtn.onclick = function() {
+            hideDetectionMessage();
+        };
+    }
+}
+
+function hideDetectionMessage() {
+    const detectionDiv = document.getElementById('providerDetection');
+    if (detectionDiv) {
+        detectionDiv.style.display = 'none';
+        detectionDiv.classList.remove('show');
+    }
+}
+
+function showLoadingIndicator() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'flex';
+    }
+}
+
+function hideLoadingIndicator() {
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+    }
+}
+
+// Calculate porting dates based on plan end date and regulations
+async function calculatePortingDates() {
+    const planEndDateInput = document.getElementById('currentPlan');
+    const currentCircleSelect = document.getElementById('currentCircle');
+    const smsDateInfoDiv = document.getElementById('smsDateInfo');
+    const calculatedSmsDateSpan = document.getElementById('calculatedSmsDate');
+    
+    if (!planEndDateInput || !planEndDateInput.value || 
+        !currentCircleSelect || !currentCircleSelect.value ||
+        !smsDateInfoDiv || !calculatedSmsDateSpan) {
+        return;
+    }
+    
+    const planEndDate = planEndDateInput.value;
+    const circleId = currentCircleSelect.value;
+    
+    showLoadingIndicator();
+    
+    try {
+        // Call the backend API to calculate dates
+        const response = await fetch(`${API_BASE_URL}/porting/calculate-dates`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                planEndDate,
+                circleId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Display SMS date
+            const smsDate = new Date(data.data.smsDate);
+            const formattedDate = smsDate.toLocaleDateString('en-IN', { 
+                weekday: 'long',
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric'
+            });
+            
+            calculatedSmsDateSpan.textContent = formattedDate;
+            smsDateInfoDiv.style.display = 'flex';
+            
+            // Save dates for form submission
+            if (typeof(Storage) !== "undefined") {
+                localStorage.setItem('calculatedSmsDate', data.data.smsDate);
+                localStorage.setItem('calculatedPortingDate', data.data.portingDate);
+            }
+            
+            // Update the minimum date for porting date input
+            const scheduledDateInput = document.getElementById('scheduledDate');
+            if (scheduledDateInput) {
+                const minDate = new Date(data.data.smsDate);
+                minDate.setDate(minDate.getDate() + 1); // At least one day after SMS date
+                scheduledDateInput.min = minDate.toISOString().split('T')[0];
+                
+                // Set a default suggested date (one day after SMS date)
+                const suggestedDate = new Date(data.data.smsDate);
+                suggestedDate.setDate(suggestedDate.getDate() + 1);
+                scheduledDateInput.value = suggestedDate.toISOString().split('T')[0];
+            }
+        } else {
+            console.error('Error calculating dates:', data.error);
+            smsDateInfoDiv.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error calling calculate dates API:', error);
+        smsDateInfoDiv.style.display = 'none';
+    } finally {
+        hideLoadingIndicator();
+    }
+}
+
+// Set minimum date for date inputs
+function setMinDate() {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    
+    // Format as YYYY-MM-DD
+    const formattedTomorrow = tomorrow.toISOString().split('T')[0];
+    
+    // Set min date for plan end date
+    const planEndDateInput = document.getElementById('currentPlan');
+    if (planEndDateInput) {
+        planEndDateInput.min = formattedTomorrow;
+    }
+    
+    // Set min date for porting date
+    const portingDateInput = document.getElementById('scheduledDate');
+    if (portingDateInput) {
+        portingDateInput.min = formattedTomorrow;
+    }
+}
+
+// Load Google Maps API
+function loadGoogleMapsAPI() {
+    // Check if API is already loaded
+    if (window.google && window.google.maps) {
+        console.log('Google Maps API already loaded');
+        setupSpecialFields();
+        return;
+    }
+    
+    // Use API key from config if available
+    const apiKey = CONFIG.googleMapsApiKey || '';
+    
+    // Create script element
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=mapsCallback`;
+    script.async = true;
+    script.defer = true;
+    
+    // Add error handler
+    script.onerror = function() {
+        console.error('Failed to load Google Maps API');
+        const mapsErrorDiv = document.getElementById('mapsLoadingError');
+        if (mapsErrorDiv) {
+            mapsErrorDiv.style.display = 'block';
+        }
+    };
+    
+    // Add to document
+    document.body.appendChild(script);
+    
+    // Define callback function (global scope)
+    window.mapsCallback = function() {
+        console.log('Google Maps API loaded successfully');
+        setupSpecialFields();
+    };
+}
+
+// Setup provider selection
+function setupProviderSelection() {
+    const providerCards = document.querySelectorAll('.provider-card');
+    const newProviderInput = document.getElementById('newProvider');
+    
+    if (!providerCards.length || !newProviderInput) return;
+    
+    providerCards.forEach(card => {
+        card.addEventListener('click', function() {
+            // Remove selected class from all cards
+            providerCards.forEach(c => {
+                c.classList.remove('selected');
+            });
+            
+            // Add selected class to this card
+            this.classList.add('selected');
+            
+            // Set hidden input value
+            const provider = this.getAttribute('data-provider');
+            newProviderInput.value = provider;
+            
+            // Find nearby centers if location is already entered
+            const locationInput = document.getElementById('location');
+            if (locationInput && locationInput.value) {
                 findNearbyPortingCenters();
             }
         });
     });
 }
 
-// Set minimum date for the date picker
-function setMinDate() {
-    // Set minimum date for porting date
-    const portingDatePicker = document.getElementById('portingDate');
-    if (portingDatePicker) {
-        // Set minimum date to tomorrow
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        // Format date as YYYY-MM-DD
-        const year = tomorrow.getFullYear();
-        const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-        const day = String(tomorrow.getDate()).padStart(2, '0');
-        
-        portingDatePicker.min = `${year}-${month}-${day}`;
-        
-        // Add placeholder to display correctly in all browsers
-        portingDatePicker.setAttribute('placeholder', 'Select a date');
-        
-        // Fix to ensure the value is visible when selected
-        portingDatePicker.addEventListener('change', function() {
-            if (this.value) {
-                this.classList.add('has-value');
-                // If the icon element exists, add the floating class
-                const icon = this.parentElement.querySelector('.form-icon');
-                if (icon) icon.classList.add('floating');
-                this.parentElement.classList.add('focused');
-            }
-        });
-    }
+// Initialize all providers from API
+async function loadProviders() {
+    const currentProviderSelect = document.getElementById('currentProvider');
     
-    // Set current date as default for the end of recharge date (currentPlan)
-    const currentPlanPicker = document.getElementById('currentPlan');
-    if (currentPlanPicker) {
-        // Set placeholder
-        currentPlanPicker.setAttribute('placeholder', 'Select a date');
-        
-        // Add event listener to handle styling
-        currentPlanPicker.addEventListener('change', function() {
-            if (this.value) {
-                this.classList.add('has-value');
-                // If the icon element exists, add the floating class
-                const icon = this.parentElement.querySelector('.form-icon');
-                if (icon) icon.classList.add('floating');
-                this.parentElement.classList.add('focused');
-            }
-        });
-    }
-}
-
-// Setup circle selection behavior
-function setupCircleSelection() {
-    const currentProvider = document.getElementById('currentProvider');
-    const currentCircle = document.getElementById('currentCircle');
+    if (!currentProviderSelect) return;
     
-    // Optional functionality: You could change available circles based on provider
-    if (currentProvider && currentCircle) {
-        currentProvider.addEventListener('change', function() {
-            // Reset circle selection when provider changes
-            currentCircle.selectedIndex = 0;
+    try {
+        const response = await fetch(`${API_BASE_URL}/porting/providers`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            // Clear existing options except the default
+            const defaultOption = currentProviderSelect.querySelector('option[disabled][selected]');
+            currentProviderSelect.innerHTML = '';
             
-            // You could add provider-specific circle filtering here if needed
-            // For example, some providers might not be available in all circles
-            /*
-            const provider = currentProvider.value;
-            Array.from(currentCircle.options).forEach(option => {
-                if (option.value === '') return; // Skip the placeholder
-                
-                // Example: MTNL only available in Mumbai and Delhi
-                if (provider === 'mtnl' && 
-                    option.value !== 'mumbai' && 
-                    option.value !== 'delhi') {
-                    option.disabled = true;
-                } else {
-                    option.disabled = false;
-                }
+            if (defaultOption) {
+                currentProviderSelect.appendChild(defaultOption);
+            }
+            
+            // Add providers from API
+            data.data.forEach(provider => {
+                const option = document.createElement('option');
+                option.value = provider.code;
+                option.textContent = provider.name;
+                currentProviderSelect.appendChild(option);
             });
-            */
-        });
+        }
+    } catch (error) {
+        console.error('Error loading providers:', error);
     }
 }
 
-// Display success message and animation
-function displaySuccessMessage() {
-    // Hide form steps
-    const formSteps = document.querySelectorAll('.form-step');
-    formSteps.forEach(step => {
-        step.classList.remove('active');
+// Initialize all telecom circles from API
+async function loadCircles() {
+    const circleSelect = document.getElementById('currentCircle');
+    
+    if (!circleSelect) return;
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/porting/circles`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            // Clear existing options except the default
+            const defaultOption = circleSelect.querySelector('option[disabled][selected]');
+            circleSelect.innerHTML = '';
+            
+            if (defaultOption) {
+                circleSelect.appendChild(defaultOption);
+            }
+            
+            // Add circles from API
+            data.data.forEach(circle => {
+                const option = document.createElement('option');
+                option.value = circle.code;
+                option.textContent = circle.name;
+                circleSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading circles:', error);
+    }
+}
+
+// Setup step navigation
+function setupStepNavigation() {
+    const nextButtons = document.querySelectorAll('.btn-next');
+    const prevButtons = document.querySelectorAll('.btn-prev');
+    
+    nextButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const currentStep = parseInt(button.getAttribute('data-next')) - 1;
+            const nextStep = parseInt(button.getAttribute('data-next'));
+            
+            // Validate current step before proceeding
+            if (validateStep(currentStep)) {
+                goToStep(nextStep);
+                updateProgressSteps(nextStep);
+            }
+        });
     });
     
-    // Show success message
-    const successMessage = document.querySelector('.form-success');
-    if (successMessage) {
-        successMessage.classList.add('show');
-        
-        // Update GUID in success screen
-        const guidDisplay = document.getElementById('guidDisplay');
-        if (guidDisplay) {
-            const storedGuid = localStorage.getItem('portingGuid') || 'PORT-UNKNOWN';
-            guidDisplay.textContent = storedGuid;
-        }
-        
-        // Update porting date display from localStorage
-        const portingDateDisplay = document.getElementById('portingDateDisplay');
-        const timelinePortingDate = document.getElementById('timelinePortingDate');
-        if (portingDateDisplay) {
-            const formattedPortingDate = localStorage.getItem('formattedPortingDate');
-            if (formattedPortingDate) {
-                portingDateDisplay.textContent = formattedPortingDate;
-                
-                if (timelinePortingDate) {
-                    timelinePortingDate.textContent = ` (${formattedPortingDate})`;
-                }
-            } else if (localStorage.getItem('calculatedPortingDate')) {
-                // Fallback to calculating from ISO date if formatted date not found
-                const calculatedDate = new Date(localStorage.getItem('calculatedPortingDate'));
-                const formattedDate = calculatedDate.toLocaleDateString('en-IN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                portingDateDisplay.textContent = formattedDate;
-                
-                if (timelinePortingDate) {
-                    timelinePortingDate.textContent = ` (${formattedDate})`;
-                }
-            }
-        }
-        
-        // Update automation status in success screen
-        const automationStatus = document.getElementById('automationStatus');
-        const automatePortingCheckbox = document.getElementById('automatePorting');
-        if (automationStatus && automatePortingCheckbox) {
-            if (automatePortingCheckbox.checked) {
-                automationStatus.textContent = 'Automated by PortMySim';
-                automationStatus.style.color = 'var(--accent-color)';
-                
-                // Update timeline descriptions for automated process
-                const smsStepDescription = document.getElementById('smsStepDescription');
-                const upcStepDescription = document.getElementById('upcStepDescription');
-                
-                if (smsStepDescription) {
-                    smsStepDescription.innerHTML = '<strong style="color: var(--accent-color);">Automated:</strong> Our system will send the SMS on your behalf';
-                }
-                
-                if (upcStepDescription) {
-                    upcStepDescription.innerHTML = '<strong style="color: var(--accent-color);">Automated:</strong> We will retrieve and process your UPC code';
-                }
-            } else {
-                automationStatus.textContent = 'Manual Process';
-            }
-        }
-        
-        // Set SMS date on timeline
-        const timelineSmsDate = document.getElementById('timelineSmsDate');
-        const smsDateElement = document.getElementById('smsDate');
-        const storedSmsDate = localStorage.getItem('smsSendDate');
-        
-        if (timelineSmsDate && storedSmsDate) {
-            timelineSmsDate.textContent = ` (${storedSmsDate})`;
-        }
-        
-        if (smsDateElement && storedSmsDate) {
-            smsDateElement.textContent = storedSmsDate;
-        }
-        
-        // Set reference number (if not already set by API response)
-        const refNumberElement = document.getElementById('refNumber');
-        if (refNumberElement && refNumberElement.textContent === 'PORT-12345') {
-            refNumberElement.textContent = generateReferenceNumber();
-        }
-    }
+    prevButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const prevStep = parseInt(button.getAttribute('data-prev'));
+            goToStep(prevStep);
+            updateProgressSteps(prevStep);
+        });
+    });
 }
 
-// Generate a random reference number
-function generateReferenceNumber() {
-    const refNumberElement = document.getElementById('refNumber');
-    if (refNumberElement) {
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const randomNum = Math.floor(10000 + Math.random() * 90000);
-        const refNumber = `PORT-${dateStr}-${randomNum}`;
-        
-        refNumberElement.textContent = refNumber;
-    }
-}
-
-// Add ripple effect to buttons
-document.addEventListener('click', function(e) {
-    const target = e.target;
-    
-    if (target.classList.contains('btn-next') || 
-        target.classList.contains('btn-prev') || 
-        target.classList.contains('btn-submit')) {
-        
-        // Create ripple element
-        const ripple = document.createElement('span');
-        ripple.classList.add('ripple');
-        
-        // Position the ripple
-        const rect = target.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-        
-        // Apply styles to ripple
-        ripple.style.width = ripple.style.height = `${size}px`;
-        ripple.style.left = `${x}px`;
-        ripple.style.top = `${y}px`;
-        
-        // Add ripple to button
-        target.appendChild(ripple);
-        
-        // Remove ripple after animation completes
-        setTimeout(() => {
-            ripple.remove();
-        }, 600);
-    }
-});
-
-// Helper function to get auth token from localStorage
-function getAuthToken() {
-    // Use the PortMySimAPI to get the token if it's available
-    if (window.PortMySimAPI && window.PortMySimAPI.auth) {
-        return window.PortMySimAPI.getToken ? window.PortMySimAPI.getToken() : localStorage.getItem('authToken') || '';
-    }
-    // Fallback to direct localStorage access
-    return localStorage.getItem('authToken') || '';
-}
-
-// Display error message
-function displayErrorMessage(message) {
+// Show generic error message
+function showError(message) {
     // Create error alert if it doesn't exist
     let errorAlert = document.querySelector('.form-error-alert');
     
@@ -755,1074 +1695,60 @@ function displayErrorMessage(message) {
         errorAlert = document.createElement('div');
         errorAlert.className = 'form-error-alert';
         
-        // Insert after the form title
-        const formTitle = document.querySelector('.form-step.active h2');
-        if (formTitle && formTitle.parentNode) {
-            formTitle.parentNode.insertBefore(errorAlert, formTitle.nextSibling);
+        const formContainer = document.querySelector('.schedule-form-container');
+        if (formContainer) {
+            formContainer.prepend(errorAlert);
+        } else {
+            // Fallback to body
+            document.body.prepend(errorAlert);
         }
     }
     
-    // Update error message
+    // Set message and show
     errorAlert.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
     errorAlert.classList.add('show');
+    
+    // Scroll to error
+    errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
     
     // Auto-hide after 5 seconds
     setTimeout(() => {
         errorAlert.classList.remove('show');
     }, 5000);
-    
-    // Scroll to error message
-    errorAlert.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// Load providers from the API
-function loadProviders() {
-    fetch(`${API_BASE_URL}/porting/providers`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateProviderCards(data.data);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching providers:', error);
-        });
-}
-
-// Update provider cards with data from API
-function updateProviderCards(providers) {
-    const providerContainer = document.querySelector('.provider-options');
-    if (!providerContainer) return;
+// Show warning message
+function showWarning(message) {
+    // Create warning alert if it doesn't exist
+    let warningAlert = document.querySelector('.warning-message');
     
-    // Clear existing cards (keep only the first 4 as fallback)
-    const existingCards = providerContainer.querySelectorAll('.provider-card');
-    const cardsToKeep = Math.min(existingCards.length, 4);
-    
-    // Create and append provider cards
-    providers.forEach(provider => {
-        // Check if a card already exists for this provider
-        const existingCard = providerContainer.querySelector(`.provider-card[data-provider="${provider.id}"]`);
+    if (!warningAlert) {
+        warningAlert = document.createElement('div');
+        warningAlert.className = 'warning-message';
         
-        if (existingCard) {
-            // Update existing card
-            const nameElement = existingCard.querySelector('h3');
-            const descElement = existingCard.querySelector('p');
-            
-            if (nameElement) nameElement.textContent = provider.name;
-            if (descElement) descElement.textContent = provider.description;
+        const formContainer = document.querySelector('.schedule-form-container');
+        if (formContainer) {
+            formContainer.prepend(warningAlert);
         } else {
-            // Create a new card
-            const card = document.createElement('div');
-            card.className = 'provider-card';
-            card.setAttribute('data-provider', provider.id);
-            
-            card.innerHTML = `
-                <div class="provider-logo">
-                    <i class="fas fa-broadcast-tower"></i>
-                </div>
-                <h3>${provider.name}</h3>
-                <p>${provider.description}</p>
-            `;
-            
-            providerContainer.appendChild(card);
-            
-            // Add click event handler
-            card.addEventListener('click', () => {
-                // Remove selected class from all cards
-                providerContainer.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
-                
-                // Add selected class to clicked card
-                card.classList.add('selected');
-                
-                // Update hidden input value
-                const providerInput = document.getElementById('newProvider');
-                if (providerInput) {
-                    providerInput.value = provider.id;
-                }
-                
-                // Clear any error message
-                const errorMsg = document.querySelector('.selected-provider .error-message');
-                if (errorMsg) {
-                    errorMsg.textContent = '';
-                    errorMsg.classList.remove('show');
-                }
-            });
+            // Fallback to body
+            document.body.prepend(warningAlert);
         }
-    });
+    }
+    
+    // Set message and show
+    warningAlert.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+    warningAlert.classList.add('show');
+    
+    // Scroll to warning
+    warningAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        warningAlert.classList.remove('show');
+    }, 5000);
 }
 
-// Load telecom circles from the API
-function loadCircles() {
-    fetch(`${API_BASE_URL}/porting/circles`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateCircleOptions(data.data);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching circles:', error);
-        });
-}
-
-// Update circle select options with data from API
-function updateCircleOptions(circles) {
-    const circleSelect = document.getElementById('currentCircle');
-    if (!circleSelect) return;
-    
-    // Keep the placeholder option
-    const placeholderOption = circleSelect.querySelector('option[disabled][selected]');
-    
-    // Clear existing options except placeholder
-    circleSelect.innerHTML = '';
-    
-    // Add placeholder option back
-    if (placeholderOption) {
-        circleSelect.appendChild(placeholderOption);
-    }
-    
-    // Add circles from API
-    circles.forEach(circle => {
-        const option = document.createElement('option');
-        option.value = circle.id;
-        option.textContent = circle.name;
-        circleSelect.appendChild(option);
-    });
-}
-
-// Setup mobile number detection event handlers
-function setupMobileNumberDetection() {
-    const mobileInput = document.getElementById('currentNumber');
-    if (mobileInput) {
-        let detectTimeout;
-        
-        mobileInput.addEventListener('input', function(e) {
-            // Clear any previous detection timeout
-            if (detectTimeout) {
-                clearTimeout(detectTimeout);
-            }
-            
-            // Remove any existing detection message
-            const currentNumberField = this.closest('.form-group');
-            const existingMsg = currentNumberField.querySelector('.detection-message');
-            if (existingMsg) {
-                existingMsg.remove();
-            }
-            
-            // Only detect when we have 10 digits
-            if (this.value.length === 10) {
-                // Show loading indicator
-                const loadingMsg = document.createElement('div');
-                loadingMsg.className = 'detection-message loading-message show';
-                loadingMsg.innerHTML = `
-                    <div class="detection-header">
-                        <span><i class="fas fa-spinner fa-spin"></i> Detecting operator and circle...</span>
-                    </div>
-                `;
-                currentNumberField.appendChild(loadingMsg);
-                
-                // Wait a brief moment to avoid detection on every keystroke
-                detectTimeout = setTimeout(async () => {
-                    try {
-                        await detectOperatorAndCircle(this.value);
-                        // Remove loading message (updateOperatorAndCircle will create the actual detection message)
-                        if (loadingMsg && loadingMsg.parentNode) {
-                            loadingMsg.remove();
-                        }
-                    } catch (error) {
-                        console.error('Detection error:', error);
-                        // Show error message
-                        if (loadingMsg && loadingMsg.parentNode) {
-                            loadingMsg.innerHTML = `
-                                <div class="detection-header">
-                                    <span><i class="fas fa-exclamation-circle"></i> Detection failed. Please select manually.</span>
-                                </div>
-                            `;
-                            setTimeout(() => {
-                                loadingMsg.classList.remove('show');
-                                setTimeout(() => {
-                                    if (loadingMsg.parentNode) {
-                                        loadingMsg.remove();
-                                    }
-                                }, 300);
-                            }, 3000);
-                        }
-                    }
-                }, 500);
-            }
-        });
-    }
-}
-
-// Detect operator and circle based on mobile number
-async function detectOperatorAndCircle(mobileNumber) {
-    if (!mobileNumber || mobileNumber.length !== 10) {
-        return;
-    }
-
-    try {
-        // First try Numlookup API
-        const numlookupResult = await lookupMobileNumber(mobileNumber);
-        console.log('Numlookup API result:', numlookupResult);
-        
-        if (numlookupResult && numlookupResult.operator && numlookupResult.operator !== 'Unknown') {
-            // API returned valid data, use it to update form
-            const currentProvider = document.getElementById('currentProvider');
-            const currentCircle = document.getElementById('currentCircle');
-            const currentNumberField = document.getElementById('currentNumber').closest('.form-group');
-            
-            // Get all dropdown options
-            const providerOptions = Array.from(currentProvider.options);
-            const circleOptions = Array.from(currentCircle.options);
-            
-            // Try to find a matching provider (case insensitive)
-            let providerFound = false;
-            let apiOperator = numlookupResult.operator.toLowerCase();
-            
-            // Common provider name mappings
-            const operatorMappings = {
-                'airtel': ['airtel', 'bharti airtel', 'bhartiairtel'],
-                'jio': ['jio', 'reliancejio', 'reliance jio'],
-                'vi': ['vi', 'vodafone idea', 'vodafoneidea', 'vodafone', 'idea'],
-                'bsnl': ['bsnl', 'bharat sanchar nigam limited'],
-                'mtnl': ['mtnl', 'mahanagar telephone nigam limited']
-            };
-            
-            console.log('Trying to match operator:', apiOperator);
-            
-            // First try direct comparison
-            for (let option of providerOptions) {
-                if (option.value && option.value.toLowerCase() === apiOperator) {
-                    currentProvider.value = option.value;
-                    providerFound = true;
-                    console.log('Direct match found for provider:', option.value);
-                    break;
-                }
-            }
-            
-            // If not found, try using the mappings
-            if (!providerFound) {
-                console.log('No direct match, trying mappings');
-                for (const [provider, aliases] of Object.entries(operatorMappings)) {
-                    if (aliases.some(alias => apiOperator.includes(alias))) {
-                        for (let option of providerOptions) {
-                            if (option.value.toLowerCase() === provider) {
-                                currentProvider.value = option.value;
-                                providerFound = true;
-                                console.log('Mapped match found for provider:', option.value);
-                                break;
-                            }
-                        }
-                        if (providerFound) break;
-                    }
-                }
-            }
-            
-            // Try to find a matching circle (case insensitive)
-            let circleFound = false;
-            let apiCircle = numlookupResult.circle.toLowerCase();
-            
-            // Common circle name mappings
-            const circleMappings = {
-                'delhi': ['delhi', 'new delhi', 'delhi ncr'],
-                'mumbai': ['mumbai', 'bombay'],
-                'maharashtra': ['maharashtra', 'mh'],
-                'kolkata': ['kolkata', 'calcutta'],
-                'chennai': ['chennai', 'madras'],
-                'karnataka': ['karnataka', 'ka', 'bangalore', 'bengaluru'],
-                'andhra-pradesh': ['andhra pradesh', 'andhra', 'ap', 'telangana'],
-                'gujarat': ['gujarat', 'gj'],
-                'punjab': ['punjab'],
-                'haryana': ['haryana'],
-                'rajasthan': ['rajasthan', 'rj'],
-                'madhya-pradesh': ['madhya pradesh', 'mp'],
-                'bihar': ['bihar'],
-                'orissa': ['orissa', 'odisha'],
-                'assam': ['assam'],
-                'northeast': ['northeast', 'north east', 'ne'],
-                'himachal': ['himachal pradesh', 'himachal', 'hp'],
-                'jammu': ['jammu and kashmir', 'jammu', 'kashmir', 'j&k'],
-                'kerala': ['kerala', 'kl'],
-                'tamil-nadu': ['tamil nadu', 'tn'],
-                'up-east': ['uttar pradesh east', 'up east', 'up-east'],
-                'up-west': ['uttar pradesh west', 'up west', 'up-west'],
-                'west-bengal': ['west bengal', 'wb']
-            };
-            
-            console.log('Trying to match circle:', apiCircle);
-            
-            // First try direct comparison
-            for (let option of circleOptions) {
-                if (option.value && option.value.toLowerCase() === apiCircle) {
-                    currentCircle.value = option.value;
-                    circleFound = true;
-                    console.log('Direct match found for circle:', option.value);
-                    break;
-                }
-            }
-            
-            // If not found, try using the mappings
-            if (!circleFound) {
-                console.log('No direct match, trying mappings');
-                for (const [circle, aliases] of Object.entries(circleMappings)) {
-                    if (aliases.some(alias => apiCircle.includes(alias))) {
-                        for (let option of circleOptions) {
-                            if (option.value.toLowerCase() === circle) {
-                                currentCircle.value = option.value;
-                                circleFound = true;
-                                console.log('Mapped match found for circle:', option.value);
-                                break;
-                            }
-                        }
-                        if (circleFound) break;
-                    }
-                }
-            }
-            
-            // Clean up any existing detection message
-            const existingMsg = currentNumberField.querySelector('.detection-message');
-            if (existingMsg) {
-                existingMsg.remove();
-            }
-            
-            // Create new detection message
-            const detectionMsg = document.createElement('div');
-            detectionMsg.className = 'detection-message show';
-            
-            const confidence = numlookupResult.confidence || 'medium';
-            const confidenceIcon = confidence === 'high' ? 'fa-check-circle' : 'fa-info-circle';
-            const confidenceText = confidence === 'high' ? 'High Confidence' : 'Medium Confidence';
-            
-            if (providerFound || circleFound) {
-                // Show success message
-                detectionMsg.innerHTML = `
-                    <div class="detection-header">
-                        <span><i class="fas ${confidenceIcon}"></i> Mobile number detected</span>
-                        <small class="confidence-badge ${confidence}">${confidenceText}</small>
-                    </div>
-                    <div class="detection-details">
-                        ${providerFound ? `<div>Provider: ${currentProvider.options[currentProvider.selectedIndex].text}</div>` : ''}
-                        ${circleFound ? `<div>Circle: ${currentCircle.options[currentCircle.selectedIndex].text}</div>` : ''}
-                    </div>
-                `;
-                detectionMsg.classList.add('success-message');
-            } else {
-                // Show warning if nothing was found
-                detectionMsg.innerHTML = `
-                    <div class="detection-header">
-                        <span><i class="fas fa-exclamation-circle"></i> Unable to match operator and circle. Please select manually.</span>
-                    </div>
-                `;
-                detectionMsg.classList.add('error-message');
-            }
-            
-            currentNumberField.appendChild(detectionMsg);
-            
-            // Trigger change events to update dependent fields
-            if (providerFound) currentProvider.dispatchEvent(new Event('change'));
-            if (circleFound) currentCircle.dispatchEvent(new Event('change'));
-            
-            return;
-        }
-
-        // Fallback to local database if API fails
-        console.log("Falling back to local database for", mobileNumber);
-        const localResult = localMobileNumberLookup(mobileNumber);
-        if (localResult) {
-            updateOperatorAndCircle(localResult.operator, localResult.circle, localResult.confidence);
-        }
-    } catch (error) {
-        console.error('Error in operator detection:', error);
-        // Fallback to local database on error
-        const localResult = localMobileNumberLookup(mobileNumber);
-        if (localResult) {
-            updateOperatorAndCircle(localResult.operator, localResult.circle, localResult.confidence);
-        }
-    }
-}
-
-// Local mobile number lookup based on TRAI data
-function localMobileNumberLookup(mobileNumber) {
-    if (!mobileNumber || mobileNumber.length !== 10) {
-        return null;
-    }
-
-    // Step 1: Check for specific 4-digit prefixes (highest accuracy)
-    const prefix4 = mobileNumber.substring(0, 4);
-    if (specificPrefixes[prefix4]) {
-        return specificPrefixes[prefix4];
-    }
-
-    // Step 2: Check for specific 3-digit prefixes
-    const prefix3 = mobileNumber.substring(0, 3);
-    if (specificPrefixes[prefix3]) {
-        return specificPrefixes[prefix3];
-    }
-
-    // Step 3: Use the first 2 digits and check against priority mapping to resolve conflicts
-    const prefix2 = mobileNumber.substring(0, 2);
-    
-    // Check if this prefix is in our priority mapping for resolving conflicts
-    if (priorityPrefixes[prefix2]) {
-        const operatorId = priorityPrefixes[prefix2];
-        const operatorData = mobileOperatorData[operatorId];
-        
-        // If operator has this prefix in its data, use it
-        if (operatorData && operatorData.prefixes[prefix2]) {
-            const possibleCircles = operatorData.prefixes[prefix2];
-            const subIndex = parseInt(mobileNumber.substring(2, 4)) % possibleCircles.length;
-            return { 
-                operator: operatorId, 
-                circle: possibleCircles[subIndex],
-                confidence: "medium"
-            };
-        }
-    }
-    
-    // Step 4: Try general prefix mapping across all operators
-    for (const [operatorId, operatorData] of Object.entries(mobileOperatorData)) {
-        if (operatorData.prefixes[prefix2]) {
-            // Found an operator with this prefix
-            const possibleCircles = operatorData.prefixes[prefix2];
-            const subIndex = parseInt(mobileNumber.substring(2, 4)) % possibleCircles.length;
-            return { 
-                operator: operatorId, 
-                circle: possibleCircles[subIndex],
-                confidence: "medium"
-            };
-        }
-    }
-
-    // Step 5: Fallback to first digit prediction
-    const firstDigit = mobileNumber.charAt(0);
-    if (firstDigitOperators[firstDigit]) {
-        const operatorId = firstDigitOperators[firstDigit];
-        const operatorData = mobileOperatorData[operatorId];
-        
-        // Pick a circle associated with this operator
-        const firstPrefix = Object.keys(operatorData.prefixes)[0];
-        const possibleCircles = operatorData.prefixes[firstPrefix];
-        const circleIndex = parseInt(mobileNumber.substring(1, 3)) % possibleCircles.length;
-        
-        return {
-            operator: operatorId,
-            circle: possibleCircles[circleIndex],
-            confidence: "low"
-        };
-    }
-
-    // Step 6: Ultimate fallback - guarantee an answer for any number
-    const operators = Object.keys(mobileOperatorData);
-    const lastDigits = parseInt(mobileNumber.substring(8, 10));
-    const operatorIndex = lastDigits % operators.length;
-    const operatorId = operators[operatorIndex];
-    
-    // Pick any circle from the selected operator
-    const firstCircleKey = Object.keys(mobileOperatorData[operatorId].prefixes)[0];
-    const circles = mobileOperatorData[operatorId].prefixes[firstCircleKey];
-    const circleIndex = Math.floor(lastDigits / 4) % circles.length;
-    
-    return {
-        operator: operatorId,
-        circle: circles[circleIndex],
-        confidence: "very_low"
-    };
-}
-
-// Update the form with detected operator and circle
-function updateOperatorAndCircle(operator, circle, confidence) {
-    const currentProvider = document.getElementById('currentProvider');
-    const currentCircle = document.getElementById('currentCircle');
-    const currentNumberField = document.getElementById('currentNumber').closest('.form-group');
-    
-    // Remove any existing detection message
-    const existingMsg = currentNumberField.querySelector('.detection-message');
-    if (existingMsg) {
-        existingMsg.remove();
-    }
-    
-    // Create new detection message
-    const detectionMsg = document.createElement('div');
-    detectionMsg.className = 'detection-message show';
-    
-    if (operator === 'Unknown' || circle === 'Unknown') {
-        // Show error message for failed detection
-        detectionMsg.innerHTML = `
-            <div class="detection-header">
-                <span><i class="fas fa-exclamation-circle"></i> Unable to detect operator and circle. Please select manually.</span>
-            </div>
-        `;
-        detectionMsg.classList.add('error-message');
-    } else {
-        // Show success message with detected information
-        const confidenceIcon = confidence === 'high' ? 'fa-check-circle' : 'fa-info-circle';
-        const confidenceText = confidence === 'high' ? 'High Confidence' : 'Low Confidence';
-        
-        detectionMsg.innerHTML = `
-            <div class="detection-header">
-                <span><i class="fas ${confidenceIcon}"></i> Detected: ${operator.toUpperCase()} in ${circle.replace(/-/g, ' ').toUpperCase()}</span>
-                <small class="confidence-badge ${confidence}">${confidenceText}</small>
-            </div>
-        `;
-        detectionMsg.classList.add('success-message');
-        
-        // Update form fields
-        if (currentProvider) {
-            const option = Array.from(currentProvider.options).find(opt => 
-                opt.value.toLowerCase() === operator.toLowerCase()
-            );
-            if (option) {
-                currentProvider.value = option.value;
-            }
-        }
-        
-        if (currentCircle) {
-            const option = Array.from(currentCircle.options).find(opt => 
-                opt.value.toLowerCase() === circle.toLowerCase()
-            );
-            if (option) {
-                currentCircle.value = option.value;
-            }
-        }
-    }
-    
-    // Add some styles for the detection message
-    const style = document.createElement('style');
-    style.textContent = `
-        .detection-message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-            animation: fadeIn 0.3s ease;
-        }
-        .detection-message.show {
-            display: block;
-        }
-        .detection-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .confidence-badge {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 500;
-        }
-        .confidence-badge.high {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4CAF50;
-        }
-        .confidence-badge.low {
-            background: rgba(255, 152, 0, 0.2);
-            color: #FF9800;
-        }
-        .success-message {
-            background: rgba(76, 175, 80, 0.1);
-            border-left: 3px solid #4CAF50;
-        }
-        .error-message {
-            background: rgba(244, 67, 54, 0.1);
-            border-left: 3px solid #F44336;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    currentNumberField.appendChild(detectionMsg);
-}
-
-// Calculate porting dates based on current plan end date
-function calculatePortingDates() {
-    const planEndDateInput = document.getElementById('currentPlan');
-    const currentCircleInput = document.getElementById('currentCircle');
-    
-    if (planEndDateInput && planEndDateInput.value && currentCircleInput && currentCircleInput.value) {
-        // Get values
-        const planEndDate = planEndDateInput.value;
-        const circleId = currentCircleInput.value;
-        
-        try {
-            // Parse the end date
-            const endDate = new Date(planEndDate);
-            
-            // Calculate porting date (same as end date)
-            const portingDate = new Date(endDate);
-            
-            // Determine working days before based on circle (5 for J&K, 3 for others)
-            const isJammuKashmir = circleId.toLowerCase().includes('jammu') || 
-                                circleId.toLowerCase().includes('kashmir');
-            const workingDaysBefore = isJammuKashmir ? 5 : 3;
-            
-            // Calculate SMS date
-            const smsDate = new Date(endDate);
-            let workingDaysCount = 0;
-            
-            // Check if end date is a working day (not Sunday)
-            if (endDate.getDay() !== 0) {
-                workingDaysCount = 1;
-            }
-            
-            // Count backward to find the SMS date
-            while (workingDaysCount < workingDaysBefore) {
-                // Move one day back
-                smsDate.setDate(smsDate.getDate() - 1);
-                
-                // If not Sunday, count as working day
-                if (smsDate.getDay() !== 0) {
-                    workingDaysCount++;
-                }
-            }
-            
-            // Store the calculated porting date for use in submission
-            if (typeof(Storage) !== "undefined") {
-                localStorage.setItem('calculatedPortingDate', portingDate.toISOString());
-            }
-            
-            // Format the SMS date
-            const formattedSmsDate = smsDate.toLocaleDateString('en-IN', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            
-            // Format the Porting date
-            const formattedPortingDate = portingDate.toLocaleDateString('en-IN', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            
-            // Show SMS date info in Current Details section (Step 1)
-            const smsDateInfo = document.getElementById('smsDateInfo');
-            if (smsDateInfo) {
-                const daysText = isJammuKashmir ? 
-                    "5 working days (for Jammu & Kashmir circle)" : 
-                    "3 working days";
-                
-                smsDateInfo.innerHTML = `<div class="info-message">
-                    <i class="fas fa-info-circle"></i>
-                    <span>Based on your plan end date, you should send PORT SMS to 1900 on 
-                    <strong>${formattedSmsDate}</strong> (${daysText} before expiry). Your number will be ported on <strong>${formattedPortingDate}</strong>.</span>
-                </div>`;
-                smsDateInfo.style.display = 'block';
-            }
-            
-            // Update SMS date on step 3
-            const smsSendDateElement = document.getElementById('smsSendDate');
-            if (smsSendDateElement) {
-                smsSendDateElement.textContent = formattedSmsDate;
-            }
-            
-            // Store SMS date for later use
-            localStorage.setItem('smsSendDate', formattedSmsDate);
-            localStorage.setItem('formattedPortingDate', formattedPortingDate);
-        } catch (error) {
-            console.error('Error calculating porting dates locally:', error);
-        }
-    }
-}
-
-// Database of porting centers by state and district
-const portingCentersDB = {
-    'delhi': {
-        'new delhi': [
-            { name: 'Airtel Experience Center', address: 'Connaught Place, New Delhi', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Karol Bagh, New Delhi', provider: 'jio' },
-            { name: 'Vi Store', address: 'Rajouri Garden, New Delhi', provider: 'vi' }
-        ],
-        'south delhi': [
-            { name: 'Airtel Store', address: 'Saket, South Delhi', provider: 'airtel' },
-            { name: 'Jio Center', address: 'Hauz Khas, South Delhi', provider: 'jio' }
-        ],
-        'east delhi': [
-            { name: 'Airtel Store', address: 'Preet Vihar, East Delhi', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Mayur Vihar, East Delhi', provider: 'jio' }
-        ],
-        'west delhi': [
-            { name: 'Airtel Store', address: 'Rajouri Garden, West Delhi', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Punjabi Bagh, West Delhi', provider: 'jio' }
-        ],
-        'north delhi': [
-            { name: 'Airtel Store', address: 'Pitampura, North Delhi', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Rohini, North Delhi', provider: 'jio' }
-        ]
-    },
-    'maharashtra': {
-        'mumbai': [
-            { name: 'Airtel Experience Center', address: 'Bandra West, Mumbai', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Andheri East, Mumbai', provider: 'jio' },
-            { name: 'Vi Store', address: 'Malad West, Mumbai', provider: 'vi' }
-        ],
-        'pune': [
-            { name: 'Airtel Store', address: 'Koregaon Park, Pune', provider: 'airtel' },
-            { name: 'Jio Center', address: 'Viman Nagar, Pune', provider: 'jio' }
-        ],
-        'nagpur': [
-            { name: 'Airtel Store', address: 'Sitabuldi, Nagpur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Dharampeth, Nagpur', provider: 'jio' }
-        ],
-        'nashik': [
-            { name: 'Airtel Store', address: 'College Road, Nashik', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Gangapur Road, Nashik', provider: 'jio' }
-        ],
-        'thane': [
-            { name: 'Airtel Store', address: 'Kopri, Thane', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Manpada, Thane', provider: 'jio' }
-        ]
-    },
-    'karnataka': {
-        'bangalore': [
-            { name: 'Airtel Experience Center', address: 'Indiranagar, Bangalore', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Koramangala, Bangalore', provider: 'jio' },
-            { name: 'Vi Store', address: 'Whitefield, Bangalore', provider: 'vi' }
-        ],
-        'mysore': [
-            { name: 'Airtel Store', address: 'Vijayanagar, Mysore', provider: 'airtel' },
-            { name: 'Jio Center', address: 'Kuvempunagar, Mysore', provider: 'jio' }
-        ],
-        'mangalore': [
-            { name: 'Airtel Store', address: 'Hampankatta, Mangalore', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Kadri, Mangalore', provider: 'jio' }
-        ],
-        'hubli': [
-            { name: 'Airtel Store', address: 'Gokul Road, Hubli', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Deshpande Nagar, Hubli', provider: 'jio' }
-        ]
-    },
-    'tamil nadu': {
-        'chennai': [
-            { name: 'Airtel Experience Center', address: 'T Nagar, Chennai', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Anna Nagar, Chennai', provider: 'jio' },
-            { name: 'Vi Store', address: 'Adyar, Chennai', provider: 'vi' }
-        ],
-        'coimbatore': [
-            { name: 'Airtel Store', address: 'RS Puram, Coimbatore', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Gandhipuram, Coimbatore', provider: 'jio' }
-        ],
-        'madurai': [
-            { name: 'Airtel Store', address: 'KK Nagar, Madurai', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Anna Nagar, Madurai', provider: 'jio' }
-        ]
-    },
-    'gujarat': {
-        'ahmedabad': [
-            { name: 'Airtel Experience Center', address: 'CG Road, Ahmedabad', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Prahlad Nagar, Ahmedabad', provider: 'jio' },
-            { name: 'Vi Store', address: 'Maninagar, Ahmedabad', provider: 'vi' }
-        ],
-        'surat': [
-            { name: 'Airtel Store', address: 'Adajan, Surat', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Vesu, Surat', provider: 'jio' }
-        ],
-        'vadodara': [
-            { name: 'Airtel Store', address: 'Alkapuri, Vadodara', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Akota, Vadodara', provider: 'jio' }
-        ]
-    },
-    'west bengal': {
-        'kolkata': [
-            { name: 'Airtel Experience Center', address: 'Park Street, Kolkata', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Salt Lake, Kolkata', provider: 'jio' },
-            { name: 'Vi Store', address: 'New Town, Kolkata', provider: 'vi' }
-        ],
-        'howrah': [
-            { name: 'Airtel Store', address: 'Golabari, Howrah', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Shibpur, Howrah', provider: 'jio' }
-        ],
-        'durgapur': [
-            { name: 'Airtel Store', address: 'City Center, Durgapur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Benachity, Durgapur', provider: 'jio' }
-        ]
-    },
-    'andhra pradesh': {
-        'hyderabad': [
-            { name: 'Airtel Experience Center', address: 'Banjara Hills, Hyderabad', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Gachibowli, Hyderabad', provider: 'jio' },
-            { name: 'Vi Store', address: 'Hitech City, Hyderabad', provider: 'vi' }
-        ],
-        'vijayawada': [
-            { name: 'Airtel Store', address: 'Benz Circle, Vijayawada', provider: 'airtel' },
-            { name: 'Jio Store', address: 'MG Road, Vijayawada', provider: 'jio' }
-        ],
-        'visakhapatnam': [
-            { name: 'Airtel Store', address: 'Dwaraka Nagar, Visakhapatnam', provider: 'airtel' },
-            { name: 'Jio Store', address: 'MVP Colony, Visakhapatnam', provider: 'jio' }
-        ]
-    },
-    'kerala': {
-        'kochi': [
-            { name: 'Airtel Experience Center', address: 'MG Road, Kochi', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Panampilly Nagar, Kochi', provider: 'jio' },
-            { name: 'Vi Store', address: 'Kakkanad, Kochi', provider: 'vi' }
-        ],
-        'thiruvananthapuram': [
-            { name: 'Airtel Store', address: 'Kowdiar, Thiruvananthapuram', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Vazhuthacaud, Thiruvananthapuram', provider: 'jio' }
-        ],
-        'kozhikode': [
-            { name: 'Airtel Store', address: 'Mavoor Road, Kozhikode', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Palayam, Kozhikode', provider: 'jio' }
-        ]
-    },
-    'punjab': {
-        'chandigarh': [
-            { name: 'Airtel Experience Center', address: 'Sector 17, Chandigarh', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Sector 35, Chandigarh', provider: 'jio' },
-            { name: 'Vi Store', address: 'Sector 22, Chandigarh', provider: 'vi' }
-        ],
-        'ludhiana': [
-            { name: 'Airtel Store', address: 'Ferozepur Road, Ludhiana', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Model Town, Ludhiana', provider: 'jio' }
-        ],
-        'amritsar': [
-            { name: 'Airtel Store', address: 'Lawrence Road, Amritsar', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Ranjit Avenue, Amritsar', provider: 'jio' }
-        ]
-    },
-    'rajasthan': {
-        'jaipur': [
-            { name: 'Airtel Experience Center', address: 'C Scheme, Jaipur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Vaishali Nagar, Jaipur', provider: 'jio' },
-            { name: 'Vi Store', address: 'Malviya Nagar, Jaipur', provider: 'vi' }
-        ],
-        'jodhpur': [
-            { name: 'Airtel Store', address: 'Ratanada, Jodhpur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Shastri Nagar, Jodhpur', provider: 'jio' }
-        ],
-        'udaipur': [
-            { name: 'Airtel Store', address: 'Hiran Magri, Udaipur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Sector 11, Udaipur', provider: 'jio' }
-        ]
-    },
-    'uttar pradesh': {
-        'lucknow': [
-            { name: 'Airtel Experience Center', address: 'Gomti Nagar, Lucknow', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Hazratganj, Lucknow', provider: 'jio' },
-            { name: 'Vi Store', address: 'Aliganj, Lucknow', provider: 'vi' }
-        ],
-        'kanpur': [
-            { name: 'Airtel Store', address: 'Swaroop Nagar, Kanpur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Kakadeo, Kanpur', provider: 'jio' }
-        ],
-        'varanasi': [
-            { name: 'Airtel Store', address: 'Sigra, Varanasi', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Lanka, Varanasi', provider: 'jio' }
-        ]
-    },
-    'bihar': {
-        'patna': [
-            { name: 'Airtel Experience Center', address: 'Boring Road, Patna', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Kankarbagh, Patna', provider: 'jio' },
-            { name: 'Vi Store', address: 'Exhibition Road, Patna', provider: 'vi' }
-        ],
-        'gaya': [
-            { name: 'Airtel Store', address: 'Civil Lines, Gaya', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Kotwali, Gaya', provider: 'jio' }
-        ],
-        'muzaffarpur': [
-            { name: 'Airtel Store', address: 'Saraiyaganj, Muzaffarpur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Bela, Muzaffarpur', provider: 'jio' }
-        ]
-    },
-    'madhya pradesh': {
-        'bhopal': [
-            { name: 'Airtel Experience Center', address: 'MP Nagar, Bhopal', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Arera Colony, Bhopal', provider: 'jio' },
-            { name: 'Vi Store', address: 'New Market, Bhopal', provider: 'vi' }
-        ],
-        'indore': [
-            { name: 'Airtel Store', address: 'Vijay Nagar, Indore', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Sapna Sangeeta, Indore', provider: 'jio' }
-        ],
-        'jabalpur': [
-            { name: 'Airtel Store', address: 'Civil Lines, Jabalpur', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Wright Town, Jabalpur', provider: 'jio' }
-        ]
-    },
-    'assam': {
-        'guwahati': [
-            { name: 'Airtel Experience Center', address: 'GS Road, Guwahati', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Dispur, Guwahati', provider: 'jio' },
-            { name: 'Vi Store', address: 'Paltan Bazaar, Guwahati', provider: 'vi' }
-        ],
-        'silchar': [
-            { name: 'Airtel Store', address: 'Central Road, Silchar', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Tarapur, Silchar', provider: 'jio' }
-        ],
-        'dibrugarh': [
-            { name: 'Airtel Store', address: 'Borguri, Dibrugarh', provider: 'airtel' },
-            { name: 'Jio Store', address: 'Mohanbari, Dibrugarh', provider: 'jio' }
-        ]
-    }
-};
-
-// Function to find nearby porting centers based on location
-async function findNearbyPortingCenters() {
-    const locationInput = document.getElementById('location');
-    const selectedProvider = document.getElementById('newProvider').value;
-    const nearbyCentersList = document.getElementById('nearbyCentersList');
-    
-    if (!locationInput || !nearbyCentersList) return;
-    
-    const location = locationInput.value.trim();
-    if (!location) {
-        nearbyCentersList.innerHTML = '<p class="centers-loading">Please enter your location to find nearby centers.</p>';
-        return;
-    }
-    
-    // Show loading message
-    nearbyCentersList.innerHTML = '<p class="centers-loading"><i class="fas fa-spinner fa-spin"></i> Finding nearby centers...</p>';
-    
-    try {
-        // Call the API to get nearby centers
-        const centers = await getNearbyPortingCenters(location, selectedProvider);
-        
-        if (centers && centers.length > 0) {
-            // Display the found centers
-            nearbyCentersList.innerHTML = '';
-            centers.forEach(center => {
-                const centerElement = document.createElement('div');
-                centerElement.className = 'center-item';
-                
-                // Create the opening hours HTML if available
-                let openingHoursHtml = '';
-                if (center.openingHours) {
-                    openingHoursHtml = `
-                        <div class="opening-hours">
-                            <h5>Opening Hours</h5>
-                            <ul>
-                                ${center.openingHours.map(hours => `<li>${hours}</li>`).join('')}
-                            </ul>
-                        </div>
-                    `;
-                }
-                
-                // Create the rating stars
-                const rating = center.rating || 0;
-                const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-                
-                centerElement.innerHTML = `
-                    <div class="center-icon">
-                        <i class="fas fa-store"></i>
-                    </div>
-                    <div class="center-info">
-                        <h4>${center.name}</h4>
-                        <p class="address"><i class="fas fa-map-marker-alt"></i> ${center.address}</p>
-                        ${center.phone ? `<p class="phone"><i class="fas fa-phone"></i> ${center.phone}</p>` : ''}
-                        <div class="center-meta">
-                            <span class="distance"><i class="fas fa-route"></i> ${center.distance} km</span>
-                            <span class="provider-badge ${center.provider}">${center.provider.toUpperCase()}</span>
-                            ${center.openNow ? '<span class="open-now">Open Now</span>' : ''}
-                        </div>
-                        <div class="rating">
-                            <span class="stars">${stars}</span>
-                            <span class="rating-count">(${center.totalRatings || 0} reviews)</span>
-                        </div>
-                        ${openingHoursHtml}
-                        ${center.website ? `<a href="${center.website}" target="_blank" class="website-link">Visit Website</a>` : ''}
-                    </div>
-                `;
-                
-                // Add click handler to show on map
-                centerElement.addEventListener('click', () => {
-                    showOnMap(center.location.lat, center.location.lng, center.name);
-                });
-                
-                nearbyCentersList.appendChild(centerElement);
-            });
-            
-            // Initialize the map with the first center
-            if (centers[0]) {
-                initializeMap(centers);
-            }
-        } else {
-            nearbyCentersList.innerHTML = '<p class="centers-loading">No porting centers found in your area. Please try a different location.</p>';
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        nearbyCentersList.innerHTML = '<p class="centers-loading">Error finding centers. Please try again later.</p>';
-    }
-}
-
-// Function to initialize the map
-function initializeMap(centers) {
-    const mapContainer = document.getElementById('centersMap');
-    if (!mapContainer) return;
-    
-    // Create the map centered on the first center
-    const map = new google.maps.Map(mapContainer, {
-        center: { lat: centers[0].location.lat, lng: centers[0].location.lng },
-        zoom: 12
-    });
-    
-    // Add markers for all centers
-    centers.forEach(center => {
-        const marker = new google.maps.Marker({
-            position: center.location,
-            map: map,
-            title: center.name,
-            icon: getProviderIcon(center.provider)
-        });
-        
-        // Add info window
-        const infoWindow = new google.maps.InfoWindow({
-            content: `
-                <div class="map-info-window">
-                    <h4>${center.name}</h4>
-                    <p>${center.address}</p>
-                    ${center.phone ? `<p>📞 ${center.phone}</p>` : ''}
-                    <p>🚶 ${center.distance} km away</p>
-                    ${center.openNow ? '<p class="open-now">✅ Open Now</p>' : ''}
-                </div>
-            `
-        });
-        
-        marker.addListener('click', () => {
-            infoWindow.open(map, marker);
-        });
-    });
-}
-
-// Function to get provider-specific map marker icon
-function getProviderIcon(provider) {
-    const iconBase = 'https://maps.google.com/mapfiles/ms/icons/';
-    switch(provider) {
-        case 'airtel':
-            return iconBase + 'red-dot.png';
-        case 'jio':
-            return iconBase + 'blue-dot.png';
-        case 'vi':
-            return iconBase + 'purple-dot.png';
-        default:
-            return iconBase + 'yellow-dot.png';
-    }
-}
-
-// Function to show a specific location on the map
-function showOnMap(lat, lng, name) {
-    const map = new google.maps.Map(document.getElementById('centersMap'), {
-        center: { lat, lng },
-        zoom: 15
-    });
-    
-    const marker = new google.maps.Marker({
-        position: { lat, lng },
-        map: map,
-        title: name
-    });
-}
-
-// Add event listeners
-document.getElementById('location')?.addEventListener('input', debounce(findNearbyPortingCenters, 500));
-document.getElementById('newProvider')?.addEventListener('change', findNearbyPortingCenters);
-
-// Debounce function to limit API calls
+// Helper function for debouncing
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -1835,25 +1761,177 @@ function debounce(func, wait) {
     };
 }
 
-// Initialize map when Google Maps API is loaded
-let mapInitialized = false;
-
-// Function to check if Google Maps API is loaded
-function checkGoogleMapsLoaded() {
-    if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-        if (!mapInitialized) {
-            mapInitialized = true;
-            console.log('Google Maps API loaded successfully');
-            // Initialize any map-related functionality here
-            setupSpecialFields();
-        }
-    } else {
-        // If not loaded yet, check again after a short delay
-        setTimeout(checkGoogleMapsLoaded, 100);
+// URL for provider icons
+function getProviderIcon(provider) {
+    const providerLower = provider.toLowerCase();
+    
+    // Default icon
+    let iconPath = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+    
+    // Provider-specific icons
+    if (providerLower.includes('airtel')) {
+        iconPath = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+    } else if (providerLower.includes('jio')) {
+        iconPath = 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+    } else if (providerLower.includes('vi') || providerLower.includes('vodafone')) {
+        iconPath = 'https://maps.google.com/mapfiles/ms/icons/pink-dot.png';
+    } else if (providerLower.includes('bsnl')) {
+        iconPath = 'https://maps.google.com/mapfiles/ms/icons/green-dot.png';
+    } else if (providerLower.includes('mtnl')) {
+        iconPath = 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png';
     }
+    
+    return iconPath;
 }
 
-// Start checking for Google Maps API
-checkGoogleMapsLoaded();
+// Add custom styles for page
+function addPortingStyles() {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .detection-icon {
+            font-size: 18px;
+            margin-right: 8px;
+            color: var(--primary-color);
+        }
+        
+        .centers-loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .centers-loading i {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .loading-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .loading-indicator .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(var(--primary-rgb), 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        .loading-indicator span {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        .map-info-window {
+            padding: 10px;
+            max-width: 250px;
+        }
+        
+        .map-info-window h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .map-info-window p {
+            margin: 5px 0;
+            color: #666;
+            font-size: 12px;
+        }
+    `;
+    
+    document.head.appendChild(styleElement);
+}
 
-// ... existing code ...
+// Function to update the porting tracker UI
+function updatePortingTrackerUI() {
+    const trackerContainer = document.getElementById('portingTracker');
+    if (!trackerContainer) return;
+    
+    // Get the active step
+    const activeStep = document.querySelector('.form-step.active');
+    const currentStep = activeStep ? parseInt(activeStep.getAttribute('data-step')) : 1;
+    
+    // Define the porting stages
+    const stages = [
+        { name: 'Information', step: 1, icon: 'fa-user', status: currentStep > 1 ? 'completed' : (currentStep === 1 ? 'active' : 'pending') },
+        { name: 'Provider', step: 2, icon: 'fa-mobile-alt', status: currentStep > 2 ? 'completed' : (currentStep === 2 ? 'active' : 'pending') },
+        { name: 'Schedule', step: 3, icon: 'fa-calendar-alt', status: currentStep > 3 ? 'completed' : (currentStep === 3 ? 'active' : 'pending') },
+        { name: 'Confirm', step: 4, icon: 'fa-check-circle', status: currentStep > 4 ? 'completed' : (currentStep === 4 ? 'active' : 'pending') }
+    ];
+    
+    // Clear previous content
+    trackerContainer.innerHTML = '';
+    
+    // Create the tracker UI
+    const trackerHTML = `
+        <div class="tracker-title">Porting Progress</div>
+        <div class="tracker-stages">
+            ${stages.map(stage => `
+                <div class="tracker-stage ${stage.status}">
+                    <div class="stage-icon"><i class="fas ${stage.icon}"></i></div>
+                    <div class="stage-name">${stage.name}</div>
+                    <div class="stage-status">${stage.status === 'completed' ? '<i class="fas fa-check"></i>' : ''}</div>
+                </div>
+                ${stage.step < stages.length ? '<div class="tracker-connector"></div>' : ''}
+            `).join('')}
+        </div>
+    `;
+    
+    // Set the HTML content
+    trackerContainer.innerHTML = trackerHTML;
+}
+
+// Setup circle selection functionality
+function setupCircleSelection() {
+    const circleSelect = document.getElementById('currentCircle');
+    const circleCards = document.querySelectorAll('.circle-card');
+    
+    if (!circleSelect) return;
+    
+    // Setup circle dropdown change events
+    circleSelect.addEventListener('change', function() {
+        // When circle changes, recalculate porting dates if plan end date is set
+        const planEndDateInput = document.getElementById('currentPlan');
+        if (planEndDateInput && planEndDateInput.value) {
+            calculatePortingDates();
+        }
+    });
+    
+    // Setup circle cards if they exist (visual selection)
+    if (circleCards.length) {
+        circleCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove selected class from all cards
+                circleCards.forEach(c => {
+                    c.classList.remove('selected');
+                });
+                
+                // Add selected class to this card
+                this.classList.add('selected');
+                
+                // Set dropdown value to match selected card
+                const circle = this.getAttribute('data-circle');
+                if (circleSelect) {
+                    circleSelect.value = circle;
+                    
+                    // Trigger change event
+                    const event = new Event('change');
+                    circleSelect.dispatchEvent(event);
+                }
+            });
+        });
+    }
+}

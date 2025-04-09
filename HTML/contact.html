@@ -7,7 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../CSS/common.css">
+    <link rel="stylesheet" href="../CSS/loader.css"> 
     <link rel="stylesheet" href="../CSS/contact.css">
+
    
    
 </head>
@@ -264,63 +266,46 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-top">
-                <div class="footer-info">
-                    <h3>PortMySim</h3>
-                    <p>Making mobile number portability simple and hassle-free.</p>
-                    <div class="social-icons">
-                        <a href="#" class="facebook" aria-label="Facebook">
-                            <i class="fab fa-facebook-f"></i>
-                        </a>
-                        <a href="#" class="twitter" aria-label="Twitter">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="#" class="instagram" aria-label="Instagram">
-                            <i class="fab fa-instagram"></i>
-                        </a>
-                        <a href="#" class="linkedin" aria-label="LinkedIn">
-                            <i class="fab fa-linkedin-in"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="footer-links">
-                    <div class="footer-links-column">
-                        <h3>Quick Links</h3>
-                        <ul>
-                            <li><a href="index.html">Home</a></li>
-                            <li><a href="how-it-works.html">How It Works</a></li>
-                            <li><a href="plans.html">Plans</a></li>
-                            <li><a href="about.html">About</a></li>
-                            <li><a href="contact.html">Contact</a></li>
-                        </ul>
-                    </div>
-                    <div class="footer-links-column">
-                        <h3>Support</h3>
-                        <ul>
-                            <li><a href="terms-of-service.html">Terms & Conditions</a></li>
-                            <li><a href="privacy-policy.html">Privacy Policy</a></li>
-                            <li><a href="faq.html">FAQ</a></li>
-                            <li><a href="help-center.html">Help Center</a></li>
-                            <li><a href="refund-policy.html">Refund Policy</a></li>
-                        </ul>
-                    </div>
-                </div>
+          <div class="footer-content">
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.3s">
+              <h3>PortMySim</h3>
+              <p>Making mobile number portability simple and hassle-free.</p>
             </div>
-            <div class="footer-bottom">
-                <div class="footer-copyright">
-                    <p>&copy; <span id="currentYear"></span> PortMySim. All rights reserved.</p>
-                </div>
-                <div class="footer-app-links">
-                    <a href="#" class="app-link">
-                        <img src="../images/app-store.svg" alt="Download on the App Store" width="119.66407" height="40">
-                    </a>
-                    <a href="#" class="app-link">
-                        <img src="../images/google-play.png" alt="Get it on Google Play" width="119.66407" height="40">
-                    </a>
-                </div>
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.4s">
+              <h3>Quick Links</h3>
+              <ul>
+                <li><a href="index.html" data-transition="fade">Home</a></li>
+                <li><a href="how-it-works.html" data-transition="fade">How It Works</a></li>
+                <li><a href="plans.html" data-transition="fade">Plans</a></li>
+                <li><a href="compare.html" data-transition="fade">Compare Networks</a></li>
+                <li><a href="about.html" data-transition="fade">About</a></li>
+                <li><a href="contact.html" data-transition="fade">Contact</a></li>
+              </ul>
             </div>
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.5s">
+              <h3>Contact Us</h3>
+              <p>Email: support@portmysim.com</p>
+              <p>Phone: +91 1234567890</p>
+            </div>
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.6s">
+              <h3>Support</h3>
+              <ul>
+                <li><a href="terms-of-service.html" data-transition="fade">Terms & Conditions</a></li>
+                <li><a href="privacy-policy.html" data-transition="fade">Privacy Policy</a></li>
+                <li><a href="faq.html" data-transition="fade">FAQ</a></li>
+                <li><a href="help-center.html" data-transition="fade">Help Center</a></li>
+                <li><a href="refund-policy.html" data-transition="fade">Refund Policy</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-bottom content-transition" data-animation="fade-in" data-delay="0.7s">
+            <p>
+              &copy; <span id="currentYear"></span> PortMySim. All rights
+              reserved.
+            </p>
+          </div>
         </div>
-    </footer>
+      </footer>
     
     <!-- Main JS - Contains all consolidated JavaScript functionality -->
     <script>
@@ -334,25 +319,7 @@
     <script src="../JS/transitions.js"></script>
     <script src="../JS/contact.js" type="module"></script>
     <script src="../JS/loader.js"></script>
-    <script>
-        // Custom initialization for contact page
-        document.addEventListener('DOMContentLoaded', function() {
-            // Remove any existing loader elements
-            const existingLoaders = document.querySelectorAll('.loader-container, .loader-progress');
-            existingLoaders.forEach(loader => {
-                if (loader.parentNode) {
-                    loader.parentNode.removeChild(loader);
-                }
-            });
-            
-            // Initialize contact form dropdowns
-            if (document.getElementById('contactForm')) {
-                const script = document.createElement('script');
-                script.src = '../JS/contact-dropdowns.js';
-                script.defer = true;
-                document.body.appendChild(script);
-            }
-        });
-    </script>
+
+
 </body>
 </html>

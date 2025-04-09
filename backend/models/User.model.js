@@ -40,8 +40,25 @@ const userSchema = new mongoose.Schema(
       enum: ['user', 'admin'],
       default: 'user'
     },
+    isEmailVerified: {
+      type: Boolean,
+      default: false
+    },
+    emailVerificationToken: String,
+    emailVerificationExpire: Date,
     resetPasswordToken: String,
-    resetPasswordExpire: Date
+    resetPasswordExpire: Date,
+    lastLogin: Date,
+    active: {
+      type: Boolean,
+      default: true
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'facebook'],
+      default: 'local'
+    },
+    providerId: String
   },
   {
     timestamps: true
@@ -93,6 +110,23 @@ userSchema.methods.getResetPasswordToken = function () {
   this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
 
   return resetToken;
+};
+
+// Generate Email Verification Token
+userSchema.methods.getEmailVerificationToken = function () {
+  // Generate token
+  const verificationToken = crypto.randomBytes(20).toString('hex');
+
+  // Hash token and set to emailVerificationToken field
+  this.emailVerificationToken = crypto
+    .createHash('sha256')
+    .update(verificationToken)
+    .digest('hex');
+
+  // Set expire time to 24 hours
+  this.emailVerificationExpire = Date.now() + 24 * 60 * 60 * 1000;
+
+  return verificationToken;
 };
 
 const User = mongoose.model('User', userSchema);

@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | PortMySim</title>
+    <link rel="stylesheet" href="../CSS/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="../CSS/loader.css">
+    <style>
+        .profile-container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            color: #fff;
+            margin-right: 30px;
+        }
+
+        .profile-title h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .profile-email {
+            color: #666;
+            display: flex;
+            align-items: center;
+        }
+
+        .profile-email i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--success-light);
+            color: var(--success);
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+
+        .verified-badge i {
+            margin-right: 5px;
+            color: var(--success);
+        }
+
+        .unverified-badge {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--warning-light);
+            color: var(--warning);
+            font-size: 0.8rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+
+        .unverified-badge i {
+            margin-right: 5px;
+            color: var(--warning);
+        }
+
+        .profile-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #666;
+            font-weight: 500;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .profile-tab.active {
+            color: var(--primary);
+        }
+
+        .profile-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary);
+        }
+
+        .profile-content {
+            display: none;
+        }
+
+        .profile-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .form-error {
+            color: var(--error);
+            font-size: 0.85rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn-update {
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn-update:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-cancel {
+            background-color: #f5f5f5;
+            color: #666;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-right: 15px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background-color: #e8e8e8;
+        }
+
+        .section-divider {
+            display: flex;
+            align-items: center;
+            margin: 40px 0;
+        }
+
+        .section-divider hr {
+            flex-grow: 1;
+            height: 1px;
+            background-color: #eee;
+            border: none;
+        }
+
+        .section-divider span {
+            padding: 0 15px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .social-auth-section {
+            margin-top: 30px;
+        }
+
+        .social-auth-title {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .social-auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .social-auth-btn {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .social-auth-btn i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        .social-auth-btn:hover {
+            opacity: 0.9;
+        }
+
+        .google-btn {
+            background-color: #DB4437;
+        }
+
+        .facebook-btn {
+            background-color: #4267B2;
+        }
+
+        .danger-zone {
+            margin-top: 50px;
+            padding: 20px;
+            border: 1px solid var(--error-light);
+            border-radius: 4px;
+            background-color: rgba(var(--error-rgb), 0.05);
+        }
+
+        .danger-zone h3 {
+            color: var(--error);
+            margin-bottom: 15px;
+        }
+
+        .danger-zone p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .btn-danger {
+            background-color: var(--error);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+
+        .btn-danger:hover {
+            background-color: var(--error-dark);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--error);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            margin-bottom: 25px;
+        }
+
+        .modal-body p {
+            margin-bottom: 15px;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        /* Form message styles */
+        .form-message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .form-message.success {
+            background-color: rgba(var(--success-rgb), 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .form-message.error {
+            background-color: rgba(var(--error-rgb), 0.1);
+            color: var(--error);
+            border: 1px solid var(--error);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-avatar {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+
+            .profile-tabs {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .social-auth-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <a href="../index.html">
+                <img src="../images/logo.png" alt="PortMySim Logo">
+                <span>PortMySim</span>
+            </a>
+        </div>
+        <nav>
+            <ul class="nav-links">
+                <li><a href="../index.html">Home</a></li>
+                <li><a href="../HTML/how-it-works.html">How It Works</a></li>
+                <li><a href="../HTML/plans.html">Plans</a></li>
+                <li><a href="../HTML/contact.html">Contact</a></li>
+                <li><a href="../HTML/about.html">About</a></li>
+            </ul>
+        </nav>
+        <div class="auth-btns">
+            <!-- Will be replaced by JS if logged in -->
+        </div>
+        <div class="menu-toggle">
+            <i class="fas fa-bars"></i>
+        </div>
+    </header>
+
+    <main>
+        <div class="profile-container">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">
+                    <!-- Will be filled by JS -->
+                </div>
+                <div class="profile-title">
+                    <h1 id="profileName">Loading...</h1>
+                    <div class="profile-email">
+                        <i class="fas fa-envelope"></i>
+                        <span id="profileEmail">loading@example.com</span>
+                        <span id="emailVerificationStatus" class="verified-badge">
+                            <i class="fas fa-check-circle"></i> Verified
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-tabs">
+                <div class="profile-tab active" data-tab="personal-info">Personal Information</div>
+                <div class="profile-tab" data-tab="security">Security</div>
+                <div class="profile-tab" data-tab="account">Account</div>
+            </div>
+
+            <div class="profile-content active" id="personal-info">
+                <div class="form-message" id="profileMessage"></div>
+                
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" placeholder="Your full name">
+                        <div class="form-error" id="nameError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="text" id="phone" name="phone" placeholder="Your 10-digit phone number">
+                        <div class="form-error" id="phoneError"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" id="cancelProfileBtn">Cancel</button>
+                        <button type="submit" class="btn-update">Update Profile</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="profile-content" id="security">
+                <div class="form-message" id="emailMessage"></div>
+                
+                <form id="emailForm">
+                    <h3>Change Email Address</h3>
+                    <p>You'll need to verify your new email address after changing it.</p>
+                    <div class="form-group">
+                        <label for="newEmail">New Email Address</label>
+                        <input type="email" id="newEmail" name="newEmail" placeholder="Your new email address">
+                        <div class="form-error" id="newEmailError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="emailPassword">Current Password</label>
+                        <input type="password" id="emailPassword" name="emailPassword" placeholder="Enter your current password">
+                        <div class="form-error" id="emailPasswordError"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" id="cancelEmailBtn">Cancel</button>
+                        <button type="submit" class="btn-update">Update Email</button>
+                    </div>
+                </form>
+
+                <div class="section-divider">
+                    <hr>
+                    <span>PASSWORD</span>
+                    <hr>
+                </div>
+
+                <div class="form-message" id="passwordMessage"></div>
+                
+                <form id="passwordForm">
+                    <h3>Change Password</h3>
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" name="currentPassword" placeholder="Enter your current password">
+                        <div class="form-error" id="currentPasswordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="newPassword" placeholder="Enter your new password">
+                        <div class="form-error" id="newPasswordError"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your new password">
+                        <div class="form-error" id="confirmPasswordError"></div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel" id="cancelPasswordBtn">Cancel</button>
+                        <button type="submit" class="btn-update">Update Password</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="profile-content" id="account">
+                <h3>Account Information</h3>
+                <p>You joined PortMySim on <span id="accountCreatedDate">loading...</span></p>
+                <p>Last login: <span id="lastLoginDate">loading...</span></p>
+
+                <div class="social-auth-section">
+                    <h3 class="social-auth-title">Social Authentication</h3>
+                    <p>Link your account with social media for easier login.</p>
+                    <div class="social-auth-buttons">
+                        <a href="#" class="social-auth-btn google-btn" id="googleAuthBtn">
+                            <i class="fab fa-google"></i> Connect with Google
+                        </a>
+                        <a href="#" class="social-auth-btn facebook-btn" id="facebookAuthBtn">
+                            <i class="fab fa-facebook-f"></i> Connect with Facebook
+                        </a>
+                    </div>
+                </div>
+
+                <div class="danger-zone">
+                    <h3>Danger Zone</h3>
+                    <p>Once you delete your account, there is no going back. This action is permanent.</p>
+                    <button type="button" class="btn-danger" id="deleteAccountBtn">Delete Account</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div class="modal" id="deleteAccountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Delete Your Account</h3>
+                <button class="modal-close" id="closeDeleteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.</p>
+                <div class="form-group">
+                    <label for="deletePassword">Please enter your password to confirm</label>
+                    <input type="password" id="deletePassword" name="deletePassword" placeholder="Enter your password">
+                    <div class="form-error" id="deletePasswordError"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelDeleteBtn">Cancel</button>
+                <button class="btn-danger" id="confirmDeleteBtn">Delete Account</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+          <div class="footer-content">
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.3s">
+              <h3>PortMySim</h3>
+              <p>Making mobile number portability simple and hassle-free.</p>
+            </div>
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.4s">
+              <h3>Quick Links</h3>
+              <ul>
+                <li><a href="index.html" data-transition="fade">Home</a></li>
+                <li><a href="how-it-works.html" data-transition="fade">How It Works</a></li>
+                <li><a href="plans.html" data-transition="fade">Plans</a></li>
+                <li><a href="compare.html" data-transition="fade">Compare Networks</a></li>
+                <li><a href="about.html" data-transition="fade">About</a></li>
+                <li><a href="contact.html" data-transition="fade">Contact</a></li>
+              </ul>
+            </div>
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.5s">
+              <h3>Contact Us</h3>
+              <p>Email: support@portmysim.com</p>
+              <p>Phone: +91 1234567890</p>
+            </div>
+            <div class="footer-section content-transition" data-animation="fade-in" data-delay="0.6s">
+              <h3>Support</h3>
+              <ul>
+                <li><a href="terms-of-service.html" data-transition="fade">Terms & Conditions</a></li>
+                <li><a href="privacy-policy.html" data-transition="fade">Privacy Policy</a></li>
+                <li><a href="faq.html" data-transition="fade">FAQ</a></li>
+                <li><a href="help-center.html" data-transition="fade">Help Center</a></li>
+                <li><a href="refund-policy.html" data-transition="fade">Refund Policy</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="footer-bottom content-transition" data-animation="fade-in" data-delay="0.7s">
+            <p>
+              &copy; <span id="currentYear"></span> PortMySim. All rights
+              reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+      <script src="../JS/loader.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Redirect if not logged in
+            if (!window.PortMySimAPI || !window.PortMySimAPI.isAuthenticated()) {
+                window.location.href = '/HTML/login.html';
+                return;
+            }
+
+            // Load user data
+            loadUserData();
+            
+            // Tab switching
+            const tabs = document.querySelectorAll('.profile-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all content sections
+                    document.querySelectorAll('.profile-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show selected content
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+
+            // Profile Form
+            const profileForm = document.getElementById('profileForm');
+            profileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                updateProfile();
+            });
+
+            // Email Form
+            const emailForm = document.getElementById('emailForm');
+            emailForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                updateEmail();
+            });
+
+            // Password Form
+            const passwordForm = document.getElementById('passwordForm');
+            passwordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                updatePassword();
+            });
+
+            // Cancel buttons
+            document.getElementById('cancelProfileBtn').addEventListener('click', () => {
+                loadUserData(); // Reset form
+            });
+
+            document.getElementById('cancelEmailBtn').addEventListener('click', () => {
+                emailForm.reset();
+                hideMessage('emailMessage');
+            });
+
+            document.getElementById('cancelPasswordBtn').addEventListener('click', () => {
+                passwordForm.reset();
+                hideMessage('passwordMessage');
+            });
+
+            // Delete account modal
+            const deleteAccountModal = document.getElementById('deleteAccountModal');
+            const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+            const closeDeleteModal = document.getElementById('closeDeleteModal');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+
+            deleteAccountBtn.addEventListener('click', () => {
+                deleteAccountModal.classList.add('active');
+            });
+
+            closeDeleteModal.addEventListener('click', () => {
+                deleteAccountModal.classList.remove('active');
+                document.getElementById('deletePassword').value = '';
+                hideError('deletePasswordError');
+            });
+
+            cancelDeleteBtn.addEventListener('click', () => {
+                deleteAccountModal.classList.remove('active');
+                document.getElementById('deletePassword').value = '';
+                hideError('deletePasswordError');
+            });
+
+            confirmDeleteBtn.addEventListener('click', () => {
+                deleteAccount();
+            });
+
+            // Social auth buttons
+            document.getElementById('googleAuthBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                // This would typically open Google OAuth flow
+                alert('Google authentication would be integrated here in a production environment.');
+            });
+
+            document.getElementById('facebookAuthBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                // This would typically open Facebook OAuth flow
+                alert('Facebook authentication would be integrated here in a production environment.');
+            });
+        });
+
+        // Load user data from the API
+        async function loadUserData() {
+            try {
+                const response = await window.PortMySimAPI.auth.getProfile();
+                
+                if (response.success) {
+                    const user = response.data;
+                    
+                    // Update profile header
+                    document.getElementById('profileName').textContent = user.name;
+                    document.getElementById('profileEmail').textContent = user.email;
+                    
+                    // Set avatar with first letter of name
+                    const firstLetter = user.name.charAt(0).toUpperCase();
+                    document.getElementById('profileAvatar').textContent = firstLetter;
+                    
+                    // Show verification status
+                    const verificationStatus = document.getElementById('emailVerificationStatus');
+                    if (user.isEmailVerified) {
+                        verificationStatus.className = 'verified-badge';
+                        verificationStatus.innerHTML = '<i class="fas fa-check-circle"></i> Verified';
+                    } else {
+                        verificationStatus.className = 'unverified-badge';
+                        verificationStatus.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Not Verified <a href="#" id="resendVerificationLink">Resend</a>';
+                        
+                        // Add resend verification listener
+                        document.getElementById('resendVerificationLink').addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            resendVerification();
+                        });
+                    }
+                    
+                    // Fill profile form
+                    document.getElementById('name').value = user.name;
+                    document.getElementById('phone').value = user.phone;
+                    
+                    // Set account dates
+                    const createdDate = new Date(user.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric'
+                    });
+                    document.getElementById('accountCreatedDate').textContent = createdDate;
+                    
+                    if (user.lastLogin) {
+                        const lastLogin = new Date(user.lastLogin).toLocaleDateString('en-US', {
+                            year: 'numeric', month: 'long', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                        document.getElementById('lastLoginDate').textContent = lastLogin;
+                    } else {
+                        document.getElementById('lastLoginDate').textContent = 'Unknown';
+                    }
+                } else {
+                    showMessage('profileMessage', 'Failed to load user data. Please try refreshing the page.', false);
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showMessage('profileMessage', 'Failed to load user data. Please try refreshing the page.', false);
+            }
+        }
+
+        // Update profile (name, phone)
+        async function updateProfile() {
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            
+            // Validate inputs
+            let isValid = true;
+            
+            if (!name) {
+                showError('nameError', 'Name is required');
+                isValid = false;
+            } else {
+                hideError('nameError');
+            }
+            
+            if (!phone) {
+                showError('phoneError', 'Phone number is required');
+                isValid = false;
+            } else if (!/^[6-9]\d{9}$/.test(phone)) {
+                showError('phoneError', 'Please enter a valid 10-digit Indian mobile number');
+                isValid = false;
+            } else {
+                hideError('phoneError');
+            }
+            
+            if (!isValid) return;
+            
+            try {
+                const response = await window.PortMySimAPI.auth.updateProfile({ name, phone });
+                
+                if (response.success) {
+                    showMessage('profileMessage', 'Profile updated successfully!', true);
+                    loadUserData(); // Refresh user data
+                } else {
+                    showMessage('profileMessage', response.message || 'Failed to update profile', false);
+                }
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showMessage('profileMessage', 'An error occurred. Please try again later.', false);
+            }
+        }
+
+        // Update email
+        async function updateEmail() {
+            const email = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('emailPassword').value;
+            
+            // Validate inputs
+            let isValid = true;
+            
+            if (!email) {
+                showError('newEmailError', 'Email is required');
+                isValid = false;
+            } else if (!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(email)) {
+                showError('newEmailError', 'Please enter a valid email address');
+                isValid = false;
+            } else {
+                hideError('newEmailError');
+            }
+            
+            if (!password) {
+                showError('emailPasswordError', 'Password is required');
+                isValid = false;
+            } else {
+                hideError('emailPasswordError');
+            }
+            
+            if (!isValid) return;
+            
+            try {
+                const response = await window.PortMySimAPI.auth.updateEmail({ email, password });
+                
+                if (response.success) {
+                    showMessage('emailMessage', 'Email updated! Please check your inbox to verify your new email.', true);
+                    document.getElementById('emailForm').reset();
+                    loadUserData(); // Refresh user data
+                } else {
+                    showMessage('emailMessage', response.message || 'Failed to update email', false);
+                }
+            } catch (error) {
+                console.error('Error updating email:', error);
+                showMessage('emailMessage', 'An error occurred. Please try again later.', false);
+            }
+        }
+
+        // Update password
+        async function updatePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate inputs
+            let isValid = true;
+            
+            if (!currentPassword) {
+                showError('currentPasswordError', 'Current password is required');
+                isValid = false;
+            } else {
+                hideError('currentPasswordError');
+            }
+            
+            if (!newPassword) {
+                showError('newPasswordError', 'New password is required');
+                isValid = false;
+            } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(newPassword)) {
+                showError('newPasswordError', 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number');
+                isValid = false;
+            } else {
+                hideError('newPasswordError');
+            }
+            
+            if (!confirmPassword) {
+                showError('confirmPasswordError', 'Please confirm your new password');
+                isValid = false;
+            } else if (confirmPassword !== newPassword) {
+                showError('confirmPasswordError', 'Passwords do not match');
+                isValid = false;
+            } else {
+                hideError('confirmPasswordError');
+            }
+            
+            if (!isValid) return;
+            
+            try {
+                const response = await window.PortMySimAPI.auth.updatePassword({
+                    currentPassword, 
+                    newPassword
+                });
+                
+                if (response.success) {
+                    showMessage('passwordMessage', 'Password updated successfully!', true);
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    showMessage('passwordMessage', response.message || 'Failed to update password', false);
+                }
+            } catch (error) {
+                console.error('Error updating password:', error);
+                showMessage('passwordMessage', 'An error occurred. Please try again later.', false);
+            }
+        }
+
+        // Delete account
+        async function deleteAccount() {
+            const password = document.getElementById('deletePassword').value;
+            
+            if (!password) {
+                showError('deletePasswordError', 'Please enter your password to confirm');
+                return;
+            }
+            
+            try {
+                const response = await window.PortMySimAPI.auth.deleteAccount({ password });
+                
+                if (response.success) {
+                    // Logout and redirect to home
+                    window.PortMySimAPI.auth.logout();
+                    window.location.href = '/index.html';
+                } else {
+                    showError('deletePasswordError', response.message || 'Failed to delete account');
+                }
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                showError('deletePasswordError', 'An error occurred. Please try again later.');
+            }
+        }
+
+        // Resend verification email
+        async function resendVerification() {
+            try {
+                const email = document.getElementById('profileEmail').textContent;
+                const response = await window.PortMySimAPI.auth.resendVerification({ email });
+                
+                if (response.success) {
+                    alert('Verification email has been sent! Please check your inbox.');
+                } else {
+                    alert(response.message || 'Failed to send verification email');
+                }
+            } catch (error) {
+                console.error('Error sending verification email:', error);
+                alert('An error occurred. Please try again later.');
+            }
+        }
+
+        // Helper functions
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        function hideError(elementId) {
+            const element = document.getElementById(elementId);
+            element.textContent = '';
+            element.style.display = 'none';
+        }
+
+        function showMessage(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = isSuccess ? 'form-message success' : 'form-message error';
+            element.style.display = 'block';
+            
+            // Hide after 5 seconds if success
+            if (isSuccess) {
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function hideMessage(elementId) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'none';
+        }
+    </script>
+    <script src="../JS/api.js"></script>
+    <script src="../JS/auth.js" type="module"></script>
+    <script src="../JS/loader.js"></script>
+</body>
+</html> 

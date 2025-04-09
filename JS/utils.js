@@ -16,11 +16,15 @@ export const validatePhone = (phone) => {
 export const showError = (input, message) => {
     const errorElement = input.parentElement.querySelector('.error-message');
     input.classList.add('error');
-    errorElement.textContent = message;
+    if (errorElement) {
+        errorElement.textContent = message;
+    }
 };
 
 export const clearError = (input) => {
     const errorElement = input.parentElement.querySelector('.error-message');
     input.classList.remove('error');
-    errorElement.textContent = '';
+    if (errorElement) {
+        errorElement.textContent = '';
+    }
 }; 
