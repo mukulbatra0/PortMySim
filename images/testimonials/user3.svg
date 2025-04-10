@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- Background -->
+  <rect width="200" height="200" fill="#f72585"/>
+  
+  <!-- Avatar silhouette -->
+  <circle cx="100" cy="70" r="40" fill="#f8f9fa"/>
+  <path d="M100,120 C65,120 40,150 40,190 L160,190 C160,150 135,120 100,120 Z" fill="#f8f9fa"/>
+  
+  <!-- Name -->
+  <text x="100" y="170" text-anchor="middle" fill="#f8f9fa" font-family="Arial" font-size="14" font-weight="bold">Amit Kumar</text>
+  <text x="100" y="185" text-anchor="middle" fill="#f8f9fa" font-family="Arial" font-size="12">Bangalore</text>
+</svg> 

@@ -90,6 +90,7 @@
     left: 1rem;
     color: var(--text-light-muted);
     transition: color 0.3s ease;
+    z-index: 2;
 }
 
 .input-group:focus-within i {
