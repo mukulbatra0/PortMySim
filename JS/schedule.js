@@ -236,101 +236,7 @@ function initScheduleForm() {
     });
     
     // Form submission
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        // Validate the final step
-        if (validateStep(4)) {
-            // Show loading state
-            const submitButton = document.querySelector('.btn-submit');
-            const originalButtonText = submitButton.innerHTML;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            submitButton.disabled = true;
-            
-            // Get form data
-            const formData = {
-                mobileNumber: document.getElementById('currentNumber').value,
-                currentProvider: document.getElementById('currentProvider').value,
-                currentCircle: document.getElementById('currentCircle').value,
-                newProvider: document.getElementById('newProvider').value,
-                planEndDate: document.getElementById('currentPlan').value,
-                automatePorting: document.getElementById('automatePorting').checked,
-                notifyUpdates: document.getElementById('notifyUpdates').checked,
-                fullName: document.getElementById('fullName').value,
-                email: document.getElementById('email').value,
-                alternateNumber: document.getElementById('altNumber').value || null,
-                location: userLocation,
-                scheduledDate: localStorage.getItem('calculatedPortingDate') || new Date().toISOString()
-            };
-            
-            // Send data to backend API
-            fetch(`${API_BASE_URL}/porting/submit`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getAuthToken()}` // Function to get auth token from localStorage
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Reset button state
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-                
-                if (data.success) {
-                    // Store reference number for display
-                    const refNumberElement = document.getElementById('refNumber');
-                    if (refNumberElement && data.data && data.data.refNumber) {
-                        refNumberElement.textContent = data.data.refNumber;
-                    }
-                    
-                    // Store SMS date information
-                    if (data.data && data.data.smsDate) {
-                        const smsDateElement = document.getElementById('smsDate');
-                        if (smsDateElement) {
-                            const date = new Date(data.data.smsDate);
-                            smsDateElement.textContent = date.toLocaleDateString('en-IN', { 
-                                weekday: 'long', 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                            });
-                        }
-                    }
-                    
-                    // Display porting center information if available
-                    if (data.data && data.data.portingCenterDetails) {
-                        const centerElement = document.getElementById('portingCenter');
-                        if (centerElement) {
-                            centerElement.textContent = `${data.data.portingCenterDetails.name}, ${data.data.portingCenterDetails.address}`;
-                        }
-                    }
-                    
-                    // Display success message with animation
-                    displaySuccessMessage();
-                } else {
-                    // Handle error
-                    displayErrorMessage(data.error || 'Failed to submit porting request. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error submitting porting request:', error);
-                
-                // Reset button state
-                submitButton.innerHTML = originalButtonText;
-                submitButton.disabled = false;
-                
-                // Display error message
-                displayErrorMessage('Network error. Please check your connection and try again.');
-            });
-        }
-    });
+    form.addEventListener('submit', submitForm);
 
     // Input validations for real-time feedback
     const inputs = form.querySelectorAll('input, select');
@@ -1933,5 +1839,219 @@ function setupCircleSelection() {
                 }
             });
         });
+    }
+}
+
+// Handle form submission
+function submitForm(e) {
+    e.preventDefault();
+    
+    // Validate the final step
+    if (validateAllSteps()) {
+        // Show loading state
+        const submitButton = document.querySelector('.btn-submit');
+        const originalButtonText = submitButton.innerHTML;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        submitButton.disabled = true;
+        
+        // Get form data
+        const formData = {
+            mobileNumber: document.getElementById('currentNumber').value,
+            currentProvider: document.getElementById('currentProvider').value,
+            currentCircle: document.getElementById('currentCircle').value,
+            newProvider: document.getElementById('newProvider').value,
+            planEndDate: document.getElementById('currentPlan').value,
+            automatePorting: document.getElementById('automatePorting').checked,
+            notifyUpdates: document.getElementById('notifyUpdates').checked,
+            fullName: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            alternateNumber: document.getElementById('altNumber').value || null,
+            location: userLocation,
+            scheduledDate: localStorage.getItem('calculatedPortingDate') || new Date().toISOString()
+        };
+        
+        // Function to get auth token from localStorage
+        const getAuthToken = () => localStorage.getItem('authToken') || '';
+        
+        // Send data to backend API
+        fetch(`${API_BASE_URL}/porting/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getAuthToken()}`
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server responded with status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Reset button state
+            submitButton.innerHTML = originalButtonText;
+            submitButton.disabled = false;
+            
+            if (data.success) {
+                // Store reference number for display
+                const refNumberElement = document.getElementById('refNumber');
+                if (refNumberElement && data.data && data.data.refNumber) {
+                    refNumberElement.textContent = data.data.refNumber;
+                }
+                
+                // Store SMS date information
+                if (data.data && data.data.smsDate) {
+                    const smsDateElement = document.getElementById('smsDate');
+                    if (smsDateElement) {
+                        const date = new Date(data.data.smsDate);
+                        smsDateElement.textContent = date.toLocaleDateString('en-IN', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                        });
+                    }
+                }
+                
+                // Display porting center information if available
+                if (data.data && data.data.portingCenterDetails) {
+                    const centerElement = document.getElementById('portingCenter');
+                    if (centerElement) {
+                        centerElement.textContent = `${data.data.portingCenterDetails.name}, ${data.data.portingCenterDetails.address}`;
+                    }
+                }
+                
+                // Display success message with animation
+                displaySuccessMessage();
+            } else {
+                // Handle error
+                displayErrorMessage(data.error || 'Failed to submit porting request. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting porting request:', error);
+            
+            // Reset button state
+            submitButton.innerHTML = originalButtonText;
+            submitButton.disabled = false;
+            
+            // Display error message
+            displayErrorMessage('Network error. Please check your connection and try again.');
+        });
+    }
+}
+
+// Display success message
+function displaySuccessMessage() {
+    // Create success alert if it doesn't exist
+    let successAlert = document.querySelector('.success-message');
+    
+    if (!successAlert) {
+        successAlert = document.createElement('div');
+        successAlert.className = 'success-message';
+        
+        const formContainer = document.querySelector('.schedule-form-container');
+        if (formContainer) {
+            formContainer.prepend(successAlert);
+        } else {
+            // Fallback to body
+            document.body.prepend(successAlert);
+        }
+    }
+    
+    // Set message and show
+    successAlert.innerHTML = `<i class="fas fa-check-circle"></i> Your porting request has been submitted successfully!`;
+    successAlert.classList.add('show');
+    
+    // Scroll to success message
+    successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Show confirmation step
+    goToStep(5);
+    updateProgressSteps(5);
+}
+
+// Display error message
+function displayErrorMessage(message) {
+    // Create error alert if it doesn't exist
+    let errorAlert = document.querySelector('.form-error-alert');
+    
+    if (!errorAlert) {
+        errorAlert = document.createElement('div');
+        errorAlert.className = 'form-error-alert';
+        
+        const formContainer = document.querySelector('.schedule-form-container');
+        if (formContainer) {
+            formContainer.prepend(errorAlert);
+        } else {
+            // Fallback to body
+            document.body.prepend(errorAlert);
+        }
+    }
+    
+    // Set message and show
+    errorAlert.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
+    errorAlert.classList.add('show');
+    
+    // Scroll to error
+    errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        errorAlert.classList.remove('show');
+    }, 5000);
+}
+
+// Check the eligibility of a number for porting
+async function checkPortingEligibility(mobileNumber) {
+    const statusDiv = document.getElementById('portingStatus');
+    if (!statusDiv) return;
+    
+    // Show loading state
+    statusDiv.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin"></i> Checking eligibility...</p>';
+    statusDiv.style.display = 'block';
+    
+    try {
+        // Call API to check eligibility
+        const response = await fetch(`${API_BASE_URL}/porting/check-eligibility`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ mobileNumber })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.data.eligible) {
+                // Show eligible status
+                statusDiv.innerHTML = `
+                    <p class="eligible"><i class="fas fa-check-circle"></i> This number is eligible for porting!</p>
+                    ${data.data.message ? `<p class="info">${data.data.message}</p>` : ''}
+                `;
+            } else {
+                // Show ineligible status with reason
+                statusDiv.innerHTML = `
+                    <p class="ineligible"><i class="fas fa-times-circle"></i> This number is not eligible for porting.</p>
+                    <p class="info">${data.data.reason || 'No specific reason provided.'}</p>
+                `;
+            }
+        } else {
+            // Show error
+            statusDiv.innerHTML = `
+                <p class="error"><i class="fas fa-exclamation-circle"></i> Error checking eligibility.</p>
+                <p class="info">${data.error || 'Please try again later.'}</p>
+            `;
+        }
+    } catch (error) {
+        console.error('Error checking eligibility:', error);
+        
+        // Show error
+        statusDiv.innerHTML = `
+            <p class="error"><i class="fas fa-exclamation-circle"></i> Network error.</p>
+            <p class="info">Please check your connection and try again.</p>
+        `;
     }
 }

@@ -426,11 +426,11 @@ const authAPI = {
 };
 
 /**
- * Compare multiple plans
+ * Compare multiple plans side by side
  * @param {string[]} planIds - Array of plan IDs to compare
  * @returns {Promise<Object>} Comparison results
  */
-const comparePlans = async (planIds) => {
+async function comparePlans(planIds) {
   if (!planIds || !Array.isArray(planIds) || planIds.length < 2) {
     throw new Error('At least 2 plan IDs are required for comparison');
   }
@@ -489,7 +489,7 @@ const comparePlans = async (planIds) => {
       throw new Error('Failed to compare plans. Please try again later.');
     }
   }
-};
+}
 
 // Initialize the PortMySimAPI object
 window.PortMySimAPI = {
@@ -2094,7 +2094,9 @@ function getSimulatedPortabilityStatus(mobileNumber) {
     }
 }
 
-// Export the functions needed by other modules
+// Instead of using ES module exports, all functions are already attached to the 
+// global window.PortMySimAPI object for use by other scripts
+/* 
 export { 
     authAPI, 
     lookupMobileNumber,
@@ -2106,5 +2108,8 @@ export {
     getPopularPlans,
     detectOperatorAndCircle,
     verifyMobileNumber,
-    getPortabilityStatus
+    getPortabilityStatus,
+    comparePlans,
+    fetchRecommendedPlans
 };
+*/
