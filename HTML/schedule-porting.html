@@ -30,6 +30,39 @@
         animation: fadeIn 0.5s ease forwards;
       }
       
+      /* Fix for provider cards */
+      .provider-options {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+        width: 100% !important;
+        gap: 1.8rem !important;
+      }
+      
+      .provider-card {
+        background-color: var(--bg-dark-2) !important;
+        color: var(--text-light) !important;
+        min-height: 260px !important;
+      }
+      
+      .provider-card h3 {
+        color: var(--text-light) !important;
+      }
+      
+      .provider-card p {
+        color: var(--text-light-muted) !important;
+      }
+      
+      .provider-card:hover {
+        background-color: var(--bg-dark-1) !important;
+      }
+      
+      .provider-card.selected {
+        background: linear-gradient(to bottom, var(--bg-dark-1), var(--bg-dark-2)) !important;
+        border-color: var(--primary-color) !important;
+      }
+      
+      /* End fix for provider cards */
+      
       .info-message i {
         color: var(--primary-color);
         margin-right: 10px;
@@ -478,16 +511,6 @@
                     />
                   </div>
                   <span class="error-message"></span>
-                  <div id="providerDetection" class="detection-message" style="display: none;">
-                    <div class="detection-header">
-                      <span>We detected your provider is <strong id="detectedProvider"></strong></span>
-                      <span class="confidence" id="confidenceLevel"></span>
-                    </div>
-                    <div class="detection-actions">
-                      <button type="button" class="btn-confirm-detection">Yes, that's correct</button>
-                      <button type="button" class="btn-wrong-detection">No, let me select</button>
-                    </div>
-                  </div>
                 </div>
 
                 <div class="form-group">
@@ -603,34 +626,34 @@
                   Select your desired new service provider
                 </p>
 
-                <div class="provider-options">
-                  <div class="provider-card" data-provider="airtel">
-                    <div class="provider-logo">
-                      <i class="fas fa-broadcast-tower"></i>
+                <div class="provider-options" style="display: grid; width: 100%;">
+                  <div class="provider-card" data-provider="airtel" tabindex="0" role="button" aria-pressed="false">
+                    <div class="provider-logo" style="background-color: rgba(228, 0, 0, 0.1);">
+                      <i class="fas fa-broadcast-tower" style="color: #e40000;"></i>
                     </div>
                     <h3>Airtel</h3>
                     <p>Wide coverage & great speeds</p>
                   </div>
 
-                  <div class="provider-card" data-provider="jio">
-                    <div class="provider-logo">
-                      <i class="fas fa-broadcast-tower"></i>
+                  <div class="provider-card" data-provider="jio" tabindex="0" role="button" aria-pressed="false">
+                    <div class="provider-logo" style="background-color: rgba(15, 60, 201, 0.1);">
+                      <i class="fas fa-wifi" style="color: #0f3cc9;"></i>
                     </div>
                     <h3>Jio</h3>
                     <p>Affordable plans & digital benefits</p>
                   </div>
 
-                  <div class="provider-card" data-provider="vi">
-                    <div class="provider-logo">
-                      <i class="fas fa-broadcast-tower"></i>
+                  <div class="provider-card" data-provider="vi" tabindex="0" role="button" aria-pressed="false">
+                    <div class="provider-logo" style="background-color: rgba(238, 0, 140, 0.1);">
+                      <i class="fas fa-mobile-alt" style="color: #ee008c;"></i>
                     </div>
                     <h3>Vi</h3>
                     <p>Weekend data & entertainment</p>
                   </div>
 
-                  <div class="provider-card" data-provider="bsnl">
-                    <div class="provider-logo">
-                      <i class="fas fa-broadcast-tower"></i>
+                  <div class="provider-card" data-provider="bsnl" tabindex="0" role="button" aria-pressed="false">
+                    <div class="provider-logo" style="background-color: rgba(29, 138, 19, 0.1);">
+                      <i class="fas fa-phone-alt" style="color: #1d8a13;"></i>
                     </div>
                     <h3>BSNL</h3>
                     <p>Extensive rural coverage</p>
@@ -638,6 +661,7 @@
                 </div>
 
                 <div class="selected-provider">
+                  <p>Selected Provider: <span id="selectedProviderName">None</span></p>
                   <input
                     type="hidden"
                     id="newProvider"
@@ -667,11 +691,11 @@
                   Choose when you'd like to port your number
                 </p>
 
-                <!-- Porting Guide Timeline -->
+                <!-- Porting Guide Timeline - Now in a scrollable container -->
                 <div class="guide-wrapper">
                   <h3><i class="fas fa-info-circle"></i> Porting Process Guide</h3>
                   
-                  <div class="porting-timeline">
+                  <div class="porting-timeline scrollable-guide">
                     <div class="timeline-item">
                       <div class="timeline-dot">
                         <i class="fas fa-mobile-alt"></i>
@@ -763,14 +787,6 @@
                   <label for="notifyUpdates">Notify me about porting updates via SMS and email</label>
                 </div>
 
-                <!-- Nearby Centers Display -->
-                <div class="nearby-centers">
-                  <h3><i class="fas fa-map-marker-alt"></i> Nearby Porting Centers</h3>
-                  <div id="nearbyCentersList" class="centers-list">
-                    <p class="centers-loading">Loading nearby centers based on your location...</p>
-                  </div>
-                </div>
-
                 <div class="form-group">
                     <label for="scheduledDate" class="form-label">Select Porting Date</label>
                     <div class="input-with-icon">
@@ -789,20 +805,6 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="timeSlot" class="form-label">Preferred Time Slot</label>
-                    <div class="input-with-icon">
-                      <i class="fas fa-clock form-icon"></i>
-                      <select id="timeSlot" name="timeSlot" required>
-                        <option value="" disabled selected>Select preferred time</option>
-                        <option value="morning">Morning (9 AM - 12 PM)</option>
-                        <option value="afternoon">Afternoon (12 PM - 4 PM)</option>
-                        <option value="evening">Evening (4 PM - 8 PM)</option>
-                      </select>
-                    </div>
-                    <span class="error-message"></span>
-                </div>
-
-                <div class="form-group">
                     <label for="location" class="form-label">Your Location</label>
                     <div class="input-with-icon">
                       <i class="fas fa-map-marker-alt form-icon"></i>
@@ -818,16 +820,18 @@
                     <small class="form-help-text">Enter your location to find nearby porting centers</small>
                 </div>
 
-                <!-- Improved map container for porting centers -->
-                <div class="porting-centers-container">
-                    <div class="centers-list-container">
-                        <h4><i class="fas fa-store"></i> Nearby Porting Centers</h4>
-                        <div id="nearbyCentersList" class="centers-list">
-                          <p class="centers-loading"><i class="fas fa-spinner fa-spin"></i> Enter your location above to find nearby centers</p>
-                        </div>
-                    </div>
-                    <div class="map-container">
-                        <div id="centersMap"></div>
+                <!-- Redesigned map container for porting centers -->
+                <div class="redesigned-centers-container">
+                    <h3><i class="fas fa-store"></i> Nearby Porting Centers</h3>
+                    <div class="centers-content">
+                      <div class="centers-list-container">
+                          <div id="porting-centers-list" class="centers-list enhanced-list">
+                            <p class="centers-loading"><i class="fas fa-spinner fa-spin"></i> Enter your location above to find nearby centers</p>
+                          </div>
+                      </div>
+                      <div class="map-container enhanced-map">
+                          <div id="centersMap"></div>
+                      </div>
                     </div>
                 </div>
 
@@ -874,7 +878,6 @@
                       name="email"
                       placeholder="Enter your email address"
                       required
-                      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                     />
                   </div>
                   <span class="error-message"></span>
@@ -968,8 +971,9 @@
                       <i class="fas fa-mobile-alt"></i>
                     </div>
                     <div class="timeline-content">
-                      <h4>Send SMS to 1900<span class="timeline-date" id="timelineSmsDate"></span></h4>
+                      <h4>Send SMS to 1900</h4>
                       <p id="smsStepDescription">Send "PORT" followed by your mobile number to 1900 to get your UPC code</p>
+                      <div class="timeline-date"><i class="far fa-calendar-alt"></i> <span id="timelineSmsDate"></span></div>
                     </div>
                   </div>
                   
@@ -988,8 +992,9 @@
                       <i class="fas fa-store"></i>
                     </div>
                     <div class="timeline-content">
-                      <h4>Visit Porting Center<span class="timeline-date" id="timelinePortingDate"></span></h4>
+                      <h4>Visit Porting Center</h4>
                       <p>Visit the nearest center with your UPC code and ID proof</p>
+                      <div class="timeline-date"><i class="far fa-calendar-alt"></i> <span id="timelinePortingDate"></span></div>
                     </div>
                   </div>
                   

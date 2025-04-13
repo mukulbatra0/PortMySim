@@ -132,7 +132,7 @@ async function loadPortingRequests() {
             // Show empty state
             portingRequestsContainer.innerHTML = `
                 <div class="empty-state">
-                    <img src="../images/empty-requests.svg" alt="No porting requests" />
+                    <img src="../images/submit-request.svg" alt="No porting requests" style="width: 150px; margin-bottom: 1rem;" />
                     <h3>No Porting Requests Yet</h3>
                     <p>You haven't submitted any porting requests yet.</p>
                     <a href="/HTML/schedule-porting.html" class="btn btn-primary">
@@ -346,43 +346,62 @@ function openEditProfileModal() {
     
     // Create modal HTML
     const modalHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Edit Profile</h3>
-                <button class="close-modal">
+        <div class="modal-content" style="background-color: #1e2837; color: #fff; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); overflow: hidden;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <h3 style="margin: 0; color: #fff;">Edit Profile</h3>
+                <button class="close-modal" style="background: transparent; border: none; color: #999; font-size: 1.2rem; cursor: pointer;">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding: 1.5rem;">
                 <form id="edit-profile-form">
-                    <div class="form-group">
-                        <label for="edit-name">Full Name</label>
-                        <input type="text" id="edit-name" name="name" value="${user.name}" class="form-control" required>
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label for="edit-name" style="display: block; margin-bottom: 0.5rem; color: #fff; font-weight: 500;">Full Name</label>
+                        <input type="text" id="edit-name" name="name" value="${user.name || ''}" style="width: 100%; padding: 0.8rem 1rem; background-color: #2a3547; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-size: 1rem;" required>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="edit-email">Email Address</label>
-                        <input type="email" id="edit-email" name="email" value="${user.email}" class="form-control" required>
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label for="edit-email" style="display: block; margin-bottom: 0.5rem; color: #fff; font-weight: 500;">Email Address</label>
+                        <input type="email" id="edit-email" name="email" value="${user.email || ''}" style="width: 100%; padding: 0.8rem 1rem; background-color: #2a3547; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-size: 1rem;" required>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="edit-phone">Phone Number</label>
-                        <input type="tel" id="edit-phone" name="phone" value="${user.phone}" class="form-control" required>
+                    <div class="form-group" style="margin-bottom: 1.2rem;">
+                        <label for="edit-phone" style="display: block; margin-bottom: 0.5rem; color: #fff; font-weight: 500;">Phone Number</label>
+                        <input type="tel" id="edit-phone" name="phone" value="${user.phone || ''}" style="width: 100%; padding: 0.8rem 1rem; background-color: #2a3547; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-size: 1rem;" required>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="submit" style="background: #4a90e2; color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 500; cursor: pointer; width: 100%;">Save Changes</button>
                 </form>
             </div>
         </div>
     `;
     
-    // Create modal container
+    // Remove any existing modals
+    const existingModal = document.querySelector('.modal-container');
+    if (existingModal) {
+        document.body.removeChild(existingModal);
+    }
+    
+    // Create modal container with inline styles to ensure visibility
     const modalContainer = document.createElement('div');
     modalContainer.className = 'modal-container';
+    modalContainer.style.display = 'flex';
+    modalContainer.style.position = 'fixed';
+    modalContainer.style.top = '0';
+    modalContainer.style.left = '0';
+    modalContainer.style.width = '100%';
+    modalContainer.style.height = '100%';
+    modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    modalContainer.style.zIndex = '9999';
+    modalContainer.style.justifyContent = 'center';
+    modalContainer.style.alignItems = 'center';
     modalContainer.innerHTML = modalHTML;
     
     // Add to body
     document.body.appendChild(modalContainer);
+    
+    // Force a reflow to ensure the modal is rendered
+    void modalContainer.offsetWidth;
     
     // Add event listeners
     const closeModalButton = modalContainer.querySelector('.close-modal');
@@ -410,22 +429,84 @@ function openEditProfileModal() {
         };
         
         try {
-            // Update profile API call would go here
-            // const response = await window.PortMySimAPI.user.updateProfile(formData);
+            // Show loading indicator
+            const submitButton = editProfileForm.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.textContent;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            submitButton.disabled = true;
             
-            // For now, just simulate success
-            showNotification('Profile updated successfully', 'success');
+            let apiSuccess = false;
+            let response;
             
-            // Close modal
-            document.body.removeChild(modalContainer);
+            try {
+                // Add timeout to prevent infinite loading
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('Request timed out')), 10000); // 10-second timeout
+                });
+                
+                // Call the updateProfile API method with timeout
+                response = await Promise.race([
+                    window.PortMySimAPI.auth.updateProfile(formData),
+                    timeoutPromise
+                ]);
+                
+                apiSuccess = true;
+            } catch (apiError) {
+                console.error('API call failed:', apiError);
+                // Force a simulated response since the API failed
+                response = {
+                    success: true,
+                    message: 'Profile updated locally (API unavailable)',
+                    localOnly: true
+                };
+            }
             
-            // Update UI
-            updateUserProfile({
-                ...user,
-                ...formData
-            });
+            // Check response
+            if (response && response.success) {
+                // Show appropriate message based on whether this was a real API update or local fallback
+                showNotification(
+                    response.localOnly 
+                        ? 'Profile updated locally (server connection failed)' 
+                        : 'Profile updated successfully', 
+                    response.localOnly ? 'info' : 'success'
+                );
+                
+                // Update localStorage user data to reflect changes
+                const currentUser = window.PortMySimAPI.getUser();
+                const updatedUser = {
+                    ...currentUser,
+                    ...formData
+                };
+                localStorage.setItem('portmysim_user', JSON.stringify(updatedUser));
+                
+                // Close modal
+                document.body.removeChild(modalContainer);
+                
+                // Update UI
+                updateUserProfile(updatedUser);
+                
+                // Update displayed username in the welcome message
+                const userNameDisplay = document.getElementById('userName');
+                if (userNameDisplay) {
+                    userNameDisplay.textContent = formData.name;
+                }
+            } else {
+                // Handle case where response exists but success is false
+                showNotification(response?.message || 'Error updating profile', 'error');
+                // Reset button
+                submitButton.innerHTML = originalButtonText;
+                submitButton.disabled = false;
+            }
         } catch (error) {
-            showNotification('Error updating profile', 'error');
+            console.error('Profile update error:', error);
+            showNotification(error.message || 'Error updating profile. Please try again.', 'error');
+            
+            // Reset submit button
+            const submitButton = editProfileForm.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.innerHTML = 'Save Changes';
+                submitButton.disabled = false;
+            }
         }
     });
 }
@@ -456,24 +537,81 @@ function showNotification(message, type = 'info') {
     if (!notificationsContainer) {
         notificationsContainer = document.createElement('div');
         notificationsContainer.className = 'notifications-container';
+        notificationsContainer.style.position = 'fixed';
+        notificationsContainer.style.top = '20px';
+        notificationsContainer.style.right = '20px';
+        notificationsContainer.style.zIndex = '9999';
+        notificationsContainer.style.display = 'flex';
+        notificationsContainer.style.flexDirection = 'column';
+        notificationsContainer.style.gap = '10px';
         document.body.appendChild(notificationsContainer);
+    }
+    
+    // Style the notification
+    notification.style.backgroundColor = '#1e2837';
+    notification.style.color = '#fff';
+    notification.style.padding = '15px 20px';
+    notification.style.borderRadius = '8px';
+    notification.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+    notification.style.display = 'flex';
+    notification.style.alignItems = 'center';
+    notification.style.gap = '12px';
+    notification.style.animation = 'slideIn 0.3s ease forwards';
+    
+    if (type === 'success') {
+        notification.style.borderLeft = '4px solid #4CAF50';
+    } else if (type === 'error') {
+        notification.style.borderLeft = '4px solid #F44336';
+    } else {
+        notification.style.borderLeft = '4px solid #4a90e2';
     }
     
     // Add to container
     notificationsContainer.appendChild(notification);
     
+    // Define keyframes for animations
+    if (!document.getElementById('notification-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'notification-keyframes';
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes fadeOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
     // Remove after 5 seconds
     setTimeout(() => {
-        notification.classList.add('fade-out');
+        notification.style.animation = 'fadeOut 0.3s ease forwards';
         
         // Remove from DOM after animation
         setTimeout(() => {
-            notificationsContainer.removeChild(notification);
-            
-            // Remove container if empty
-            if (notificationsContainer.children.length === 0) {
-                document.body.removeChild(notificationsContainer);
+            if (notification.parentNode) {
+                notificationsContainer.removeChild(notification);
+                
+                // Remove container if empty
+                if (notificationsContainer.children.length === 0) {
+                    document.body.removeChild(notificationsContainer);
+                }
             }
         }, 300);
     }, 5000);
-} 
+}

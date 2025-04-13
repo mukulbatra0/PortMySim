@@ -1,9 +1,47 @@
-// API Configuration
-const API_CONFIG = {
-    NUMLOOKUP_API_KEY: 'num_live_zCd8QdqiwpDZ8NNKAdeKa0FQLYSk3g2cwVZkrJ8T', // Numlookup API key
-    GOOGLE_MAPS_API_KEY: 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg', // Google Maps API key
-    API_BASE_URL: 'http://localhost:5000/api'
+// Configuration for PortMySim application
+
+const CONFIG = {
+    // API endpoints
+    apiBaseUrl: 'http://localhost:5000/api',
+    
+    // Feature flags
+    enableLiveSearch: true,
+    enableAutoDetection: false,
+    enableMapFeatures: true,
+    
+    // Authentication settings
+    authTokenKey: 'portmysim_auth_token',
+    userDataKey: 'portmysim_user',
+    sessionExpiryHours: 24,
+    
+    // Mobile number validation
+    mobileNumberPattern: /^[6-9]\d{9}$/,
+    
+    // Maps API settings
+    mapDefaultZoom: 13,
+    mapDefaultLocation: {
+        lat: 28.6139,  // New Delhi
+        lng: 77.2090
+    },
+    googleMapsApiKey: '', // Add your Google Maps API key here
+    useOpenStreetMapAsFallback: true, // Use OpenStreetMap if Google Maps fails or API key is missing
+    
+    // Default providers
+    providers: [
+        { id: 'airtel', name: 'Airtel', color: '#e40000' },
+        { id: 'jio', name: 'Jio', color: '#0f3cc9' },
+        { id: 'vi', name: 'Vi', color: '#ee008c' },
+        { id: 'bsnl', name: 'BSNL', color: '#1d8a13' },
+        { id: 'mtnl', name: 'MTNL', color: '#ff6a00' }
+    ],
+    
+    // App settings
+    appName: 'PortMySim',
+    appVersion: '1.0.0',
+    
+    // Default options
+    defaultCircle: 'delhi',
+    defaultProvider: 'jio'
 };
 
-// Export the configuration
-export default API_CONFIG; 
+export default CONFIG; 

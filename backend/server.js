@@ -3,6 +3,21 @@
  * This server provides APIs for the mobile number porting application
  */
 
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Set critical environment variables with fallbacks if not defined
+if (!process.env.JWT_SECRET) {
+  console.warn('JWT_SECRET not found in environment variables, using fallback for development');
+  process.env.JWT_SECRET = 'portmysim_secure_jwt_secret_key_2023';
+}
+
+if (!process.env.JWT_EXPIRE) {
+  console.warn('JWT_EXPIRE not found in environment variables, using default of 30 days');
+  process.env.JWT_EXPIRE = '30d';
+}
+
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -30,11 +45,9 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB but don't crash if it fails
 connectDB().catch(err => {
     console.error('Failed to connect to MongoDB:', err);
-    console.warn('Server will continue running with limited functionality');
-    // Don't exit the process on connection failure in dev mode
-    if (process.env.NODE_ENV === 'production') {
-        process.exit(1);
-    }
+    console.warn('Server will continue running with limited functionality using in-memory database');
+    console.warn('Predefined test user: demo@example.com / Password123');
+    // Don't exit the process on connection failure
 });
 
 // Enable CORS for all routes

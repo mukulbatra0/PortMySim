@@ -6,7 +6,7 @@
 // Define configuration directly - no imports needed
 const API_CONFIG = {
   NUMLOOKUP_API_KEY: 'your_api_key_here',
-  GOOGLE_MAPS_API_KEY: 'your_api_key_here'
+  GOOGLE_MAPS_API_KEY: '' // TODO: Replace with your own Google Maps API key
 };
 const CONFIG = API_CONFIG;
 
@@ -17,40 +17,55 @@ let API_PORT_DETECTED = false;
 
 // Config for port detection
 const PORT_DETECTION_CONFIG = {
-  // Only try the most likely ports
-  portsToTry: [5000], // Focus on the one port we know is used
-  timeoutMs: 2000,   // Shorter timeout
-  retryCount: 1,     // Only try once per port
-  retryDelayMs: 0    // No delay between retries
+  // Try more ports to improve chances of connecting
+  portsToTry: [5000, 3000, 8080], 
+  timeoutMs: 3000,   // Longer timeout
+  retryCount: 2,     // Try twice per port
+  retryDelayMs: 1000 // 1 second delay between retries
 };
 
-// Disable port detection entirely - just use port 5000
-// Using DEFAULT_PORT defined at the top of the file
+// Detect backend API port
 async function detectApiPort() {
   if (API_PORT_DETECTED) {
     return API_BASE_URL;
   }
   
+  console.log('Detecting API port...');
+  
   for (const port of PORT_DETECTION_CONFIG.portsToTry) {
     const testUrl = `http://localhost:${port}/api/auth/ping`;
     try {
+      console.log(`Trying API on port ${port}...`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), PORT_DETECTION_CONFIG.timeoutMs);
+      
       const response = await fetch(testUrl, {
-        timeout: PORT_DETECTION_CONFIG.timeoutMs
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         API_BASE_URL = `http://localhost:${port}/api`;
         API_PORT_DETECTED = true;
-        console.log(`Detected API running on port ${port}`);
+        console.log(`✅ Successfully detected API running on port ${port}`);
         return API_BASE_URL;
       }
     } catch (error) {
-      console.log(`API not detected on port ${port}`);
+      if (error.name === 'AbortError') {
+        console.log(`Timeout while trying port ${port}`);
+      } else {
+        console.log(`API not detected on port ${port}: ${error.message}`);
+      }
     }
   }
   
   // If no port detected, use default
-  console.log(`No API port detected, using default: ${DEFAULT_PORT}`);
+  console.log(`⚠️ No API port detected, using default: ${DEFAULT_PORT}`);
+  
+  // Set this to true to prevent further detection attempts
+  API_PORT_DETECTED = true;
+  
   return API_BASE_URL;
 }
 
@@ -1117,6 +1132,12 @@ function showConnectionError() {
 // Numlookup API integration
 async function lookupMobileNumber(mobileNumber) {
     try {
+        // Check if we have a valid API key - if not, skip API call
+        if (!API_CONFIG.NUMLOOKUP_API_KEY || API_CONFIG.NUMLOOKUP_API_KEY === 'your_api_key_here') {
+            console.log('No valid API key configured for Numlookup API, skipping API call');
+            return null;
+        }
+        
         // Add +91 prefix if not already present
         const formattedNumber = mobileNumber.startsWith('+91') ? mobileNumber : `+91${mobileNumber}`;
         console.log('Calling Numlookup API for number:', formattedNumber);
@@ -1128,7 +1149,8 @@ async function lookupMobileNumber(mobileNumber) {
         });
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
+            console.warn(`API error: ${response.status}`);
+            return null;
         }
 
         const data = await response.json();
@@ -2094,22 +2116,45 @@ function getSimulatedPortabilityStatus(mobileNumber) {
     }
 }
 
-// Instead of using ES module exports, all functions are already attached to the 
-// global window.PortMySimAPI object for use by other scripts
-/* 
-export { 
-    authAPI, 
-    lookupMobileNumber,
-    getNearbyPortingCenters,
-    getFallbackPortingCenters,
+// Export functions for use in other modules
+export {
+    authAPI,
+    getToken,
+    getUser,
+    setAuth,
+    clearAuth,
+    isAuthenticated,
+    apiRequest,
+    comparePlans,
     fetchPlans,
     fetchPlansByOperator,
+    getLocalOperatorPlans,
+    fetchSimilarPlans,
+    fetchRecommendedPlans,
+    getLocalRecommendedPlans,
+    fetchNetworkCoverage,
     compareNetworks,
+    getBestNetwork,
+    getLocationsWithCoverage,
+    showConnectionError,
+    lookupMobileNumber,
+    getCoordinates,
+    calculateDistance,
+    getNearbyPortingCenters,
+    getFallbackPortingCenters, 
+    checkCoverage,
+    getLocalCoverageData,
+    findTowers,
+    generateTowerData,
+    fetchReviewsForNetwork,
+    submitReview,
+    fetchUserActivity,
     getPopularPlans,
+    getSampleReviews,
+    getLocalPopularPlans,
     detectOperatorAndCircle,
     verifyMobileNumber,
+    findNetworkByNumber,
     getPortabilityStatus,
-    comparePlans,
-    fetchRecommendedPlans
+    getSimulatedPortabilityStatus
 };
-*/

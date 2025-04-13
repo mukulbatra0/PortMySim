@@ -24,6 +24,19 @@ class EmailService {
    */
   async sendEmail(options) {
     try {
+      // Check if email sending is disabled
+      if (process.env.DISABLE_EMAIL_SENDING === 'true') {
+        console.log('Email sending is disabled. Would have sent:');
+        console.log(`To: ${options.to}`);
+        console.log(`Subject: ${options.subject}`);
+        
+        // Return mock successful response
+        return {
+          messageId: 'mock-message-id',
+          response: 'Email sending bypassed in development mode'
+        };
+      }
+
       // Create mail options
       const mailOptions = {
         from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,

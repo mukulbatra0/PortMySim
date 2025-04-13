@@ -109,17 +109,7 @@ router.delete('/delete-account', protect, deleteAccount);
 // @desc    Simple endpoint to test API connectivity
 // @access  Public
 router.get('/ping', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API server is running',
-    timestamp: new Date().toISOString(),
-    server: {
-      version: process.version,
-      platform: process.platform,
-      port: process.env.PORT || 5000,
-      memory: process.memoryUsage()
-    }
-  });
+  res.status(200).json({ success: true, message: 'Auth API is running' });
 });
 
 // @route   GET /api/auth/port
@@ -129,6 +119,43 @@ router.get('/port', (req, res) => {
   res.json({
     success: true,
     port: parseInt(process.env.PORT || 5000)
+  });
+});
+
+// @route   GET /api/auth/docs
+// @desc    Display API documentation and fallback credentials
+// @access  Public
+router.get('/docs', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API Documentation',
+    endpoints: {
+      login: {
+        url: '/api/auth/login',
+        method: 'POST',
+        body: {
+          email: 'string',
+          password: 'string'
+        },
+        description: 'Log in with email and password'
+      },
+      register: {
+        url: '/api/auth/register',
+        method: 'POST',
+        body: {
+          name: 'string',
+          email: 'string',
+          phone: 'string (10 digits)',
+          password: 'string (min 6 chars)'
+        },
+        description: 'Register a new user'
+      }
+    },
+    fallback_credentials: {
+      email: 'demo@example.com',
+      password: 'Password123',
+      note: 'These credentials can be used when MongoDB is not available'
+    }
   });
 });
 

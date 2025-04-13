@@ -54,6 +54,12 @@ passwordToggles.forEach(toggle => {
         const input = toggle.previousElementSibling;
         const icon = toggle.querySelector('i');
         
+        // Add null checks to prevent errors
+        if (!input || !icon) {
+            console.warn('Password toggle missing required elements', toggle);
+            return;
+        }
+        
         if (input.type === 'password') {
             input.type = 'text';
             icon.classList.remove('fa-eye');
@@ -98,35 +104,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 `;
                 
-                // Toggle dropdown when clicking the profile circle
-                const profileCircle = document.querySelector('.user-profile-circle');
-                const dropdownMenu = document.querySelector('.dropdown-menu');
-                
-                if (profileCircle && dropdownMenu) {
-                    profileCircle.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        dropdownMenu.classList.toggle('active');
-                    });
-                    
-                    // Prevent dropdown from closing when clicking inside it
-                    dropdownMenu.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                    });
-                    
-                    // Close dropdown when clicking outside
-                    document.addEventListener('click', () => {
-                        dropdownMenu.classList.remove('active');
-                    });
-                }
-                
-                // Add logout handler
-                const logoutBtn = document.getElementById('logoutBtn');
-                if (logoutBtn) {
-                    logoutBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        window.PortMySimAPI.auth.logout();
-                    });
-                }
+                // Setup dropdown functionality after DOM update
+                setupProfileDropdown();
             }
             
             // Redirect if on login/signup pages
@@ -137,6 +116,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
+
+// Setup profile dropdown functionality
+function setupProfileDropdown() {
+    try {
+        const profileCircle = document.querySelector('.user-profile-circle');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        
+        // Only setup listeners if both elements exist
+        if (!profileCircle || !dropdownMenu) {
+            console.log('Profile dropdown elements not found, skipping setup');
+            return;
+        }
+        
+        // Toggle dropdown when clicking the profile circle
+        profileCircle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+        });
+        
+        // Prevent dropdown from closing when clicking inside it
+        dropdownMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Close dropdown when clicking outside - store a reference to the click handler
+        const documentClickHandler = () => {
+            // First check if the element still exists in the DOM
+            const menuStillExists = document.querySelector('.dropdown-menu');
+            if (menuStillExists && document.contains(menuStillExists)) {
+                menuStillExists.classList.remove('active');
+            } else {
+                // If element no longer exists, remove this event listener
+                document.removeEventListener('click', documentClickHandler);
+            }
+        };
+        
+        // Add the click handler
+        document.addEventListener('click', documentClickHandler);
+        
+        // Add logout handler
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.PortMySimAPI.auth.logout();
+            });
+        }
+    } catch (error) {
+        console.error('Error setting up profile dropdown:', error);
+    }
+}
 
 // Login Form Validation
 const loginForm = document.getElementById('loginForm');
@@ -209,10 +239,13 @@ if (loginForm) {
 const signupForm = document.getElementById('signupForm');
 
 if (signupForm) {
+    console.log('Signup form found, attaching event listener');
+    
     signupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         let isValid = true;
         
+        // Get form elements with null checks
         const name = signupForm.querySelector('#name');
         const email = signupForm.querySelector('#email');
         const phone = signupForm.querySelector('#phone');
@@ -221,71 +254,86 @@ if (signupForm) {
         const terms = signupForm.querySelector('#terms');
         const submitButton = signupForm.querySelector('button[type="submit"]');
         
+        // Log form elements to help debug
+        console.log('Form elements found:', {
+            name: !!name,
+            email: !!email,
+            phone: !!phone,
+            password: !!password,
+            confirmPassword: !!confirmPassword,
+            terms: !!terms,
+            submitButton: !!submitButton
+        });
+        
         // Validate Name
-        if (!name.value.trim()) {
+        if (name && !name.value.trim()) {
             showError(name, 'Name is required');
             isValid = false;
-        } else {
+        } else if (name) {
             clearError(name);
         }
         
         // Validate Email
-        if (!email.value.trim()) {
+        if (email && !email.value.trim()) {
             showError(email, 'Email is required');
             isValid = false;
-        } else if (!validateEmail(email.value)) {
+        } else if (email && !validateEmail(email.value)) {
             showError(email, 'Please enter a valid email address');
             isValid = false;
-        } else {
+        } else if (email) {
             clearError(email);
         }
         
         // Validate Phone
-        if (!phone.value.trim()) {
+        if (phone && !phone.value.trim()) {
             showError(phone, 'Phone number is required');
             isValid = false;
-        } else if (!validatePhone(phone.value)) {
+        } else if (phone && !validatePhone(phone.value)) {
             showError(phone, 'Please enter a valid Indian mobile number (10 digits starting with 6-9)');
             isValid = false;
-        } else {
+        } else if (phone) {
             clearError(phone);
         }
         
         // Validate Password
-        if (!password.value.trim()) {
+        if (password && !password.value.trim()) {
             showError(password, 'Password is required');
             isValid = false;
-        } else if (!validatePassword(password.value)) {
+        } else if (password && !validatePassword(password.value)) {
             showError(password, 'Password must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number');
             isValid = false;
-        } else {
+        } else if (password) {
             clearError(password);
         }
         
         // Validate Confirm Password
-        if (!confirmPassword.value.trim()) {
+        if (confirmPassword && !confirmPassword.value.trim()) {
             showError(confirmPassword, 'Please confirm your password');
             isValid = false;
-        } else if (confirmPassword.value !== password.value) {
+        } else if (confirmPassword && password && confirmPassword.value !== password.value) {
             showError(confirmPassword, 'Passwords do not match');
             isValid = false;
-        } else {
+        } else if (confirmPassword) {
             clearError(confirmPassword);
         }
         
         // Validate Terms
-        if (!terms.checked) {
+        if (terms && !terms.checked) {
             showError(terms, 'You must agree to the Terms of Service and Privacy Policy');
             isValid = false;
-        } else {
+        } else if (terms) {
             clearError(terms);
         }
         
-        if (isValid && window.PortMySimAPI) {
+        if (isValid && window.PortMySimAPI && name && email && phone && password) {
             try {
+                console.log('Form is valid, attempting to create account');
+                
                 // Disable button and show loading
-                submitButton.disabled = true;
-                submitButton.textContent = 'Creating Account...';
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Creating Account...';
+                }
                 
                 // Call register API
                 const response = await window.PortMySimAPI.auth.register({
@@ -308,13 +356,19 @@ if (signupForm) {
                     showFormMessage(signupForm, response.message || 'Registration failed. Please try again.');
                 }
             } catch (error) {
+                console.error('Registration error:', error);
                 // Show error message
                 showFormMessage(signupForm, error.message || 'Registration failed. Please try again.');
             } finally {
                 // Re-enable button
-                submitButton.disabled = false;
-                submitButton.textContent = 'Create Account';
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Create Account';
+                }
             }
+        } else if (!window.PortMySimAPI) {
+            showFormMessage(signupForm, 'API connection error. Please try again later.');
+            console.error('PortMySimAPI not available');
         }
     });
 }

@@ -1,6 +1,19 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.model.js';
 import asyncHandler from './async.middleware.js';
+import mockUserService from '../utils/mockUserService.js';
+
+// Track if we're using mock DB
+let usingMockDB = false;
+
+// Helper function to get the appropriate user model
+const getUserModel = () => {
+  if (usingMockDB) {
+    console.log('Auth middleware using mock user service');
+    return mockUserService;
+  }
+  return User;
+};
 
 /**
  * Middleware to protect routes - validates JWT token and adds user info to request
@@ -33,8 +46,11 @@ export const protect = asyncHandler(async (req, res, next) => {
     }
 
     try {
+        // Get JWT secret with fallback
+        const jwtSecret = process.env.JWT_SECRET || 'fallback_jwt_secret_dev_only';
+        
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, jwtSecret);
         
         // Check if token is expired
         const currentTime = Math.floor(Date.now() / 1000);
@@ -45,8 +61,25 @@ export const protect = asyncHandler(async (req, res, next) => {
             });
         }
         
-        // Find user by ID (to ensure they still exist and get latest role)
-        const user = await User.findById(decoded.id);
+        // Get appropriate user model
+        let UserModel = getUserModel();
+        
+        try {
+            // Find user by ID (to ensure they still exist and get latest role)
+            var user = await UserModel.findById(decoded.id);
+        } catch (error) {
+            console.error('Error finding user in database:', error);
+            
+            // If MongoDB connection failed, fall back to mock user service
+            if (!usingMockDB) {
+                console.log('Auth middleware falling back to mock user service');
+                usingMockDB = true;
+                UserModel = getUserModel();
+                user = await UserModel.findById(decoded.id);
+            } else {
+                throw error; // If already using mock DB, re-throw the error
+            }
+        }
         
         // Check if user still exists
         if (!user) {

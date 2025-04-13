@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Please add a phone number'],
       unique: true,
       match: [
-        /^[6-9]\d{9}$/,
+        /^[0-9]{10}$/,
         'Please add a valid 10-digit phone number'
       ]
     },
@@ -88,10 +88,16 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 
 // Generate JWT
 userSchema.methods.getSignedJwtToken = function () {
+  // Make sure JWT_SECRET is not empty, use fallback if needed
+  const secret = process.env.JWT_SECRET || 'fallback_jwt_secret_dev_only';
+  const expiry = process.env.JWT_EXPIRE || '30d';
+  
+  console.log('Generating JWT with secret:', secret ? 'Secret available' : 'SECRET MISSING');
+  
   return jwt.sign(
     { id: this._id, role: this.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRE }
+    secret,
+    { expiresIn: expiry }
   );
 };
 

@@ -105,6 +105,179 @@
             text-align: center;
             border: 1px solid var(--error);
         }
+
+        /* Modal Styles */
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: var(--bg-dark-2);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .modal-header h3 {
+            color: var(--text-light);
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: transparent;
+            border: none;
+            color: var(--text-light-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: var(--text-light);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        /* Notification Styles */
+        .notifications-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .notification {
+            background-color: var(--bg-dark-2);
+            color: var(--text-light);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease forwards;
+        }
+        
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .notification.error {
+            border-left: 4px solid var(--error);
+        }
+        
+        .notification.info {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .notification i {
+            font-size: 1.2rem;
+        }
+        
+        .notification.success i {
+            color: var(--success);
+        }
+        
+        .notification.error i {
+            color: var(--error);
+        }
+        
+        .notification.info i {
+            color: var(--primary-color);
+        }
+        
+        .notification.fade-out {
+            animation: fadeOut 0.3s ease forwards;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        /* Form Styles for Modal */
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background-color: var(--bg-dark-3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-light);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-color);
+        }
     </style>
 </head>
 <body class="bg-dark-1" data-requires-api="true">
@@ -158,7 +331,7 @@
                 <div class="dashboard-container">
                     <div class="dashboard-header">
                         <h2 class="welcome-message">Welcome to your Dashboard, <span id="userName">User</span>!</h2>
-                        <button id="logoutBtn" class="btn btn-signup">Logout</button>
+                        <button id="logout-btn" class="btn btn-signup">Logout</button>
                     </div>
                     
                     <div class="dashboard-content">
@@ -206,8 +379,18 @@
                             <p>Update your personal information and password.</p>
                             <p><strong>Last Updated:</strong> <span id="lastUpdated">Never</span></p>
                             <div class="dashboard-action">
-                                <a href="#" class="btn-dashboard">Edit Profile</a>
+                                <a href="#" class="btn-dashboard" id="edit-profile-btn">Edit Profile</a>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Porting Requests Section -->
+                    <div class="dashboard-container" style="margin-top: 2rem;">
+                        <div class="dashboard-header">
+                            <h2 class="welcome-message">My Porting Requests</h2>
+                        </div>
+                        <div id="porting-requests">
+                            <!-- Content will be loaded by dashboard.js -->
                         </div>
                     </div>
                 </div>
@@ -264,6 +447,7 @@
     <script src="../JS/api.js" type="module"></script>
     <script src="../JS/auth.js" type="module"></script>
     <script src="../JS/loader.js"></script>
+    <script src="../JS/dashboard.js" type="module"></script>
     <script>
         // Dashboard-specific script
         document.addEventListener('DOMContentLoaded', function() {
@@ -284,7 +468,7 @@
                     });
                 
                 // Handle logout button
-                document.getElementById('logoutBtn').addEventListener('click', function() {
+                document.getElementById('logout-btn').addEventListener('click', function() {
                     window.PortMySimAPI.auth.logout();
                 });
             } else {
