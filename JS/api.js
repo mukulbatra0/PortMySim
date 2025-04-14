@@ -32,32 +32,80 @@ async function detectApiPort() {
   
   console.log('Detecting API port...');
   
+  // Try each port in sequence
   for (const port of PORT_DETECTION_CONFIG.portsToTry) {
     const testUrl = `http://localhost:${port}/api/auth/ping`;
-    try {
-      console.log(`Trying API on port ${port}...`);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), PORT_DETECTION_CONFIG.timeoutMs);
-      
-      const response = await fetch(testUrl, {
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        API_BASE_URL = `http://localhost:${port}/api`;
-        API_PORT_DETECTED = true;
-        console.log(`✅ Successfully detected API running on port ${port}`);
-        return API_BASE_URL;
-      }
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        console.log(`Timeout while trying port ${port}`);
-      } else {
-        console.log(`API not detected on port ${port}: ${error.message}`);
+    
+    // Try multiple times for each port
+    for (let attempt = 1; attempt <= PORT_DETECTION_CONFIG.retryCount; attempt++) {
+      try {
+        console.log(`Trying API on port ${port} (attempt ${attempt})...`);
+        
+        // Set a timeout for the fetch
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), PORT_DETECTION_CONFIG.timeoutMs);
+        
+        const response = await fetch(testUrl, {
+          signal: controller.signal,
+          // Add headers to prevent caching issues
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        // Clear the timeout
+        clearTimeout(timeoutId);
+        
+        // Check response
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`✅ Successfully detected API running on port ${port}`, data);
+          
+          // Save the detected port
+          API_BASE_URL = `http://localhost:${port}/api`;
+          API_PORT_DETECTED = true;
+          
+          // Save the detected port to sessionStorage for persistence
+          try {
+            sessionStorage.setItem('portmysim_api_port', port.toString());
+            console.log('Saved API port to session storage:', port);
+          } catch (storageError) {
+            console.warn('Could not save API port to session storage:', storageError);
+          }
+          
+          return API_BASE_URL;
+        } else {
+          console.warn(`API responded with non-OK status on port ${port}:`, response.status);
+        }
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log(`Timeout while trying port ${port} (attempt ${attempt})`);
+        } else {
+          console.log(`API not detected on port ${port} (attempt ${attempt}):`, error.message);
+        }
+        
+        // Wait before retry (except last attempt)
+        if (attempt < PORT_DETECTION_CONFIG.retryCount) {
+          console.log(`Waiting ${PORT_DETECTION_CONFIG.retryDelayMs}ms before retrying port ${port}...`);
+          await new Promise(resolve => setTimeout(resolve, PORT_DETECTION_CONFIG.retryDelayMs));
+        }
       }
     }
+  }
+  
+  // Check session storage for previously detected port
+  try {
+    const savedPort = sessionStorage.getItem('portmysim_api_port');
+    if (savedPort) {
+      const port = parseInt(savedPort);
+      console.log(`Using previously detected port from session storage: ${port}`);
+      API_BASE_URL = `http://localhost:${port}/api`;
+      API_PORT_DETECTED = true;
+      return API_BASE_URL;
+    }
+  } catch (error) {
+    console.warn('Error reading from session storage:', error);
   }
   
   // If no port detected, use default
@@ -440,90 +488,146 @@ const authAPI = {
   }
 };
 
-/**
- * Compare multiple plans side by side
- * @param {string[]} planIds - Array of plan IDs to compare
- * @returns {Promise<Object>} Comparison results
- */
-async function comparePlans(planIds) {
-  if (!planIds || !Array.isArray(planIds) || planIds.length < 2) {
-    throw new Error('At least 2 plan IDs are required for comparison');
-  }
-
-  if (planIds.length > 3) {
-    throw new Error('Maximum 3 plans can be compared at once');
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/plans/compare`, {
+// Porting API functions
+const portingAPI = {
+  // Get user's porting requests
+  getPortingRequests: async () => {
+    return await apiRequest('/porting/requests');
+  },
+  
+  // Get details of a specific porting request
+  getPortingRequestDetails: async (id) => {
+    return await apiRequest(`/porting/requests/${id}`);
+  },
+  
+  // Submit a new porting request
+  submitPortingRequest: async (requestData) => {
+    return await apiRequest('/porting/submit', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ planIds }),
-      signal: AbortSignal.timeout(10000) // 10 second timeout
+      body: JSON.stringify(requestData)
     });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to compare plans');
-    }
-
-    return await response.json();
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      console.error('Plan comparison request timed out');
-      throw new Error('Request timed out. Please try again.');
-    }
-
-    console.error('Error comparing plans:', error);
-    
-    // Fallback to local comparison if server request fails
-    try {
-      const plans = await Promise.all(planIds.map(id => getPlanById(id)));
-      return {
-        plans,
-        valueScores: plans.map(plan => ({
-          id: plan._id,
-          score: plan.calculateValueScore()
-        })),
-        features: {
-          daily_data: determineBestFeature(plans, 'data_value', 'highest'),
-          validity: determineBestFeature(plans, 'validity', 'highest'),
-          price: determineBestFeature(plans, 'price', 'lowest'),
-          coverage: determineBestFeature(plans, 'network_coverage', 'highest'),
-          speed: determineBestFeature(plans, 'data_speed', 'highest'),
-          has_5g: plans.map(plan => plan.has_5g),
-          subscriptions: plans.map(plan => plan.subscriptions.length)
-        },
-        summary: generateComparisonSummary(plans)
-      };
-    } catch (fallbackError) {
-      console.error('Local comparison fallback failed:', fallbackError);
-      throw new Error('Failed to compare plans. Please try again later.');
-    }
+  },
+  
+  // Track the status of a porting request
+  trackPortingRequest: async (id) => {
+    return await apiRequest(`/porting/status/${id}`);
+  },
+  
+  // Cancel a porting request
+  cancelPortingRequest: async (id) => {
+    return await apiRequest(`/porting/requests/${id}/cancel`, {
+      method: 'PUT'
+    });
+  },
+  
+  // Find nearby porting centers
+  findNearbyPortingCenters: async (location, provider, radius = 10) => {
+    return await apiRequest('/porting/centers/nearby', {
+      method: 'POST',
+      body: JSON.stringify({
+        lat: location.lat,
+        lng: location.lng,
+        provider,
+        radius
+      })
+    });
+  },
+  
+  // Calculate porting dates based on plan details
+  calculatePortingDates: async (planEndDate, currentCircle) => {
+    return await apiRequest('/porting/calculate-dates', {
+      method: 'POST',
+      body: JSON.stringify({
+        planEndDate,
+        currentCircle
+      })
+    });
   }
-}
+};
 
-// Initialize the PortMySimAPI object
-window.PortMySimAPI = {
-    auth: authAPI,
-    getApiBaseUrl: () => API_BASE_URL,
-    detectApiPort,
-    testServerConnection,
-    isAuthenticated,
-    getToken,
-    getUser,
-    setAuth,
-    clearAuth,
-    compareNetworks,
-    fetchNetworkCoverage,
-    getLocationsWithCoverage,
-    comparePlans,
-    fetchPlans,
-    fetchPlansByOperator,
-    fetchRecommendedPlans
+// Plans API functions
+const plansAPI = {
+  // Get all plans
+  getPlans: async (filters = {}) => {
+    return await fetchPlans(filters);
+  },
+  
+  // Get plans by operator
+  getPlansByOperator: async (operator) => {
+    return await fetchPlansByOperator(operator);
+  },
+  
+  // Get similar plans
+  getSimilarPlans: async (params) => {
+    return await fetchSimilarPlans(params);
+  },
+  
+  // Get recommended plans
+  getRecommendedPlans: async () => {
+    return await fetchRecommendedPlans();
+  },
+  
+  // Compare multiple plans
+  comparePlans: async (planIds) => {
+    return await comparePlans(planIds);
+  }
+};
+
+// Networks API functions
+const networksAPI = {
+  // Get network coverage information
+  getNetworkCoverage: async (params = {}) => {
+    return await fetchNetworkCoverage(params);
+  },
+  
+  // Compare networks in a specific location
+  compareNetworks: async (location) => {
+    return await compareNetworks(location);
+  },
+  
+  // Get the best network for a location
+  getBestNetwork: async (params = {}) => {
+    return await getBestNetwork(params);
+  },
+  
+  // Find nearby cell towers
+  findTowers: async (params = {}) => {
+    return await findTowers(params);
+  },
+  
+  // Get network review information
+  getNetworkReviews: async (provider, params = {}) => {
+    return await fetchReviewsForNetwork(provider, params);
+  },
+  
+  // Submit a network review
+  submitReview: async (reviewData) => {
+    return await submitReview(reviewData);
+  }
+};
+
+// Make the global API object
+const PortMySimAPI = {
+  // Expose the API functions
+  auth: authAPI,
+  plans: plansAPI,
+  networks: networksAPI,
+  porting: portingAPI,
+  
+  // Utility functions
+  isAuthenticated,
+  getToken,
+  getUser,
+  clearAuth,
+  
+  // Generic fetch method for API requests
+  fetch: async (endpoint, options = {}) => {
+    return await apiRequest(endpoint, options);
+  },
+  
+  // Config
+  detectApiPort,
+  testServerConnection
 };
 
 /**
@@ -2116,6 +2220,156 @@ function getSimulatedPortabilityStatus(mobileNumber) {
     }
 }
 
+/**
+ * Compare multiple plans side by side
+ * @param {string[]} planIds - Array of plan IDs to compare
+ * @returns {Promise<Object>} Comparison results
+ */
+async function comparePlans(planIds) {
+  if (!planIds || !Array.isArray(planIds) || planIds.length < 2) {
+    throw new Error('At least 2 plan IDs are required for comparison');
+  }
+
+  if (planIds.length > 3) {
+    throw new Error('Maximum 3 plans can be compared at once');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/plans/compare`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ planIds }),
+      signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to compare plans');
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error('Plan comparison request timed out');
+      throw new Error('Request timed out. Please try again.');
+    }
+
+    console.error('Error comparing plans:', error);
+    
+    // Fallback to local comparison if server request fails
+    try {
+      // Get plans by IDs (this is a simplified fallback)
+      const plans = [];
+      for (const id of planIds) {
+        // This is a dummy implementation - you would need to implement getPlanById
+        const plan = await getPlanById(id);
+        if (plan) plans.push(plan);
+      }
+      
+      return {
+        plans,
+        valueScores: plans.map(plan => ({
+          id: plan._id,
+          score: calculateValueScore(plan)
+        })),
+        features: {
+          daily_data: determineBestFeature(plans, 'data_value', 'highest'),
+          validity: determineBestFeature(plans, 'validity', 'highest'),
+          price: determineBestFeature(plans, 'price', 'lowest'),
+          coverage: determineBestFeature(plans, 'network_coverage', 'highest'),
+          speed: determineBestFeature(plans, 'data_speed', 'highest'),
+          has_5g: plans.map(plan => plan.has_5g),
+          subscriptions: plans.map(plan => plan.subscriptions ? plan.subscriptions.length : 0)
+        },
+        summary: generateComparisonSummary(plans)
+      };
+    } catch (fallbackError) {
+      console.error('Local comparison fallback failed:', fallbackError);
+      throw new Error('Failed to compare plans. Please try again later.');
+    }
+  }
+}
+
+/**
+ * Helper function to calculate value score for a plan
+ */
+function calculateValueScore(plan) {
+  if (!plan) return 0;
+  // Simple calculation: data value / (price / validity)
+  const pricePerDay = plan.price / (plan.validity || 1);
+  return Math.round((plan.data_value || 0) / pricePerDay * 10);
+}
+
+/**
+ * Helper function to determine which plan is best for a specific feature
+ */
+function determineBestFeature(plans, feature, criterion) {
+  if (!plans || !plans.length) return null;
+  
+  return plans.map(plan => {
+    const value = plan[feature] || 0;
+    return { id: plan._id, value };
+  });
+}
+
+/**
+ * Helper function to generate a summary of plan comparison
+ */
+function generateComparisonSummary(plans) {
+  if (!plans || !plans.length) return '';
+  
+  // Generate a simple comparison summary
+  let bestValue = plans[0];
+  let lowestPrice = plans[0];
+  
+  plans.forEach(plan => {
+    const valueScore = calculateValueScore(plan);
+    const currentBestValue = calculateValueScore(bestValue);
+    
+    if (valueScore > currentBestValue) {
+      bestValue = plan;
+    }
+    
+    if (plan.price < lowestPrice.price) {
+      lowestPrice = plan;
+    }
+  });
+  
+  return `Based on our analysis, ${bestValue.name} by ${bestValue.operator} offers the best overall value, while ${lowestPrice.name} has the lowest price.`;
+}
+
+/**
+ * Helper function to get plan by ID (simplified implementation)
+ */
+async function getPlanById(id) {
+  // Try to fetch from API first
+  try {
+    const response = await fetch(`${API_BASE_URL}/plans/${id}`);
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (error) {
+    console.error(`Error fetching plan ${id}:`, error);
+  }
+  
+  // Fallback to dummy plan if API fails
+  return {
+    _id: id,
+    name: `Plan ${id.slice(-4)}`,
+    operator: ['jio', 'airtel', 'vi', 'bsnl'][Math.floor(Math.random() * 4)],
+    price: Math.floor(Math.random() * 400) + 199,
+    validity: Math.floor(Math.random() * 60) + 28,
+    data_value: Math.floor(Math.random() * 60) + 30,
+    network_coverage: Math.floor(Math.random() * 20) + 80,
+    data_speed: Math.floor(Math.random() * 40) + 30,
+    has_5g: Math.random() > 0.5,
+    subscriptions: Array(Math.floor(Math.random() * 4))
+  };
+}
+
 // Export functions for use in other modules
 export {
     authAPI,
@@ -2158,3 +2412,64 @@ export {
     getPortabilityStatus,
     getSimulatedPortabilityStatus
 };
+
+// Create global API object for use in the app
+if (typeof window !== 'undefined') {
+  // Initialize API
+  window.PortMySimAPI = {
+    // Exposed detection and test functions
+    detectApiPort,
+    testServerConnection,
+    
+    // Auth methods
+    auth: {
+      login: authAPI.login,
+      register: authAPI.register,
+      logout: authAPI.logout,
+      getProfile: authAPI.getProfile,
+      verifyEmail: authAPI.verifyEmail,
+      resendVerification: authAPI.resendVerification,
+      forgotPassword: authAPI.forgotPassword,
+      resetPassword: authAPI.resetPassword,
+      updateProfile: authAPI.updateProfile
+    },
+    
+    // User info methods
+    getUser,
+    isAuthenticated,
+    
+    // Generic fetch method for API requests
+    fetch: async (endpoint, options = {}) => {
+      return await apiRequest(endpoint, options);
+    },
+    
+    // API Functions
+    // Plans
+    plans: {
+      fetchPlans,
+      fetchPlansByOperator,
+      fetchRecommendedPlans,
+      fetchSimilarPlans
+    },
+    
+    // Add porting API functions
+    porting: {
+      getPortingRequests: portingAPI.getPortingRequests,
+      getPortingRequestDetails: portingAPI.getPortingRequestDetails,
+      submitPortingRequest: portingAPI.submitPortingRequest,
+      trackPortingRequest: portingAPI.trackPortingRequest,
+      cancelPortingRequest: portingAPI.cancelPortingRequest,
+      findNearbyPortingCenters: portingAPI.findNearbyPortingCenters,
+      calculatePortingDates: portingAPI.calculatePortingDates
+    },
+    
+    // ... existing API functions ...
+  };
+
+  // Detect API port on load, but don't block rendering
+  detectApiPort().then(apiUrl => {
+    console.log(`API client initialized with base URL: ${apiUrl}`);
+  }).catch(error => {
+    console.error('Failed to detect API port:', error);
+  });
+}

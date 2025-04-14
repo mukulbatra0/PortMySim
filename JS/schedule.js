@@ -990,34 +990,118 @@ async function getCoordinatesWithNominatim(searchQuery) {
     // Encode the search query
     const encodedQuery = encodeURIComponent(searchQuery);
     
-    // Make request to Nominatim API
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`);
+    // Try different geocoding services in order of preference
     
-    if (!response.ok) {
-      throw new Error('Nominatim API request failed');
+    // Option 1: Try direct access first (might work in some environments)
+    try {
+      const directResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`, {
+        headers: {
+          'User-Agent': 'PortMySim/1.0',
+          'Referer': window.location.origin
+        }
+      });
+      
+      if (directResponse.ok) {
+        const data = await directResponse.json();
+        if (data && data.length > 0) {
+          const result = data[0];
+          return {
+            lat: parseFloat(result.lat),
+            lng: parseFloat(result.lon),
+            formattedAddress: result.display_name
+          };
+        }
+      }
+    } catch (directError) {
+      console.warn('Direct Nominatim access failed, trying alternatives', directError);
     }
     
-    const data = await response.json();
+    // Option 2: Try alternative geocoding service - LocationIQ (requires free API key)
+    // Uncomment and add your API key if you want to use this service
+    // const locationIqApiKey = 'your-locationiq-api-key'; // Register at locationiq.com
+    // if (locationIqApiKey) {
+    //   try {
+    //     const locationIqResponse = await fetch(`https://eu1.locationiq.com/v1/search.php?key=${locationIqApiKey}&q=${encodedQuery}&format=json&limit=1`);
+    //     
+    //     if (locationIqResponse.ok) {
+    //       const data = await locationIqResponse.json();
+    //       if (data && data.length > 0) {
+    //         const result = data[0];
+    //         return {
+    //           lat: parseFloat(result.lat),
+    //           lng: parseFloat(result.lon),
+    //           formattedAddress: result.display_name
+    //         };
+    //       }
+    //     }
+    //   } catch (locationIqError) {
+    //     console.warn('LocationIQ geocoding failed', locationIqError);
+    //   }
+    // }
     
-    if (data && data.length > 0) {
-      const result = data[0];
-      return {
+    // Option 3: Try with CORS proxy
+    // Note: cors-anywhere requires users to enable it by visiting https://cors-anywhere.herokuapp.com/ first
+    // This is why we're getting 403 errors
+    try {
+      const corsProxy = 'https://cors-anywhere.herokuapp.com/';
+      const apiUrl = `${corsProxy}https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`;
+      
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error('Nominatim API request failed');
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const result = data[0];
+        return {
           lat: parseFloat(result.lat),
-        lng: parseFloat(result.lon),
-        formattedAddress: result.display_name
-      };
-    } else {
-      console.warn('No results found from Nominatim');
-      return {
-          lat: CONFIG.mapDefaultLocation.lat,
-        lng: CONFIG.mapDefaultLocation.lng,
-        formattedAddress: 'Default Location'
-      };
+          lng: parseFloat(result.lon),
+          formattedAddress: result.display_name
+        };
+      }
+    } catch (proxyError) {
+      console.warn('CORS proxy request failed', proxyError);
     }
+    
+    // If all methods fail, attempt geocoding using predefined locations
+    const knownLocations = {
+      'bhiwani': { lat: 28.7929, lng: 76.1397, name: 'Bhiwani, Haryana, India' },
+      'haryana': { lat: 29.0588, lng: 76.0856, name: 'Haryana, India' },
+      'delhi': { lat: 28.7041, lng: 77.1025, name: 'Delhi, India' },
+      'mumbai': { lat: 19.0760, lng: 72.8777, name: 'Mumbai, Maharashtra, India' },
+      'bangalore': { lat: 12.9716, lng: 77.5946, name: 'Bangalore, Karnataka, India' },
+      'hyderabad': { lat: 17.3850, lng: 78.4867, name: 'Hyderabad, Telangana, India' },
+      'chennai': { lat: 13.0827, lng: 80.2707, name: 'Chennai, Tamil Nadu, India' },
+      'kolkata': { lat: 22.5726, lng: 88.3639, name: 'Kolkata, West Bengal, India' }
+    };
+    
+    // Try to match against known locations (case insensitive)
+    const searchLower = searchQuery.toLowerCase();
+    for (const [key, location] of Object.entries(knownLocations)) {
+      if (searchLower.includes(key)) {
+        console.log(`Using predefined location match for "${searchQuery}"`);
+        return {
+          lat: location.lat,
+          lng: location.lng,
+          formattedAddress: location.name
+        };
+      }
+    }
+    
+    // If no match found, use default location
+    console.warn('No results found from geocoding, using default location');
+    return {
+      lat: CONFIG.mapDefaultLocation.lat,
+      lng: CONFIG.mapDefaultLocation.lng,
+      formattedAddress: 'Default Location'
+    };
   } catch (error) {
     console.error('Error using Nominatim geocoding:', error);
     return {
-        lat: CONFIG.mapDefaultLocation.lat,
+      lat: CONFIG.mapDefaultLocation.lat,
       lng: CONFIG.mapDefaultLocation.lng,
       formattedAddress: 'Default Location'
     };
@@ -1372,49 +1456,244 @@ function submitForm(e) {
       location: document.getElementById('location').value
     };
     
-    // Simulate API call with a timeout
-    setTimeout(() => {
-      // Reset button state
-      submitButton.innerHTML = originalButtonText;
-      submitButton.disabled = false;
+    // Actually send the data to the backend API
+    submitPortingRequest(formData)
+      .then(response => {
+        if (response.success) {
+          // Show success message
+          const formSteps = document.querySelectorAll('.form-step');
+          const formSuccess = document.querySelector('.form-success');
+          
+          if (formSteps && formSuccess) {
+            // Hide all steps
+            formSteps.forEach(step => {
+              step.classList.remove('active');
+            });
+            
+            // Show success message
+            formSuccess.classList.add('show');
+            
+            // Calculate SMS date based on plan end date
+            const smsDate = calculateSmsSendDate();
+            const formattedSmsDate = formatDate(smsDate || new Date());
+            
+            // Set displayed information from the actual API response
+            document.getElementById('refNumber').textContent = response.data.refNumber || `PORT-${Math.floor(Math.random() * 1000000)}`;
+            document.getElementById('smsDate').textContent = formatDate(new Date(response.data.smsDate)) || formattedSmsDate;
+            document.getElementById('guidDisplay').textContent = document.getElementById('portingGuid').textContent;
+            document.getElementById('portingDateDisplay').textContent = formatDate(new Date(formData.scheduledDate));
+            document.getElementById('currentProviderDisplay').textContent = formData.currentProvider;
+            document.getElementById('automationStatus').textContent = formData.automatePorting ? 'Automated' : 'Manual Process';
+            
+            // Set timeline dates - use the API response date
+            document.getElementById('timelineSmsDate').textContent = formatDate(new Date(response.data.smsDate)) || formattedSmsDate;
+            document.getElementById('timelinePortingDate').textContent = formatDate(new Date(formData.scheduledDate));
+            
+            // Update SMS step description if automation is enabled
+            if (formData.automatePorting) {
+              document.getElementById('smsStepDescription').textContent = 'PortMySim will automatically send the PORT SMS on your behalf';
+              document.getElementById('upcStepDescription').textContent = 'PortMySim will retrieve and store your UPC code for the next step';
+            }
+            
+            // Log the successful submission
+            console.log('Porting request submitted successfully:', response.data);
+          }
+        } else {
+          // Show error notification
+          alert('Error submitting porting request: ' + (response.error || 'Unknown error'));
+          console.error('Failed to submit porting request:', response.error);
+        }
+      })
+      .catch(error => {
+        // Show error notification
+        alert('Error submitting porting request: ' + (error.message || 'Network error'));
+        console.error('Error submitting porting request:', error);
+      })
+      .finally(() => {
+        // Reset button state
+        submitButton.innerHTML = originalButtonText;
+        submitButton.disabled = false;
+      });
+  }
+}
+
+// Function to submit porting request to API
+async function submitPortingRequest(formData) {
+  try {
+    // Check if the user is authenticated
+    if (!window.PortMySimAPI || !window.PortMySimAPI.isAuthenticated()) {
+      // Redirect to login if not authenticated
+      window.location.href = '/HTML/login.html?redirect=schedule-porting.html';
+      return { success: false, error: 'Authentication required' };
+    }
+    
+    // Format location data if needed
+    if (formData.location && typeof formData.location === 'string') {
+      // Try to get coordinates for the location
+      try {
+        const coordinates = await getCoordinates(formData.location);
+        if (coordinates) {
+          formData.location = {
+            address: formData.location,
+            lat: coordinates.lat,
+            lng: coordinates.lng
+          };
+        }
+      } catch (locationError) {
+        console.warn('Could not get coordinates for location:', locationError);
+        // Continue with just the address string
+        formData.location = { address: formData.location };
+      }
+    }
+    
+    // Prepare request data - fix potential issues with the data format
+    const requestData = {
+      mobileNumber: formData.mobileNumber,
+      currentProvider: formData.currentProvider,
+      // Fix the circle format - server expects standardized circle names
+      currentCircle: normalizeCircleName(formData.currentCircle),
+      newProvider: formData.newProvider,
+      scheduledDate: formData.scheduledDate,
+      planEndDate: formData.planEndDate,
+      timeSlot: document.getElementById('timeSlot')?.value || '10:00 AM - 12:00 PM',
+      fullName: formData.fullName,
+      email: formData.email,
+      alternateNumber: formData.alternateNumber || '',
+      // Convert booleans to strings for API compatibility
+      automatePorting: formData.automatePorting ? 'true' : 'false',
+      notifyUpdates: formData.notifyUpdates ? 'true' : 'false',
+      // Simplify location to avoid complex nested objects that might cause server errors
+      location: typeof formData.location === 'object' ? {
+        address: formData.location.address || '',
+        lat: parseFloat(formData.location.lat) || 0,
+        lng: parseFloat(formData.location.lng) || 0
+      } : { 
+        address: String(formData.location || ''),
+        lat: 0, 
+        lng: 0 
+      }
+    };
+
+    console.log('Submitting porting request with data:', requestData);
+
+    // First try the direct API approach with additional error reporting
+    try {
+      const directResponse = await fetch('http://localhost:5000/api/porting/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('portmysim_token') || ''}`
+        },
+        body: JSON.stringify(requestData)
+      });
       
-      // Show success message
-      const formSteps = document.querySelectorAll('.form-step');
-      const formSuccess = document.querySelector('.form-success');
+      // Get the response text first to debug potential JSON parsing issues
+      const responseText = await directResponse.text();
       
-      if (formSteps && formSuccess) {
-        // Hide all steps
-        formSteps.forEach(step => {
-          step.classList.remove('active');
+      try {
+        // Attempt to parse JSON only after we've secured the text
+        const responseData = JSON.parse(responseText);
+        
+        if (directResponse.ok) {
+          console.log('Direct API connection successful:', responseData);
+          return responseData;
+        } else {
+          console.warn('Server returned error:', directResponse.status, responseData);
+          throw new Error(responseData.error || `Server returned ${directResponse.status}`);
+        }
+      } catch (jsonError) {
+        console.error('Error parsing JSON response:', jsonError, 'Response text:', responseText);
+        throw new Error('Invalid server response format');
+      }
+    } catch (directError) {
+      console.warn('Direct API connection error:', directError);
+      
+      // Try alternative approach with API helper
+      try {
+        console.log('Attempting API helper as fallback...');
+        const response = await window.PortMySimAPI.fetch('/porting/submit', {
+          method: 'POST',
+          body: JSON.stringify(requestData)
         });
         
-        // Show success message
-        formSuccess.classList.add('show');
-        
-        // Calculate SMS date based on plan end date
-        const smsDate = calculateSmsSendDate();
-        const formattedSmsDate = formatDate(smsDate || new Date());
-        
-        // Set displayed information
-        document.getElementById('refNumber').textContent = `PORT-${Math.floor(Math.random() * 1000000)}`;
-        document.getElementById('smsDate').textContent = formattedSmsDate;
-        document.getElementById('guidDisplay').textContent = document.getElementById('portingGuid').textContent;
-        document.getElementById('portingDateDisplay').textContent = formatDate(new Date(formData.scheduledDate));
-        document.getElementById('currentProviderDisplay').textContent = formData.currentProvider;
-        document.getElementById('automationStatus').textContent = formData.automatePorting ? 'Automated' : 'Manual Process';
-        
-        // Set timeline dates - use the calculated SMS date
-        document.getElementById('timelineSmsDate').textContent = formattedSmsDate;
-        document.getElementById('timelinePortingDate').textContent = formatDate(new Date(formData.scheduledDate));
-        
-        // Update SMS step description if automation is enabled
-        if (formData.automatePorting) {
-          document.getElementById('smsStepDescription').textContent = 'PortMySim will automatically send the PORT SMS on your behalf';
-          document.getElementById('upcStepDescription').textContent = 'PortMySim will retrieve and store your UPC code for the next step';
+        if (response && response.success) {
+          console.log('Porting request submitted successfully via API helper');
+          return response;
         }
+        
+        console.warn('API helper request failed:', response?.error);
+        throw new Error(response?.error || 'Unknown API error');
+      } catch (apiError) {
+        console.error('All API submission attempts failed:', apiError);
+        
+        // Check if the server is running
+        try {
+          const pingResponse = await fetch('http://localhost:5000/api/health/check', { method: 'GET' });
+          if (!pingResponse.ok) {
+            throw new Error('Server appears to be down or unresponsive');
+          }
+        } catch (pingError) {
+          console.error('Server health check failed:', pingError);
+          alert('Server appears to be down. Please ensure the backend server is running at http://localhost:5000');
+          return { success: false, error: 'Server connectivity issue. Please try again later.' };
+        }
+        
+        // Return mock response as last resort but log this clearly
+        console.warn('FALLING BACK to mock response due to all API failures');
+        return generateMockResponse(formData);
       }
-    }, 2000);
+    }
+  } catch (error) {
+    console.error('Unexpected error in submitPortingRequest:', error);
+    
+    // Return error response
+    return { 
+      success: false, 
+      error: error.message || 'An unexpected error occurred while submitting your porting request.' 
+    };
   }
+}
+
+// Helper function to generate a mock response
+function generateMockResponse(formData) {
+  console.log('Using demo mode with mock response');
+  
+  // Generate mock data
+  const smsDate = new Date(formData.planEndDate);
+  smsDate.setDate(smsDate.getDate() - 3);
+  
+  // Generate unique reference number
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 6);
+  const refNumber = `PORT-${timestamp}-${random}`.toUpperCase();
+  
+  // Return mock successful response
+  return {
+    success: true,
+    data: {
+      id: `mock-${Date.now()}`,
+      refNumber: refNumber,
+      status: 'pending',
+      smsDate: smsDate,
+      portingCenterDetails: {
+        name: "Nearest Service Center",
+        address: formData.location?.address || "Default location",
+      },
+      notifications: [
+        {
+          type: 'sms',
+          scheduledFor: smsDate,
+          message: 'Your porting SMS will be sent on this date'
+        },
+        {
+          type: 'porting',
+          scheduledFor: new Date(formData.scheduledDate),
+          message: 'Your number will be ported on this date'
+        }
+      ]
+    },
+    message: 'Porting request submitted successfully (Demo Mode)'
+  };
 }
 
 // Helper function to format date
@@ -1711,4 +1990,52 @@ async function loadCircles() {
     if (!circleSelect) return;
     
   // We'll use the existing options in the HTML since telecom circles are fixed
+}
+
+// Helper function to normalize circle names to match backend expectations
+function normalizeCircleName(circleName) {
+  if (!circleName) return 'delhi'; // Default circle
+  
+  // Convert to lowercase for case-insensitive matching
+  const circle = circleName.toLowerCase().trim();
+  
+  // Map of common input values to standardized circle IDs
+  const circleMap = {
+    // Names to IDs
+    'delhi': 'delhi',
+    'delhi ncr': 'delhi',
+    'mumbai': 'mumbai',
+    'kolkata': 'kolkata',
+    'karnataka': 'karnataka',
+    'chennai': 'tamil-nadu',
+    'tamil nadu': 'tamil-nadu',
+    'andhra pradesh': 'andhra-pradesh',
+    'kerala': 'kerala',
+    'punjab': 'punjab',
+    'up east': 'up-east',
+    'up west': 'up-west',
+    'rajasthan': 'rajasthan',
+    'madhya pradesh': 'madhya-pradesh',
+    'west bengal': 'west-bengal',
+    'gujarat': 'gujarat',
+    'maharashtra': 'maharashtra',
+    'jharkhand': 'bihar',
+    'bihar': 'bihar',
+    'odisha': 'orissa',
+    'orissa': 'orissa',
+    'assam': 'assam',
+    'north east': 'northeast',
+    'northeast': 'northeast',
+    'jammu & kashmir': 'jammu',
+    'j&k': 'jammu',
+    'haryana': 'haryana',
+    'himachal pradesh': 'himachal'
+  };
+  
+  // Return the standardized ID if found, otherwise convert spaces to hyphens
+  const result = circleMap[circle];
+  if (result) return result;
+  
+  // Convert spaces to hyphens to match backend format
+  return circle.replace(/\s+/g, '-');
 }

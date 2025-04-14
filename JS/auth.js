@@ -199,17 +199,41 @@ if (loginForm) {
             clearError(password);
         }
         
-        if (isValid && window.PortMySimAPI) {
+        if (isValid) {
             try {
                 // Disable button and show loading
                 submitButton.disabled = true;
                 submitButton.textContent = 'Logging in...';
+                
+                // Check API connectivity before login attempt
+                if (!window.PortMySimAPI) {
+                    console.error('API client not initialized');
+                    showFormMessage(loginForm, 'Error: API client not initialized. The backend server may not be running.');
+                    return;
+                }
+                
+                // Test the server connection explicitly
+                try {
+                    const serverConnected = await window.PortMySimAPI.testServerConnection();
+                    if (!serverConnected) {
+                        showFormMessage(loginForm, 'Error: Cannot connect to the server. Please make sure the backend is running.');
+                        return;
+                    }
+                } catch (connectionError) {
+                    console.error('Server connection test failed:', connectionError);
+                    showFormMessage(loginForm, `Error connecting to server: ${connectionError.message}`);
+                    return;
+                }
+                
+                console.log(`Attempting login for ${email.value.trim()}`);
                 
                 // Call login API
                 const response = await window.PortMySimAPI.auth.login(
                     email.value.trim(), 
                     password.value.trim()
                 );
+                
+                console.log('Login API response:', response);
                 
                 if (response.success) {
                     // Show success message
@@ -220,12 +244,27 @@ if (loginForm) {
                         window.location.href = '/HTML/schedule-porting.html';
                     }, 1000);
                 } else {
-                    // Show error
-                    showFormMessage(loginForm, response.message || 'Login failed. Please try again.');
+                    // Show detailed error
+                    const errorMessage = response.message || 'Login failed. Please try again.';
+                    console.error('Login error:', errorMessage);
+                    
+                    if (response.statusCode === 401) {
+                        showFormMessage(loginForm, 'Invalid email or password. Please try again.');
+                    } else {
+                        showFormMessage(loginForm, `Login error: ${errorMessage}`);
+                    }
+                    
+                    // If using demo account, show hint
+                    if (email.value.trim() === 'demo@example.com') {
+                        setTimeout(() => {
+                            showFormMessage(loginForm, 'Hint: For the demo account, try the password "Password123"');
+                        }, 1500);
+                    }
                 }
             } catch (error) {
-                // Show error message
-                showFormMessage(loginForm, error.message || 'Login failed. Please try again.');
+                // Show detailed error message
+                console.error('Login exception:', error);
+                showFormMessage(loginForm, `Login failed: ${error.message || 'Unknown error'}`);
             } finally {
                 // Re-enable button
                 submitButton.disabled = false;

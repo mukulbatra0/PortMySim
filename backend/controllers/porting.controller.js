@@ -12,6 +12,8 @@ import * as portingCenterService from '../utils/portingCenterService.js';
  */
 const submitPortingRequest = async (req, res) => {
   try {
+    console.log('[API] Received porting request submission');
+    
     const {
       mobileNumber,
       currentProvider,
@@ -23,88 +25,168 @@ const submitPortingRequest = async (req, res) => {
       email,
       alternateNumber,
       planEndDate,
-      location
+      location,
+      automatePorting,
+      notifyUpdates
     } = req.body;
+
+    // Validate required fields with detailed feedback
+    const missingFields = [];
+    if (!mobileNumber) missingFields.push('mobileNumber');
+    if (!currentProvider) missingFields.push('currentProvider');
+    if (!currentCircle) missingFields.push('currentCircle');
+    if (!newProvider) missingFields.push('newProvider');
+    if (!scheduledDate) missingFields.push('scheduledDate');
+    if (!planEndDate) missingFields.push('planEndDate');
+    if (!fullName) missingFields.push('fullName');
+    if (!email) missingFields.push('email');
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Please provide all required fields: ${missingFields.join(', ')}`
+      });
+    }
 
     // Get user ID from req.userId set by auth middleware
     const userId = req.userId;
-
-    // Calculate SMS date based on plan end date and circle rules
-    const smsDate = await PortingRules.calculateSmsDate(planEndDate, currentCircle);
-
-    // Find nearby porting centers if location is provided
-    let portingCenterDetails = null;
-    if (location && location.lat && location.lng) {
-      const nearbyCenters = await portingCenterService.findNearbyPortingCenters(
-        location.lat,
-        location.lng,
-        newProvider,
-        10 // 10km radius
-      );
-      
-      if (nearbyCenters && nearbyCenters.length > 0) {
-        const center = nearbyCenters[0];
-        portingCenterDetails = {
-          name: center.name,
-          address: center.address.formattedAddress,
-          location: center.location,
-          openingHours: center.openingHours
-        };
-      }
-    }
-
-    // Create a new porting request
-    const portingRequest = new PortingRequest({
-      user: userId,
-      mobileNumber,
-      currentProvider,
+    
+    // Log the request details for debugging
+    console.log('Processing porting request for:', {
       currentCircle,
-      newProvider,
-      planEndDate: new Date(planEndDate),
-      scheduledDate: new Date(scheduledDate),
-      smsDate: smsDate,
-      portingCenterDetails,
-      status: 'pending',
-      statusHistory: [
-        {
-          status: 'pending',
-          timestamp: Date.now(),
-          notes: 'Porting request submitted'
+      mobileNumber: mobileNumber.slice(-4), // Log last 4 digits for privacy
+      userId,
+      timeSlot
+    });
+
+    try {
+      // Calculate SMS date based on plan end date and circle rules
+      const smsDate = await PortingRules.calculateSmsDate(planEndDate, currentCircle);
+      console.log(`Calculated SMS date: ${smsDate} for plan end date: ${planEndDate}`);
+      
+      // Find nearby porting centers if location is provided
+      let portingCenterDetails = null;
+      if (location && location.lat && location.lng) {
+        console.log(`Finding porting centers near: ${location.lat}, ${location.lng}`);
+        const nearbyCenters = await portingCenterService.findNearbyPortingCenters(
+          location.lat,
+          location.lng,
+          newProvider,
+          10 // 10km radius
+        );
+        
+        if (nearbyCenters && nearbyCenters.length > 0) {
+          const center = nearbyCenters[0];
+          portingCenterDetails = {
+            name: center.name,
+            address: center.address.formattedAddress,
+            location: center.location,
+            openingHours: center.openingHours
+          };
+          console.log(`Found porting center: ${center.name}`);
+        } else {
+          console.log('No nearby porting centers found, using default center');
+          // Use default center if none found
+          portingCenterDetails = {
+            name: "Default Service Center",
+            address: "Please contact customer service for nearest center",
+            location: {
+              type: "Point",
+              coordinates: [0, 0]
+            }
+          };
         }
-      ],
-      metadata: {
-        timeSlot,
-        fullName,
-        email,
-        alternateNumber
       }
-    });
 
-    // Generate notifications for the porting process
-    await portingRequest.scheduleNotifications();
+      // Parse boolean values
+      const isAutomatedPorting = automatePorting === true || automatePorting === 'true';
+      const shouldNotifyUpdates = notifyUpdates === true || notifyUpdates === 'true';
+      
+      // Create a new porting request
+      console.log('Creating new porting request document');
+      const portingRequest = new PortingRequest({
+        user: userId,
+        mobileNumber,
+        currentProvider,
+        currentCircle,
+        newProvider,
+        planEndDate: new Date(planEndDate),
+        scheduledDate: new Date(scheduledDate),
+        smsDate: smsDate,
+        portingCenterDetails,
+        automatePorting: isAutomatedPorting,
+        status: 'pending',
+        statusHistory: [
+          {
+            status: 'pending',
+            timestamp: Date.now(),
+            notes: 'Porting request submitted'
+          }
+        ],
+        metadata: {
+          timeSlot: timeSlot || 'morning',
+          fullName,
+          email,
+          alternateNumber: alternateNumber || '',
+          notifyUpdates: shouldNotifyUpdates
+        }
+      });
 
-    // Save the porting request
-    await portingRequest.save();
+      // Generate notifications for the porting process
+      console.log('Scheduling notifications');
+      await portingRequest.scheduleNotifications();
 
-    // Generate reference number
-    const refNumber = `PORT-${portingRequest._id.toString().slice(-8)}`;
+      // Save the porting request with error handling
+      try {
+        console.log('Saving porting request to database');
+        await portingRequest.save();
+        console.log(`Porting request saved successfully with ID: ${portingRequest._id}`);
+      } catch (saveError) {
+        console.error('Error saving porting request to database:', saveError);
+        // Try to identify specific MongoDB errors
+        if (saveError.name === 'MongoServerError') {
+          if (saveError.code === 11000) {
+            return res.status(400).json({
+              success: false,
+              error: 'A porting request for this mobile number already exists'
+            });
+          }
+        }
+        throw saveError; // Re-throw to be caught by outer catch
+      }
 
-    return res.status(201).json({
-      success: true,
-      data: {
-        id: portingRequest._id,
-        refNumber,
-        status: portingRequest.status,
-        smsDate: portingRequest.smsDate,
-        portingCenterDetails: portingRequest.portingCenterDetails,
-        notifications: portingRequest.notifications.map(n => ({
-          type: n.type,
-          scheduledFor: n.scheduledFor,
-          message: n.message
-        }))
-      },
-      message: 'Porting request submitted successfully'
-    });
+      // Generate reference number
+      const refNumber = `PORT-${portingRequest._id.toString().slice(-8)}`;
+
+      return res.status(201).json({
+        success: true,
+        data: {
+          id: portingRequest._id,
+          refNumber,
+          status: portingRequest.status,
+          smsDate: portingRequest.smsDate,
+          portingCenterDetails: portingRequest.portingCenterDetails,
+          notifications: portingRequest.notifications.map(n => ({
+            type: n.type,
+            scheduledFor: n.scheduledFor,
+            message: n.message
+          }))
+        },
+        message: 'Porting request submitted successfully'
+      });
+    } catch (specificError) {
+      // Handle specific errors more gracefully
+      console.error('Specific error in porting request:', specificError);
+      
+      if (specificError.message && specificError.message.includes('No porting rules found for circle')) {
+        return res.status(400).json({
+          success: false,
+          error: `The telecom circle "${currentCircle}" is not recognized. Please select a valid circle.`
+        });
+      }
+      
+      throw specificError; // Pass to outer catch block if not handled specifically
+    }
   } catch (error) {
     console.error('Error submitting porting request:', error);
     
@@ -119,7 +201,7 @@ const submitPortingRequest = async (req, res) => {
 
     return res.status(500).json({
       success: false,
-      error: 'Server Error'
+      error: 'Server Error: ' + (error.message || 'Unknown error occurred')
     });
   }
 };

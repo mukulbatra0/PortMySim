@@ -3,6 +3,97 @@
  * Handles user profile, porting requests, and dashboard UI
  */
 
+// Global modal management to prevent issues
+const ModalManager = {
+    activeModals: [],
+    originalBodyOverflow: null,
+    
+    // Open a modal and track it
+    openModal: function(modalElement) {
+        // Store original body overflow if this is the first modal
+        if (this.activeModals.length === 0) {
+            this.originalBodyOverflow = document.body.style.overflow;
+            // Prevent body scrolling
+            document.body.style.overflow = 'hidden';
+            
+            // Hide porting requests container if it exists
+            const portingRequestsContainer = document.getElementById('porting-requests');
+            if (portingRequestsContainer) {
+                portingRequestsContainer.style.visibility = 'hidden';
+            }
+        }
+        
+        // Add modal to tracking array
+        this.activeModals.push(modalElement);
+        
+        // Add to body
+        document.body.appendChild(modalElement);
+        return modalElement;
+    },
+    
+    // Close a specific modal
+    closeModal: function(modalElement) {
+        // Find and remove from tracking array
+        const index = this.activeModals.indexOf(modalElement);
+        if (index > -1) {
+            this.activeModals.splice(index, 1);
+        }
+        
+        // Remove from DOM if it exists
+        if (document.body.contains(modalElement)) {
+            document.body.removeChild(modalElement);
+        }
+        
+        // If no more modals, restore body overflow and porting requests visibility
+        if (this.activeModals.length === 0) {
+            this.restoreBodyScrolling();
+            
+            // Show porting requests container if it exists
+            const portingRequestsContainer = document.getElementById('porting-requests');
+            if (portingRequestsContainer) {
+                portingRequestsContainer.style.visibility = 'visible';
+            }
+        }
+    },
+    
+    // Close all modals
+    closeAllModals: function() {
+        // Close each modal
+        [...this.activeModals].forEach(modal => {
+            if (document.body.contains(modal)) {
+                document.body.removeChild(modal);
+            }
+        });
+        
+        // Clear the array
+        this.activeModals = [];
+        
+        // Restore body scrolling and porting requests visibility
+        this.restoreBodyScrolling();
+        
+        // Show porting requests container if it exists
+        const portingRequestsContainer = document.getElementById('porting-requests');
+        if (portingRequestsContainer) {
+            portingRequestsContainer.style.visibility = 'visible';
+        }
+    },
+    
+    // Restore body scrolling
+    restoreBodyScrolling: function() {
+        document.body.style.overflow = this.originalBodyOverflow || '';
+        document.body.style.height = 'auto';
+        
+        // Force reflow and ensure scrolling works
+        void document.body.offsetHeight;
+        window.scrollTo(0, 0);
+        
+        // Double-check after a short delay
+        setTimeout(() => {
+            document.body.style.overflow = this.originalBodyOverflow || '';
+        }, 100);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     // Check auth state
     if (!window.PortMySimAPI || !window.PortMySimAPI.isAuthenticated()) {
@@ -108,39 +199,22 @@ async function loadPortingRequests() {
             </div>
         `;
         
-        // Fetch porting requests
-        const response = await fetch('/api/porting/requests', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('portmysim_auth_token')}`
-            }
-        });
+        // Fetch porting requests using the API function
+        const response = await window.PortMySimAPI.porting.getPortingRequests();
         
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Failed to load porting requests');
+        if (!response.success) {
+            throw new Error(response.error || 'Failed to load porting requests');
         }
         
-        if (!data.success) {
-            throw new Error(data.message || 'Failed to load porting requests');
+        // Update active requests counter
+        const activeRequestsCount = response.data ? response.data.filter(req => req.status === 'pending' || req.status === 'approved').length : 0;
+        const activeRequestsElement = document.getElementById('activeRequests');
+        if (activeRequestsElement) {
+            activeRequestsElement.textContent = activeRequestsCount;
         }
         
-        // Render porting requests
-        if (data.data && data.data.length > 0) {
-            renderPortingRequests(data.data, portingRequestsContainer);
-        } else {
-            // Show empty state
-            portingRequestsContainer.innerHTML = `
-                <div class="empty-state">
-                    <img src="../images/submit-request.svg" alt="No porting requests" style="width: 150px; margin-bottom: 1rem;" />
-                    <h3>No Porting Requests Yet</h3>
-                    <p>You haven't submitted any porting requests yet.</p>
-                    <a href="/HTML/schedule-porting.html" class="btn btn-primary">
-                        <i class="fas fa-plus-circle"></i> New Porting Request
-                    </a>
-                </div>
-            `;
-        }
+        // Use the renderPortingRequests function for both cases (empty or with data)
+        renderPortingRequests(response.data, portingRequestsContainer);
     } catch (error) {
         console.error('Error loading porting requests:', error);
         
@@ -167,6 +241,33 @@ async function loadPortingRequests() {
  * @param {HTMLElement} container - Container element to render into
  */
 function renderPortingRequests(requests, container) {
+    // If no requests, show empty state with test button
+    if (!requests || requests.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <img src="../images/submit-request.svg" alt="No porting requests" style="width: 150px; margin-bottom: 1rem;" />
+                <h3>No Porting Requests Yet</h3>
+                <p>You haven't submitted any porting requests yet.</p>
+                <div class="empty-state-actions">
+                    <a href="/HTML/schedule-porting.html" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> New Porting Request
+                    </a>
+                    <button id="create-test-request-btn" class="btn btn-outline">
+                        <i class="fas fa-flask"></i> Create Test Request
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Add event listener to the test button
+        const testButton = container.querySelector('#create-test-request-btn');
+        if (testButton) {
+            testButton.addEventListener('click', createSamplePortingRequest);
+        }
+        
+        return;
+    }
+    
     // Clear the container
     container.innerHTML = '';
     
@@ -224,16 +325,16 @@ function renderPortingRequests(requests, container) {
         
         // Create row content
         row.innerHTML = `
-            <td>${request.phoneNumber}</td>
+            <td>${request.mobileNumber}</td>
             <td>
                 <div class="provider-info">
-                    <img src="../images/${request.currentProvider}.png" alt="${request.currentProvider}" />
+                    <img src="../images/${request.currentProvider}.png" alt="${request.currentProvider}" onerror="this.src='../images/default-provider.png'" />
                     <span>${request.currentProvider.charAt(0).toUpperCase() + request.currentProvider.slice(1)}</span>
                 </div>
             </td>
             <td>
                 <div class="provider-info">
-                    <img src="../images/${request.newProvider}.png" alt="${request.newProvider}" />
+                    <img src="../images/${request.newProvider}.png" alt="${request.newProvider}" onerror="this.src='../images/default-provider.png'" />
                     <span>${request.newProvider.charAt(0).toUpperCase() + request.newProvider.slice(1)}</span>
                 </div>
             </td>
@@ -280,8 +381,215 @@ function renderPortingRequests(requests, container) {
  * @param {string} requestId - ID of the request to view
  */
 function viewPortingRequestDetails(requestId) {
-    // Redirect to details page
-    window.location.href = `/HTML/porting-details.html?id=${requestId}`;
+    // Create and show modal with request details
+    createRequestDetailsModal(requestId);
+}
+
+/**
+ * Create and display a modal with porting request details
+ * @param {string} requestId - ID of the request to display
+ */
+async function createRequestDetailsModal(requestId) {
+    try {
+        // Close any existing modals first
+        ModalManager.closeAllModals();
+        
+        // Show loading state
+        const loadingModal = document.createElement('div');
+        loadingModal.className = 'modal-container';
+        loadingModal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-body" style="text-align: center; padding: 2rem;">
+                    <div class="spinner"></div>
+                    <p>Loading request details...</p>
+                </div>
+            </div>
+        `;
+        ModalManager.openModal(loadingModal);
+        
+        // Fetch request details using the API
+        const response = await window.PortMySimAPI.porting.getPortingRequestDetails(requestId);
+        
+        // Remove loading modal
+        ModalManager.closeModal(loadingModal);
+        
+        if (!response.success) {
+            throw new Error(response.error || 'Failed to load request details');
+        }
+        
+        const request = response.data;
+        
+        // Format dates
+        const submissionDate = new Date(request.createdAt).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+        
+        const scheduledDate = request.scheduledDate ? 
+            new Date(request.scheduledDate).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            }) : 'Not scheduled';
+        
+        // Create modal with request details
+        const modalHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Porting Request Details</h3>
+                    <button class="close-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="request-details">
+                        <div class="detail-row">
+                            <span class="detail-label">Phone Number:</span>
+                            <span class="detail-value">${request.mobileNumber}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Current Provider:</span>
+                            <span class="detail-value">${request.currentProvider}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">New Provider:</span>
+                            <span class="detail-value">${request.newProvider}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value status-badge status-${request.status}">${request.status}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Submission Date:</span>
+                            <span class="detail-value">${submissionDate}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Scheduled Date:</span>
+                            <span class="detail-value">${scheduledDate}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Notes:</span>
+                            <span class="detail-value">${request.notes || 'No notes provided'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="request-actions">
+                        <button class="btn btn-primary track-request-btn" data-id="${request._id}">
+                            <i class="fas fa-route"></i> Track Request
+                        </button>
+                        ${request.status === 'pending' ? `
+                            <button class="btn btn-outline cancel-request-btn" data-id="${request._id}">
+                                <i class="fas fa-times-circle"></i> Cancel Request
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Create modal container with inline styles to ensure visibility
+        const modalContainer = document.createElement('div');
+        modalContainer.className = 'modal-container';
+        modalContainer.style.display = 'flex';
+        modalContainer.style.position = 'fixed';
+        modalContainer.style.top = '0';
+        modalContainer.style.left = '0';
+        modalContainer.style.width = '100%';
+        modalContainer.style.height = '100%';
+        modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+        modalContainer.style.zIndex = '10000';
+        modalContainer.style.justifyContent = 'center';
+        modalContainer.style.alignItems = 'center';
+        modalContainer.style.overflowY = 'auto';
+        modalContainer.innerHTML = modalHTML;
+        
+        // Add to body using ModalManager
+        ModalManager.openModal(modalContainer);
+        
+        // Define event handler functions
+        const closeModalFunction = () => {
+            ModalManager.closeModal(modalContainer);
+        };
+        
+        const outsideClickFunction = (e) => {
+            if (e.target === modalContainer) {
+                closeModalFunction();
+            }
+        };
+        
+        const trackBtnHandler = () => {
+            closeModalFunction();
+            trackPortingRequest(request._id);
+        };
+        
+        const cancelBtnHandler = () => {
+            cancelPortingRequest(request._id, modalContainer);
+        };
+        
+        // Add event listeners
+        const closeModalButton = modalContainer.querySelector('.close-modal');
+        closeModalButton.addEventListener('click', closeModalFunction);
+        
+        // Close when clicking outside the modal
+        modalContainer.addEventListener('click', outsideClickFunction);
+        
+        // Track request button
+        const trackBtn = modalContainer.querySelector('.track-request-btn');
+        if (trackBtn) {
+            trackBtn.addEventListener('click', trackBtnHandler);
+        }
+        
+        // Cancel request button
+        const cancelBtn = modalContainer.querySelector('.cancel-request-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', cancelBtnHandler);
+        }
+    } catch (error) {
+        console.error('Error loading request details:', error);
+        // Restore scrolling in case of errors
+        ModalManager.closeAllModals();
+        showNotification(error.message || 'Failed to load request details', 'error');
+    }
+}
+
+/**
+ * Cancel a porting request
+ * @param {string} requestId - ID of the request to cancel
+ * @param {HTMLElement} modalContainer - The modal container to update
+ */
+async function cancelPortingRequest(requestId, modalContainer) {
+    try {
+        // Ask for confirmation
+        if (!confirm('Are you sure you want to cancel this porting request?')) {
+            return;
+        }
+        
+        // Update UI to show loading
+        const cancelBtn = modalContainer.querySelector('.cancel-request-btn');
+        cancelBtn.disabled = true;
+        cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+        
+        // Call API to cancel request
+        const response = await window.PortMySimAPI.porting.cancelPortingRequest(requestId);
+        
+        if (!response.success) {
+            throw new Error(response.error || 'Failed to cancel request');
+        }
+        
+        // Show success notification
+        showNotification('Porting request cancelled successfully', 'success');
+        
+        // Close modal using ModalManager
+        ModalManager.closeModal(modalContainer);
+        
+        // Reload porting requests
+        loadPortingRequests();
+    } catch (error) {
+        console.error('Error cancelling request:', error);
+        showNotification(error.message || 'Failed to cancel request', 'error');
+        
+        // Reset cancel button
+        const cancelBtn = modalContainer.querySelector('.cancel-request-btn');
+        cancelBtn.disabled = false;
+        cancelBtn.innerHTML = '<i class="fas fa-times-circle"></i> Cancel Request';
+    }
 }
 
 /**
@@ -289,8 +597,194 @@ function viewPortingRequestDetails(requestId) {
  * @param {string} requestId - ID of the request to track
  */
 function trackPortingRequest(requestId) {
-    // Redirect to tracking page
-    window.location.href = `/HTML/porting-track.html?id=${requestId}`;
+    // Create and show modal with request tracking
+    createRequestTrackingModal(requestId);
+}
+
+/**
+ * Create and display a modal with porting request tracking information
+ * @param {string} requestId - ID of the request to track
+ */
+async function createRequestTrackingModal(requestId) {
+    try {
+        // Close any existing modals first
+        ModalManager.closeAllModals();
+        
+        // Show loading state
+        const loadingModal = document.createElement('div');
+        loadingModal.className = 'modal-container';
+        loadingModal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-body" style="text-align: center; padding: 2rem;">
+                    <div class="spinner"></div>
+                    <p>Loading tracking information...</p>
+                </div>
+            </div>
+        `;
+        ModalManager.openModal(loadingModal);
+        
+        // Fetch request details using the API
+        const response = await window.PortMySimAPI.porting.trackPortingRequest(requestId);
+        
+        // Remove loading modal
+        ModalManager.closeModal(loadingModal);
+        
+        if (!response.success) {
+            throw new Error(response.error || 'Failed to load tracking information');
+        }
+        
+        const trackingData = response.data;
+        const request = trackingData.request || trackingData; // Handle different response formats
+        const timeline = trackingData.timeline || trackingData.statusHistory || [];
+        
+        // Define all possible stages and their order
+        const allStages = [
+            { name: 'pending', label: 'Request Submitted', icon: 'paper-plane' },
+            { name: 'processing', label: 'Processing', icon: 'cogs' },
+            { name: 'approved', label: 'Request Approved', icon: 'thumbs-up' },
+            { name: 'completed', label: 'Port Completed', icon: 'flag-checkered' }
+        ];
+        
+        // Map timeline events to our stages
+        let currentStageIndex = -1;
+        
+        for (let i = 0; i < allStages.length; i++) {
+            // Find the matching status in the timeline
+            const stageEvent = timeline.find(event => event.status === allStages[i].name);
+            if (stageEvent) {
+                currentStageIndex = i;
+            }
+            // Also check if current status matches this stage
+            if (request.status === allStages[i].name) {
+                currentStageIndex = Math.max(currentStageIndex, i);
+            }
+        }
+        
+        // Create timeline HTML
+        let timelineHTML = '';
+        
+        allStages.forEach((stage, index) => {
+            const stageEvent = timeline.find(event => event.status === stage.name);
+            const isCompleted = index <= currentStageIndex;
+            const isCurrent = index === currentStageIndex;
+            
+            const statusClass = isCompleted ? 'completed' : (isCurrent ? 'current' : 'pending');
+            const date = stageEvent ? new Date(stageEvent.timestamp).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            }) : '';
+            
+            timelineHTML += `
+                <div class="timeline-item ${statusClass}">
+                    <div class="timeline-icon">
+                        <i class="fas fa-${stage.icon}"></i>
+                    </div>
+                    <div class="timeline-content">
+                        <h4>${stage.label}</h4>
+                        ${date ? `<p>${date}</p>` : ''}
+                        ${stageEvent && stageEvent.notes ? `<p class="timeline-notes">${stageEvent.notes}</p>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        
+        // Create modal with tracking information
+        const modalHTML = `
+            <div class="modal-content" style="width: 90%; max-width: 600px;">
+                <div class="modal-header">
+                    <h3>Track Porting Request</h3>
+                    <button class="close-modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="tracking-info">
+                        <div class="tracking-header">
+                            <div class="tracking-number">
+                                <strong>Phone Number:</strong> ${request.mobileNumber}
+                            </div>
+                            <div class="tracking-status">
+                                <strong>Status:</strong> <span class="status-badge status-${request.status}">${request.status}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="tracking-timeline">
+                            ${timelineHTML}
+                        </div>
+                        
+                        <div class="tracking-eta">
+                            ${request.expectedCompletionDate ? `
+                                <p><strong>Expected Completion:</strong> ${new Date(request.expectedCompletionDate).toLocaleDateString('en-US', {
+                                    year: 'numeric', month: 'long', day: 'numeric'
+                                })}</p>
+                            ` : request.scheduledDate ? `
+                                <p><strong>Scheduled Date:</strong> ${new Date(request.scheduledDate).toLocaleDateString('en-US', {
+                                    year: 'numeric', month: 'long', day: 'numeric'
+                                })}</p>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="tracking-actions">
+                        <button class="btn btn-primary view-details-btn" data-id="${request._id}">
+                            <i class="fas fa-eye"></i> View Full Details
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Create and add modal to DOM
+        const modalContainer = document.createElement('div');
+        modalContainer.className = 'modal-container';
+        modalContainer.style.display = 'flex';
+        modalContainer.style.position = 'fixed';
+        modalContainer.style.top = '0';
+        modalContainer.style.left = '0';
+        modalContainer.style.width = '100%';
+        modalContainer.style.height = '100%';
+        modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+        modalContainer.style.zIndex = '10000';
+        modalContainer.style.justifyContent = 'center';
+        modalContainer.style.alignItems = 'center';
+        modalContainer.style.overflowY = 'auto';
+        modalContainer.innerHTML = modalHTML;
+        
+        // Add to body using ModalManager
+        ModalManager.openModal(modalContainer);
+        
+        // Define event handlers
+        const closeModalFunction = () => {
+            ModalManager.closeModal(modalContainer);
+        };
+        
+        const outsideClickFunction = (e) => {
+            if (e.target === modalContainer) {
+                closeModalFunction();
+            }
+        };
+        
+        // Add event listeners
+        const closeBtn = modalContainer.querySelector('.close-modal');
+        closeBtn.addEventListener('click', closeModalFunction);
+        
+        // Close when clicking outside
+        modalContainer.addEventListener('click', outsideClickFunction);
+        
+        // View details button
+        const viewDetailsBtn = modalContainer.querySelector('.view-details-btn');
+        if (viewDetailsBtn) {
+            viewDetailsBtn.addEventListener('click', () => {
+                closeModalFunction();
+                // Then open the details modal
+                viewPortingRequestDetails(request._id);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading tracking information:', error);
+        // Restore scrolling in case of errors
+        ModalManager.closeAllModals();
+        showNotification(error.message || 'Failed to load tracking information', 'error');
+    }
 }
 
 /**
@@ -319,9 +813,29 @@ function setupEventListeners() {
         });
     }
     
-    // Tab switching
+    // Add tab system if tab elements exist
+    setupTabSystem();
+}
+
+/**
+ * Set up the tab system for the dashboard if tab elements exist
+ */
+function setupTabSystem() {
     const tabButtons = document.querySelectorAll('.tab-button');
+    if (tabButtons.length === 0) return; // No tabs found
+    
     const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Make sure first tab is active by default
+    if (tabButtons.length > 0 && !document.querySelector('.tab-button.active')) {
+        tabButtons[0].classList.add('active');
+        
+        const firstTabId = tabButtons[0].getAttribute('data-tab');
+        const firstTabContent = document.getElementById(firstTabId);
+        if (firstTabContent) {
+            firstTabContent.classList.add('active');
+        }
+    }
     
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
@@ -343,6 +857,21 @@ function setupEventListeners() {
 function openEditProfileModal() {
     // Get user data
     const user = window.PortMySimAPI.getUser();
+    
+    // Close any existing modals first
+    ModalManager.closeAllModals();
+    
+    // Remove any existing loaders
+    const loaders = document.querySelectorAll('.loader-overlay, .loader-container, .loading-indicator');
+    loaders.forEach(loader => {
+        if (loader.parentNode) {
+            // First set its content to empty and visibility to hidden before removing
+            loader.innerHTML = '';
+            loader.style.visibility = 'hidden';
+            loader.style.display = 'none';
+            loader.parentNode.removeChild(loader);
+        }
+    });
     
     // Create modal HTML
     const modalHTML = `
@@ -376,12 +905,6 @@ function openEditProfileModal() {
         </div>
     `;
     
-    // Remove any existing modals
-    const existingModal = document.querySelector('.modal-container');
-    if (existingModal) {
-        document.body.removeChild(existingModal);
-    }
-    
     // Create modal container with inline styles to ensure visibility
     const modalContainer = document.createElement('div');
     modalContainer.className = 'modal-container';
@@ -391,33 +914,38 @@ function openEditProfileModal() {
     modalContainer.style.left = '0';
     modalContainer.style.width = '100%';
     modalContainer.style.height = '100%';
-    modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-    modalContainer.style.zIndex = '9999';
+    modalContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+    modalContainer.style.zIndex = '10000';
     modalContainer.style.justifyContent = 'center';
     modalContainer.style.alignItems = 'center';
+    modalContainer.style.overflowY = 'auto';
     modalContainer.innerHTML = modalHTML;
     
-    // Add to body
-    document.body.appendChild(modalContainer);
+    // Add to body using ModalManager
+    ModalManager.openModal(modalContainer);
     
-    // Force a reflow to ensure the modal is rendered
-    void modalContainer.offsetWidth;
+    // Define event handlers
+    const closeModalFunction = () => {
+        ModalManager.closeModal(modalContainer);
+    };
+    
+    const outsideClickFunction = (e) => {
+        if (e.target === modalContainer) {
+            closeModalFunction();
+        }
+    };
     
     // Add event listeners
     const closeModalButton = modalContainer.querySelector('.close-modal');
-    closeModalButton.addEventListener('click', () => {
-        document.body.removeChild(modalContainer);
-    });
+    closeModalButton.addEventListener('click', closeModalFunction);
     
     // Close when clicking outside the modal
-    modalContainer.addEventListener('click', (e) => {
-        if (e.target === modalContainer) {
-            document.body.removeChild(modalContainer);
-        }
-    });
+    modalContainer.addEventListener('click', outsideClickFunction);
+    
+    // Get the form element
+    const editProfileForm = document.getElementById('edit-profile-form');
     
     // Handle form submission
-    const editProfileForm = document.getElementById('edit-profile-form');
     editProfileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -479,8 +1007,8 @@ function openEditProfileModal() {
                 };
                 localStorage.setItem('portmysim_user', JSON.stringify(updatedUser));
                 
-                // Close modal
-                document.body.removeChild(modalContainer);
+                // Close the modal using ModalManager
+                closeModalFunction();
                 
                 // Update UI
                 updateUserProfile(updatedUser);
@@ -614,4 +1142,64 @@ function showNotification(message, type = 'info') {
             }
         }, 300);
     }, 5000);
+}
+
+/**
+ * Create a sample porting request for testing purposes
+ * This function should be called when no porting requests are found and user wants to create a test one
+ */
+async function createSamplePortingRequest() {
+    try {
+        // Get current user data
+        const user = window.PortMySimAPI.getUser();
+        if (!user) {
+            showNotification('Please log in to create a porting request', 'error');
+            return;
+        }
+        
+        // Show notification that we're creating a sample request
+        showNotification('Creating a sample porting request...', 'info');
+        
+        // Create sample request data
+        const currentDate = new Date();
+        const planEndDate = new Date(currentDate);
+        planEndDate.setDate(planEndDate.getDate() + 14); // 2 weeks from now
+        
+        const scheduledDate = new Date(planEndDate);
+        scheduledDate.setDate(scheduledDate.getDate() + 7); // 1 week after plan ends
+        
+        // Sample request payload
+        const sampleRequest = {
+            mobileNumber: '9' + Math.floor(Math.random() * 900000000 + 100000000), // Random 10-digit number starting with 9
+            currentProvider: ['airtel', 'jio', 'vi', 'bsnl'][Math.floor(Math.random() * 4)],
+            currentCircle: 'Delhi NCR',
+            newProvider: ['airtel', 'jio', 'vi', 'bsnl'][Math.floor(Math.random() * 4)],
+            planEndDate: planEndDate.toISOString().split('T')[0],
+            scheduledDate: scheduledDate.toISOString().split('T')[0],
+            timeSlot: ['morning', 'afternoon', 'evening'][Math.floor(Math.random() * 3)],
+            fullName: user.name || 'Test User',
+            email: user.email || 'test@example.com',
+            alternateNumber: '9' + Math.floor(Math.random() * 900000000 + 100000000)
+        };
+        
+        // Ensure current and new provider are different
+        while (sampleRequest.currentProvider === sampleRequest.newProvider) {
+            sampleRequest.newProvider = ['airtel', 'jio', 'vi', 'bsnl'][Math.floor(Math.random() * 4)];
+        }
+        
+        // Submit the request
+        const response = await window.PortMySimAPI.porting.submitPortingRequest(sampleRequest);
+        
+        if (!response.success) {
+            throw new Error(response.error || 'Failed to create sample porting request');
+        }
+        
+        showNotification('Sample porting request created successfully!', 'success');
+        
+        // Reload the porting requests
+        loadPortingRequests();
+    } catch (error) {
+        console.error('Error creating sample porting request:', error);
+        showNotification(error.message || 'Failed to create sample porting request', 'error');
+    }
 }

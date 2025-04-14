@@ -152,132 +152,146 @@
         
         <!-- India Map Container -->
         <div class="india-map-container content-transition" data-animation="fade-in" data-delay="0.5s">
-          <div class="map-title">Network Coverage Map</div>
-          <p class="map-description">See which network provides the best coverage in your area. Toggle between networks to compare.</p>
+          <div class="map-header">
+            <div class="map-title">Network Coverage Map</div>
+            <p class="map-description">See which network provides the best coverage in your area. Toggle between networks to compare.</p>
+          </div>
           
-          <div class="map-controls">
-            <div class="network-selector">
-              <label for="network-select">Select Network:</label>
-              <select id="network-select" class="map-select">
-                <option value="jio">Jio</option>
-                <option value="airtel">Airtel</option>
-                <option value="vi">Vi</option>
-                <option value="all">Compare All</option>
-              </select>
-            </div>
-            
-            <div class="coverage-type-options">
-              <label class="radio-label">
-                <input type="radio" name="coverage-type" value="4g" checked />
-                <span>4G</span>
-              </label>
-              <label class="radio-label">
-                <input type="radio" name="coverage-type" value="5g" />
-                <span>5G</span>
-              </label>
-            </div>
+          <div class="map-controls-container">
+            <div class="map-controls">
+              <div class="control-group">
+                <div class="network-selector">
+                  <label for="network-select">Select Network:</label>
+                  <select id="network-select" class="map-select">
+                    <option value="jio">Jio</option>
+                    <option value="airtel">Airtel</option>
+                    <option value="vi">Vi</option>
+                    <option value="all">Compare All</option>
+                  </select>
+                </div>
+                
+                <div class="coverage-type-options">
+                  <label class="radio-label">
+                    <input type="radio" name="coverage-type" value="4g" checked />
+                    <span>4G</span>
+                  </label>
+                  <label class="radio-label">
+                    <input type="radio" name="coverage-type" value="5g" />
+                    <span>5G</span>
+                  </label>
+                </div>
+              </div>
 
-            <div class="tower-visualization-controls">
-              <label class="toggle-label">
-                <input type="checkbox" id="show-towers" />
-                <span>Show Nearby Towers</span>
-              </label>
-              <div class="tower-radius-control">
-                <label for="tower-radius">Search Radius (km):</label>
-                <input type="range" id="tower-radius" min="1" max="10" value="5" />
-                <span id="radius-value">5 km</span>
+              <div class="control-group">
+                <div class="tower-visualization-controls">
+                  <label class="toggle-label">
+                    <input type="checkbox" id="show-towers" />
+                    <span>Show Nearby Towers</span>
+                  </label>
+                  <div class="tower-radius-control">
+                    <label for="tower-radius">Search Radius (km):</label>
+                    <input type="range" id="tower-radius" min="1" max="10" value="5" />
+                    <span id="radius-value">5 km</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="control-group">
+                <div class="coverage-opacity-control">
+                  <label for="coverage-opacity">Coverage Opacity:</label>
+                  <input type="range" id="coverage-opacity" class="opacity-slider" min="0" max="100" value="70">
+                  <span id="opacity-value">70%</span>
+                </div>
               </div>
             </div>
           </div>
           
-          <div id="india-map-svg-container" class="content-transition" data-animation="fade-in" data-delay="0.6s">
-            <!-- Interactive Map will be inserted here via JavaScript -->
-            <div id="coverage-map" class="coverage-map map-fixed-container"></div>
-            
-            <!-- Map Legend - nPerf style -->
-            <div class="map-legend" id="map-legend">
-              <h4>Network Coverage</h4>
-              <div class="legend-item">
-                <div class="legend-color" style="background-color: #E53935;"></div>
-                <span>Jio</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color" style="background-color: #1E88E5;"></div>
-                <span>Airtel</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color" style="background-color: #7B1FA2;"></div>
-                <span>Vi</span>
-              </div>
-              <h4 style="margin-top: 10px;">Signal Strength</h4>
-              <div class="legend-item">
-                <div class="legend-color signal-strength-high"></div>
-                <span>Strong (80-100%)</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color signal-strength-medium"></div>
-                <span>Medium (50-79%)</span>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color signal-strength-low"></div>
-                <span>Weak (0-49%)</span>
+          <div class="map-interface-container">
+            <div id="india-map-svg-container" class="content-transition" data-animation="fade-in" data-delay="0.6s">
+              <!-- Interactive Map will be inserted here via JavaScript -->
+              <div id="coverage-map" class="coverage-map map-fixed-container"></div>
+              
+              <!-- Map Legend - nPerf style -->
+              <div class="map-legend" id="map-legend">
+                <h4>Network Coverage</h4>
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: #E53935;"></div>
+                  <span>Jio</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: #1E88E5;"></div>
+                  <span>Airtel</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: #7B1FA2;"></div>
+                  <span>Vi</span>
+                </div>
+                <h4 style="margin-top: 10px;">Signal Strength</h4>
+                <div class="legend-item">
+                  <div class="legend-color signal-strength-high"></div>
+                  <span>Strong (80-100%)</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color signal-strength-medium"></div>
+                  <span>Medium (50-79%)</span>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color signal-strength-low"></div>
+                  <span>Weak (0-49%)</span>
+                </div>
               </div>
             </div>
             
-            <!-- Layer Opacity Control - nPerf style -->
-            <div class="layer-opacity-control" id="layer-opacity-control">
-              <h4>Coverage Opacity</h4>
-              <input type="range" id="coverage-opacity" class="opacity-slider" min="0" max="100" value="70">
-            </div>
-          </div>
-          
-          <div class="map-info-panel">
-            <div class="selected-state-info">
-              <h4>Select a location to see detailed coverage</h4>
-            </div>
+            <div class="info-panel-container">
+              <div class="map-info-panel">
+                <div class="selected-state-info">
+                  <h4>Select a location to see detailed coverage</h4>
+                </div>
 
-            <div class="tower-info-panel" id="tower-info-panel">
-              <h4>Nearby Network Towers</h4>
-              <div class="tower-count-list" id="tower-count-list">
-                <div class="tower-count-item">
-                  <img src="../images/jio.jpeg" alt="Jio" class="network-icon">
-                  <div class="count" id="jio-tower-count">0</div>
-                  <div class="label">Jio Towers</div>
+                <div class="tower-info-panel" id="tower-info-panel">
+                  <h4>Nearby Network Towers</h4>
+                  <div class="tower-count-list" id="tower-count-list">
+                    <div class="tower-count-item">
+                      <img src="../images/jio.jpeg" alt="Jio" class="network-icon">
+                      <div class="count" id="jio-tower-count">0</div>
+                      <div class="label">Jio Towers</div>
+                    </div>
+                    <div class="tower-count-item">
+                      <img src="../images/airtel.png" alt="Airtel" class="network-icon">
+                      <div class="count" id="airtel-tower-count">0</div>
+                      <div class="label">Airtel Towers</div>
+                    </div>
+                    <div class="tower-count-item">
+                      <img src="../images/vi.png" alt="Vi" class="network-icon">
+                      <div class="count" id="vi-tower-count">0</div>
+                      <div class="label">Vi Towers</div>
+                    </div>
+                  </div>
                 </div>
-                <div class="tower-count-item">
-                  <img src="../images/airtel.png" alt="Airtel" class="network-icon">
-                  <div class="count" id="airtel-tower-count">0</div>
-                  <div class="label">Airtel Towers</div>
+                
+                <div class="map-legend-secondary">
+                  <div class="legend-item">
+                    <div class="legend-color excellent-coverage"></div>
+                    <div class="legend-text">Excellent</div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color good-coverage"></div>
+                    <div class="legend-text">Good</div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color average-coverage"></div>
+                    <div class="legend-text">Average</div>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color limited-coverage"></div>
+                    <div class="legend-text">Limited</div>
+                  </div>
                 </div>
-                <div class="tower-count-item">
-                  <img src="../images/vi.png" alt="Vi" class="network-icon">
-                  <div class="count" id="vi-tower-count">0</div>
-                  <div class="label">Vi Towers</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="map-legend-secondary">
-              <div class="legend-item">
-                <div class="legend-color excellent-coverage"></div>
-                <div class="legend-text">Excellent</div>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color good-coverage"></div>
-                <div class="legend-text">Good</div>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color average-coverage"></div>
-                <div class="legend-text">Average</div>
-              </div>
-              <div class="legend-item">
-                <div class="legend-color limited-coverage"></div>
-                <div class="legend-text">Limited</div>
               </div>
             </div>
           </div>
           
-          <div class="map-tooltip">
+          <div class="map-tooltip" id="map-tooltip">
             <div class="tooltip-header">
               <h5>Coverage Details</h5>
             </div>
@@ -302,90 +316,6 @@
           </div>
         </div>
 
-        <!-- Networks Comparison Cards -->
-        <div class="networks-grid content-transition" data-animation="fade-in" data-delay="0.7s">
-          <!-- Jio Card -->
-          <div class="network-card animate-on-scroll" data-operator="jio">
-            <div class="network-logo">
-              <img src="../images/jio.jpeg" alt="Jio" />
-            </div>
-            <h3 class="network-name">Jio</h3>
-            <div class="network-type">5G Ready</div>
-            <div class="network-rating">
-              <div class="rating-stars">
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star-half-alt"></i>
-              </div>
-              <div class="rating-value">4.5/5</div>
-            </div>
-            <ul class="network-features">
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Widest 5G coverage</li>
-              <li class="feature-item"><i class="fas fa-check-circle"></i> High speeds in urban areas</li>
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Good value plans</li>
-            </ul>
-            <div class="network-actions">
-              <a href="#" class="view-details-btn">View Coverage Details <i class="fas fa-arrow-right"></i></a>
-            </div>
-          </div>
-          
-          <!-- Airtel Card -->
-          <div class="network-card animate-on-scroll delay-200" data-operator="airtel">
-            <div class="network-logo">
-              <img src="../images/airtel.png" alt="Airtel" />
-            </div>
-            <h3 class="network-name">Airtel</h3>
-            <div class="network-type">5G Ready</div>
-            <div class="network-rating">
-              <div class="rating-stars">
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-              </div>
-              <div class="rating-value">4.8/5</div>
-            </div>
-            <ul class="network-features">
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Best call quality</li>
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Reliable connectivity</li>
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Excellent rural coverage</li>
-            </ul>
-            <div class="network-actions">
-              <a href="#" class="view-details-btn">View Coverage Details <i class="fas fa-arrow-right"></i></a>
-            </div>
-          </div>
-          
-          <!-- Vi Card -->
-          <div class="network-card animate-on-scroll delay-400" data-operator="vi">
-            <div class="network-logo">
-              <img src="../images/vi.png" alt="Vi" />
-            </div>
-            <h3 class="network-name">Vi</h3>
-            <div class="network-type">4G/5G</div>
-            <div class="network-rating">
-              <div class="rating-stars">
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="fas fa-star"></i>
-                <i class="far fa-star"></i>
-              </div>
-              <div class="rating-value">4.0/5</div>
-            </div>
-            <ul class="network-features">
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Great entertainment bundles</li>
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Weekend data benefits</li>
-              <li class="feature-item"><i class="fas fa-check-circle"></i> Affordable pricing</li>
-            </ul>
-            <div class="network-actions">
-              <a href="#" class="view-details-btn">View Coverage Details <i class="fas fa-arrow-right"></i></a>
-            </div>
-          </div>
-        </div>
-        
         <!-- Comparison Table Container -->
         <div class="comparison-table-container content-transition" data-animation="fade-in" data-delay="0.8s">
           <h3>Detailed Network Comparison</h3>
@@ -637,7 +567,8 @@
     <script src="../JS/loader.js"></script>
     <script src="../JS/transitions.js"></script>
     <script src="../JS/common.js"></script>
-    <script src="../JS/api.js"></script>
+    <script src="../JS/api.js" type="module"></script>
+    <script src="../JS/auth.js" type="module"></script>
     <script src="../JS/compare.js"></script>
     <!-- Map initialization script -->
     <script>
@@ -726,35 +657,6 @@
         // Logic to show/hide layers based on selection will be implemented in compare.js
         // This is just a placeholder function that will be overridden
       };
-    </script>
-    
-    <!-- Fix for network cards visibility issue -->
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // Ensure networks-grid and network cards are visible
-        setTimeout(function() {
-          const networksGrid = document.querySelector('.networks-grid');
-          if (networksGrid) {
-            networksGrid.style.opacity = '1';
-            networksGrid.style.visibility = 'visible';
-            networksGrid.style.transform = 'translateY(0)';
-            
-            // Make all network cards visible
-            const cards = networksGrid.querySelectorAll('.network-card');
-            cards.forEach(function(card) {
-              card.style.opacity = '1';
-              card.style.visibility = 'visible';
-              card.style.transform = 'translateY(0)';
-              card.classList.add('in-view');
-            });
-            
-            // Set up event listeners for the view details buttons
-            if (typeof setupViewDetailsButtons === 'function') {
-              setupViewDetailsButtons();
-            }
-          }
-        }, 1000);
-      });
     </script>
   </body>
 </html> 

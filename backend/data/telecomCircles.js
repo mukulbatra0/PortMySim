@@ -82,8 +82,8 @@ const telecomCircles = [
     id: 'delhi',
     name: 'Delhi NCR',
     code: 'DL',
-    regions: ['Delhi', 'Parts of Uttar Pradesh', 'Parts of Haryana'],
-    major_cities: ['New Delhi', 'Gurgaon', 'Noida', 'Faridabad'],
+    regions: ['Delhi', 'Parts of Uttar Pradesh', 'Parts of Haryana', 'Haryana (Gurgaon, Faridabad)'],
+    major_cities: ['New Delhi', 'Gurgaon', 'Noida', 'Faridabad', 'Bhiwani'],
     operators: ['airtel', 'jio', 'vi', 'bsnl'],
     network_quality: {
       airtel: 4.7,

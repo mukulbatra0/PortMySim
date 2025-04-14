@@ -34,6 +34,9 @@ import mobileSmsRoutes from './routes/mobileSms.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/users.routes.js';
 import smsFailuresRoutes from './routes/smsFailures.routes.js';
+import PortingRules from './models/PortingRules.model.js';
+import portingRulesData from './data/portingRules.js';
+import mongoose from 'mongoose';
 
 // Get the directory name using ES modules approach
 const __filename = fileURLToPath(import.meta.url);
@@ -84,6 +87,25 @@ app.use('/api/porting', portingRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/mobile-sms', mobileSmsRoutes);
 app.use('/api/sms-failures', smsFailuresRoutes);
+
+// Health check endpoint
+app.get('/api/health/check', (req, res) => {
+  const dbConnected = mongoose.connection.readyState === 1;
+  
+  console.log(`[API] Health check: Database ${dbConnected ? 'connected' : 'disconnected'}`);
+  
+  res.json({
+    success: true,
+    status: 'ok',
+    message: 'API server is running',
+    database: {
+      connected: dbConnected,
+      host: mongoose.connection.host || 'not connected',
+      state: mongoose.STATES[mongoose.connection.readyState]
+    },
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Mock API endpoint for telecom providers
 app.get('/api/porting/providers', (req, res) => {
@@ -155,6 +177,38 @@ app.get('/api/porting/circles', (req, res) => {
   });
 });
 
+// Development-only route to reset and reinitialize porting rules
+// This is useful for troubleshooting when we've changed the format of circle IDs
+app.get('/api/admin/reset-porting-rules', async (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      success: false,
+      message: 'This endpoint is not available in production'
+    });
+  }
+  
+  try {
+    // Delete all existing rules
+    console.log('Removing all existing porting rules');
+    await PortingRules.deleteMany({});
+    
+    // Insert seed data
+    console.log('Reinitializing porting rules with seed data');
+    await PortingRules.insertMany(portingRulesData);
+    
+    return res.json({
+      success: true,
+      message: `Reinitialized database with ${portingRulesData.length} porting rules`
+    });
+  } catch (error) {
+    console.error('Error resetting porting rules:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Error resetting porting rules'
+    });
+  }
+});
+
 // Add a fallback route for any other API routes
 app.get('/api/*', (req, res) => {
   console.log(`[API] Fallback for: ${req.path}`);
@@ -183,6 +237,30 @@ app.use((err, req, res, next) => {
         error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
 });
+
+// Initialize database with seed data for porting rules
+async function initializePortingRules() {
+  try {
+    // Check if porting rules exist
+    const rulesCount = await PortingRules.countDocuments();
+    
+    if (rulesCount === 0) {
+      console.log('No porting rules found, initializing with seed data...');
+      
+      // Insert seed data
+      await PortingRules.insertMany(portingRulesData);
+      
+      console.log(`Initialized database with ${portingRulesData.length} porting rules`);
+    } else {
+      console.log(`Database already contains ${rulesCount} porting rules`);
+    }
+  } catch (error) {
+    console.error('Error initializing porting rules:', error);
+  }
+}
+
+// Call the function to initialize porting rules
+await initializePortingRules();
 
 // Start the server
 app.listen(PORT, () => {

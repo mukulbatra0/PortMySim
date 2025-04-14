@@ -1,0 +1,121 @@
+/* Notification styling */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: none;
+  max-width: 350px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.notification.info {
+  background-color: #2196F3;
+}
+
+.notification.success {
+  background-color: #4CAF50;
+}
+
+.notification.warning {
+  background-color: #FF9800;
+}
+
+.notification.error {
+  background-color: #F44336;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Loading indicator */
+#loading-indicator {
+  display: none;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top: 4px solid #3498db;
+  animation: spin 1s linear infinite;
+  z-index: 1000;
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Tower icon styling */
+.tower-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.tower {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.tower::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.tower.airtel {
+  background-color: #ff0000;
+}
+
+.tower.jio {
+  background-color: #0066cc;
+}
+
+.tower.vi {
+  background-color: #ff9900;
+}
+
+.tower.bsnl {
+  background-color: #00cc66;
+}
+
+.tower.other {
+  background-color: #9900cc;
+}
+
+/* Tower popup styling */
+.tower-popup {
+  padding: 5px;
+}
+
+.tower-popup h3 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.tower-popup p {
+  margin: 4px 0;
+  font-size: 13px;
+} 

@@ -23,7 +23,73 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Set up event listeners for the view details buttons
   setupViewDetailsButtons();
+  
+  // Check authentication status and update UI
+  updateAuthUI();
 });
+
+// Update authentication UI based on login status
+function updateAuthUI() {
+  // If API client is loaded
+  if (window.PortMySimAPI) {
+    // Check if user is authenticated
+    if (window.PortMySimAPI.isAuthenticated()) {
+      const user = window.PortMySimAPI.getUser();
+      
+      // Update auth buttons in nav if they exist
+      const authBtns = document.querySelector('.auth-btns');
+      if (authBtns) {
+        const firstLetter = user.name.charAt(0).toUpperCase();
+        authBtns.innerHTML = `
+          <div class="user-profile-dropdown">
+            <div class="user-profile-circle" title="${user.name}">
+              ${firstLetter}
+            </div>
+            <div class="dropdown-menu">
+              <span class="user-greeting">Hello, ${user.name.split(' ')[0]}</span>
+              <a href="/HTML/dashboard.html" class="dropdown-item">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+              </a>
+              <a href="/HTML/schedule-porting.html" class="dropdown-item">
+                <i class="fas fa-calendar-alt"></i> Schedule Porting
+              </a>
+              <button id="logoutBtn" class="dropdown-item">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </button>
+            </div>
+          </div>
+        `;
+        
+        // Add event listener for logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function() {
+            window.PortMySimAPI.clearAuth();
+            window.location.reload();
+          });
+        }
+        
+        // Add event listener for dropdown toggle
+        const profileCircle = document.querySelector('.user-profile-circle');
+        if (profileCircle) {
+          profileCircle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.querySelector('.dropdown-menu');
+            dropdown.classList.toggle('show');
+          });
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+          const dropdown = document.querySelector('.dropdown-menu');
+          if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+          }
+        });
+      }
+    }
+  }
+}
 
 // Initialize all components of the compare page
 async function initComparePage() {
@@ -1363,22 +1429,7 @@ function highlightBestNetwork(operator) {
 
   console.log('Highlighting best network:', operator);
 
-  // Highlight the network card
-  const networkCards = document.querySelectorAll('.network-card');
-  if (!networkCards || networkCards.length === 0) {
-    console.error('No network-card elements found in the DOM');
-  } else {
-    networkCards.forEach(card => {
-      if (card.getAttribute('data-operator') === operator) {
-        card.classList.add('best-network');
-      } else {
-        card.classList.remove('best-network');
-      }
-    });
-    
-    // Set up event listeners for the view details buttons again
-    setupViewDetailsButtons();
-  }
+  // Network cards have been removed, so skip this section
   
   // Update comparison table highlights
   const comparisonTable = document.querySelector('.comparison-table table');
@@ -1581,72 +1632,235 @@ async function reverseGeocode(latitude, longitude) {
   }
 }
 
-// Visualize network towers near the selected location
-function visualizeTowers() {
-  // First remove existing tower layers
+// Function to visualize towers on the map
+async function visualizeTowers() {
+  // Clear existing tower layers
   removeTowerLayers();
   
-  // If we don't have location information, return
-  if (!map || (!currentLocation && !userCoordinates)) return;
+  // Create a new combined tower layer for all towers
+  let towerLayer = L.layerGroup().addTo(map);
   
+  // Get center point and radius
   let centerLat, centerLng;
   
-  if (userCoordinates) {
-    // Use exact user coordinates if available
-    centerLat = userCoordinates.lat;
-    centerLng = userCoordinates.lng;
+  // Sample city data - use the same data format as in other functions
+  const cities = [
+    { name: 'Delhi', coords: [28.7041, 77.1025] },
+    { name: 'Mumbai', coords: [19.0760, 72.8777] },
+    { name: 'Chennai', coords: [13.0827, 80.2707] },
+    { name: 'Kolkata', coords: [22.5726, 88.3639] },
+    { name: 'Bangalore', coords: [12.9716, 77.5946] },
+    { name: 'Hyderabad', coords: [17.3850, 78.4867] },
+    { name: 'Pune', coords: [18.5204, 73.8567] },
+    { name: 'Ahmedabad', coords: [23.0225, 72.5714] },
+    { name: 'Jaipur', coords: [26.9124, 75.7873] },
+    { name: 'Lucknow', coords: [26.8467, 80.9462] }
+  ];
+  
+  // Check if a user input location is selected
+  const locationInputElement = document.getElementById('location-input');
+  const locationInput = locationInputElement ? locationInputElement.value.trim() : '';
+  
+  // Find matching city
+  const matchedCity = cities.find(city => city.name === locationInput);
+  
+  if (matchedCity) {
+    // Use the coordinates from the matched city
+    centerLat = matchedCity.coords[0];
+    centerLng = matchedCity.coords[1];
   } else {
-    // Otherwise use city coordinates from our predefined list
-    const cities = [
-      { name: 'Delhi', coords: [28.7041, 77.1025] },
-      { name: 'Mumbai', coords: [19.0760, 72.8777] },
-      { name: 'Chennai', coords: [13.0827, 80.2707] },
-      { name: 'Kolkata', coords: [22.5726, 88.3639] },
-      { name: 'Bangalore', coords: [12.9716, 77.5946] },
-      { name: 'Hyderabad', coords: [17.3850, 78.4867] },
-      { name: 'Pune', coords: [18.5204, 73.8567] },
-      { name: 'Ahmedabad', coords: [23.0225, 72.5714] },
-      { name: 'Jaipur', coords: [26.9124, 75.7873] },
-      { name: 'Lucknow', coords: [26.8467, 80.9462] }
-    ];
-    
-    const city = cities.find(c => c.name.toLowerCase().includes(currentLocation.toLowerCase()));
-    
-    if (!city) return;
-    
-    centerLat = city.coords[0];
-    centerLng = city.coords[1];
+    // Use map center if no valid location is entered
+    const center = map.getCenter();
+    centerLat = center.lat;
+    centerLng = center.lng;
   }
   
-  const radiusElem = document.getElementById('tower-radius');
-  const radius = radiusElem ? parseFloat(radiusElem.value) : 5;
+  // Get radius from slider
+  const radiusSlider = document.getElementById('radius-slider');
+  const radius = radiusSlider ? radiusSlider.value : 5; // Default to 5 if element not found
   
-  // Try to fetch tower data from the API
-  fetchTowerData(centerLat, centerLng, radius)
-    .then(towerData => {
-      displayTowers(towerData);
-    })
-    .catch(error => {
-      console.error('Error fetching tower data:', error);
-      generateFallbackTowerData(centerLat, centerLng, radius);
-    });
-}
-
-// Fetch tower data from the API
-async function fetchTowerData(lat, lng, radius) {
+  // Show loading indicator
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const towerCount = document.getElementById('tower-count');
+  
+  if (loadingIndicator) loadingIndicator.style.display = 'block';
+  if (towerCount) towerCount.textContent = 'Loading...';
+  
   try {
-    const url = `${API_BASE_URL}/network-coverage/tower-data?lat=${lat}&lng=${lng}&radius=${radius}`;
-    const response = await fetch(url);
+    // Try to fetch data from API
+    let towerData = await fetchTowerData(centerLat, centerLng, radius);
     
-    if (!response.ok) {
-      throw new Error(`Error fetching tower data: ${response.statusText}`);
+    // If API failed or returned null, use fallback data
+    if (!towerData) {
+      console.log('Using fallback tower data generator');
+      towerData = generateFallbackTowerData(centerLat, centerLng, radius);
+      // Show warning to user
+      showNotification('API unavailable - using simulated tower data', 'warning', 5000);
     }
     
-    return await response.json();
+    // Create tower markers
+    towerData.forEach(tower => {
+      // Get lat/lng values, checking both possible property names
+      const lat = tower.lat || tower.latitude;
+      const lng = tower.lng || tower.longitude;
+      
+      // Skip creating marker if coordinates are missing or invalid
+      if (!lat || !lng) {
+        console.warn('Skipping tower with invalid coordinates:', tower);
+        return;
+      }
+      
+      const towerIcon = L.divIcon({
+        className: 'tower-icon',
+        html: `<div class="tower ${tower.operator.toLowerCase()}"></div>`,
+        iconSize: [20, 20]
+      });
+      
+      const marker = L.marker([lat, lng], { icon: towerIcon }).addTo(towerLayer);
+      
+      // Create popup content
+      const popupContent = `
+        <div class="tower-popup">
+          <h3>${tower.operator} Tower</h3>
+          <p><strong>Type:</strong> ${tower.type || tower.towerType || 'Unknown'}</p>
+          <p><strong>Technology:</strong> ${(tower.technology || tower.technologySupported || ['Unknown']).join(', ')}</p>
+          <p><strong>Signal Strength:</strong> ${tower.signalStrength || 'N/A'} dBm</p>
+          <p><strong>Frequency:</strong> ${tower.frequency || 'N/A'} MHz</p>
+        </div>
+      `;
+      
+      marker.bindPopup(popupContent);
+    });
+    
+    // Update tower count
+    if (towerCount) towerCount.textContent = `${towerData.length} towers found`;
+    
   } catch (error) {
-    console.error('API Error:', error);
-    throw error;
+    console.error('Error in visualizeTowers:', error);
+    if (towerCount) towerCount.textContent = 'Error loading tower data';
+    showNotification('Error loading tower data. Please try again.', 'error', 5000);
+  } finally {
+    // Hide loading indicator
+    if (loadingIndicator) loadingIndicator.style.display = 'none';
   }
+}
+
+// Helper function to show notifications
+function showNotification(message, type = 'info', duration = 3000) {
+  const notification = document.getElementById('notification') || createNotificationElement();
+  notification.textContent = message;
+  notification.className = `notification ${type}`;
+  notification.style.display = 'block';
+  
+  setTimeout(() => {
+    notification.style.display = 'none';
+  }, duration);
+}
+
+// Create notification element if it doesn't exist
+function createNotificationElement() {
+  const notification = document.createElement('div');
+  notification.id = 'notification';
+  notification.className = 'notification';
+  document.body.appendChild(notification);
+  return notification;
+}
+
+// Function to fetch tower data from the API
+async function fetchTowerData(lat, lng, radius) {
+  // Check if API is available
+  if (!API_BASE_URL) {
+    console.log('API is not available. Using fallback data.');
+    return null;
+  }
+  
+  // Validate input parameters
+  if (!lat || !lng || isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+    console.warn('Invalid coordinates for tower data request', { lat, lng });
+    return null;
+  }
+  
+  // Ensure radius is a valid number
+  const validRadius = Number(radius) || 5;
+
+  try {
+    // Format parameters to ensure they are valid numbers with correct precision
+    const formattedLat = parseFloat(lat).toFixed(6);
+    const formattedLng = parseFloat(lng).toFixed(6);
+    
+    const url = `${API_BASE_URL}/network-coverage/tower-data?lat=${formattedLat}&lng=${formattedLng}&radius=${validRadius}`;
+    console.log(`Fetching tower data from: ${url}`);
+    
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    try {
+      const response = await fetch(url, { 
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      // Clear the timeout
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        // Log more details about the error
+        console.warn(`API response error: ${response.status} ${response.statusText}`);
+        throw new Error(`Error fetching tower data: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      // Check if this was an abort error (timeout)
+      if (error.name === 'AbortError') {
+        console.log('Fetch request timed out after 5 seconds');
+      } else {
+        console.error('API Error:', error);
+      }
+      // Always use fallback data instead of failing
+      return null;
+    }
+  } catch (error) {
+    console.error('Error fetching tower data:', error);
+    return null;
+  }
+}
+
+// Function to generate fallback tower data
+function generateFallbackTowerData(lat, lng, radius) {
+  const towerCount = Math.floor(Math.random() * 15) + 10; // 10-25 towers
+  const towers = [];
+  
+  for (let i = 0; i < towerCount; i++) {
+    // Generate random positions within the radius
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * radius * 0.8; // within 80% of radius
+    
+    // Convert polar to cartesian coordinates
+    // 0.009 = roughly 1km in latitude/longitude
+    const offsetLat = (distance * Math.cos(angle) * 0.009);
+    const offsetLng = (distance * Math.sin(angle) * 0.009);
+    
+    const tower = {
+      id: `fallback-${i}`,
+      latitude: lat + offsetLat,
+      longitude: lng + offsetLng,
+      operator: ["Airtel", "Jio", "Vodafone", "BSNL"][Math.floor(Math.random() * 4)],
+      towerType: ["Roof Top", "Ground Based", "COW"][Math.floor(Math.random() * 3)],
+      technologySupported: ["4G", "5G", "3G/4G"][Math.floor(Math.random() * 3)],
+      signalStrength: Math.floor(Math.random() * 40) + 60, // 60-100
+      frequency: [700, 800, 900, 1800, 2100, 2300, 2500][Math.floor(Math.random() * 7)]
+    };
+    
+    towers.push(tower);
+  }
+  
+  return towers;
 }
 
 // Display towers on the map using the provided data
@@ -1739,128 +1953,6 @@ function displayTowers(data) {
             console.error('Error creating heatmap:', e);
           }
         }
-      }
-    }
-    
-    // Add tower layer to map and store reference
-    towerLayer.addTo(map);
-    towerLayers[network] = towerLayer;
-  });
-  
-  // Update tower count display
-  updateTowerCountDisplay(towerCounts);
-  
-  // Optimize canvas elements for heat maps
-  optimizeHeatmapCanvas();
-
-  // After displaying towers, manage layers to ensure proper visibility
-  setTimeout(manageLayers, 200);
-}
-
-// Generate fallback tower data when API is not available
-function generateFallbackTowerData(centerLat, centerLng, radius) {
-  if (!map) return;
-  
-  const networks = ['jio', 'airtel', 'vi'];
-  const towerCounts = { jio: 0, airtel: 0, vi: 0 };
-  
-  // Updated colors that match the coverage colors
-  const networkColors = {
-    jio: '#E53935',    // Bright red for Jio
-    airtel: '#1E88E5', // Blue for Airtel
-    vi: '#7B1FA2',     // Purple for Vi
-  };
-  
-  networks.forEach(network => {
-    // Create a layer for this network's towers
-    const towerLayer = L.layerGroup();
-    
-    // Get network-specific details
-    const color = networkColors[network];
-    let iconClass, towerDensity;
-    if (network === 'jio') {
-      iconClass = 'jio-tower';
-      towerDensity = 1.2; // Higher density factor
-    } else if (network === 'airtel') {
-      iconClass = 'airtel-tower';
-      towerDensity = 1.0;
-    } else { // Vi
-      iconClass = 'vi-tower';
-      towerDensity = 0.8; // Lower density factor
-    }
-    
-    // Generate random number of towers based on network density
-    const baseTowerCount = Math.floor(15 * towerDensity * (radius / 5));
-    const towerCount = baseTowerCount + Math.floor(Math.random() * 5);
-    towerCounts[network] = towerCount;
-    
-    // Generate tower positions
-    const towers = [];
-    const heatmapPoints = [];
-    
-    for (let i = 0; i < towerCount; i++) {
-      // Random position within radius
-      const angle = Math.random() * Math.PI * 2;
-      const distance = Math.random() * radius * 1000; // Convert km to meters
-      
-      // Calculate lat/lng offset (simplified)
-      const latOffset = (distance / 111000) * Math.cos(angle);
-      const lngOffset = (distance / (111000 * Math.cos(centerLat * (Math.PI / 180)))) * Math.sin(angle);
-      
-      const towerLat = centerLat + latOffset;
-      const towerLng = centerLng + lngOffset;
-      
-      // Generate random signal strength
-      const signalStrength = 80 + Math.floor(Math.random() * 20);
-      
-      // Create tower marker using circle marker for nperf-like visualization
-      const towerMarker = L.circleMarker([towerLat, towerLng], {
-        radius: 4,
-        fillColor: color,
-        color: '#ffffff',
-        weight: 1,
-        opacity: 1,
-        fillOpacity: 0.9
-      });
-      
-      // Add popup with tower info
-      towerMarker.bindPopup(`
-        <div class="tower-popup">
-          <h4>${network.toUpperCase()} Tower</h4>
-          <p>Location: ${towerLat.toFixed(4)}, ${towerLng.toFixed(4)}</p>
-          <p>Signal Strength: ${signalStrength}%</p>
-          <p>Frequency: ${network === 'jio' ? '850MHz/1800MHz' : 
-                        network === 'airtel' ? '900MHz/1800MHz' : '900MHz/2100MHz'}</p>
-        </div>
-      `);
-      
-      // Add to layer group
-      towerLayer.addLayer(towerMarker);
-      
-      // Collect data for heatmap
-      heatmapPoints.push([towerLat, towerLng, signalStrength / 250]); // Reduced intensity for better visualization
-    }
-    
-    // Add heatmap layer if leaflet.heat is available
-    if (heatmapPoints.length > 0 && L.heatLayer) {
-      try {
-        // More transparent gradient for better layering
-        const heatmap = L.heatLayer(heatmapPoints, {
-          radius: 25,
-          blur: 15,
-          maxZoom: 10,
-          minOpacity: 0.3,
-          maxOpacity: 0.6,
-          gradient: {
-            0.2: color + '20', 
-            0.5: color + '50', 
-            0.8: color + '80',
-            1.0: color
-          }
-        });
-        towerLayer.addLayer(heatmap);
-      } catch (e) {
-        console.error('Error creating heatmap:', e);
       }
     }
     
@@ -2631,49 +2723,7 @@ function removeNetworkFromComparison(operator) {
 // Function to set up event listeners for view details buttons
 function setupViewDetailsButtons() {
   console.log('Setting up view details button event listeners');
-  document.querySelectorAll('.view-details-btn').forEach(btn => {
-    // Remove any existing event listeners to prevent duplicates
-    const newBtn = btn.cloneNode(true);
-    btn.parentNode.replaceChild(newBtn, btn);
-    
-    newBtn.addEventListener('click', function(e) {
-      e.preventDefault();
-      console.log('View details button clicked');
-      
-      const networkCard = this.closest('.network-card');
-      const operator = networkCard.getAttribute('data-operator');
-      console.log('Operator:', operator);
-      
-      // Select this network in the dropdown
-      const networkSelect = document.getElementById('network-select');
-      if (networkSelect) {
-        networkSelect.value = operator;
-      }
-      
-      // Update map layers
-      if (window.updateMapLayers) {
-        window.updateMapLayers();
-      }
-      
-      // Get the current location from the input or use a default
-      const locationInput = document.getElementById('location-search');
-      const location = locationInput && locationInput.value.trim() 
-        ? locationInput.value.trim() 
-        : 'My Current Location';
-      
-      // Compare networks with this operator highlighted
-      compareNetworksAction(location).then(() => {
-        // After comparison is done, highlight this operator
-        highlightBestNetwork(operator);
-        
-        // Scroll to map
-        const mapContainer = document.getElementById('india-map-svg-container');
-        if (mapContainer) {
-          mapContainer.scrollIntoView({
-            behavior: 'smooth'
-          });
-        }
-      });
-    });
-  });
+  
+  // Network cards have been removed, so this function is now empty
+  // Keeping the function for compatibility with any existing code
 }
