@@ -1723,7 +1723,7 @@ async function visualizeTowers() {
         <div class="tower-popup">
           <h3>${tower.operator} Tower</h3>
           <p><strong>Type:</strong> ${tower.type || tower.towerType || 'Unknown'}</p>
-          <p><strong>Technology:</strong> ${(tower.technology || tower.technologySupported || ['Unknown']).join(', ')}</p>
+          <p><strong>Technology:</strong> ${Array.isArray(tower.technology || tower.technologySupported) ? (tower.technology || tower.technologySupported).join(', ') : (tower.technology || tower.technologySupported || 'Unknown')}</p>
           <p><strong>Signal Strength:</strong> ${tower.signalStrength || 'N/A'} dBm</p>
           <p><strong>Frequency:</strong> ${tower.frequency || 'N/A'} MHz</p>
         </div>
@@ -1852,7 +1852,7 @@ function generateFallbackTowerData(lat, lng, radius) {
       longitude: lng + offsetLng,
       operator: ["Airtel", "Jio", "Vodafone", "BSNL"][Math.floor(Math.random() * 4)],
       towerType: ["Roof Top", "Ground Based", "COW"][Math.floor(Math.random() * 3)],
-      technologySupported: ["4G", "5G", "3G/4G"][Math.floor(Math.random() * 3)],
+      technologySupported: [["4G"], ["5G"], ["3G", "4G"]][Math.floor(Math.random() * 3)],
       signalStrength: Math.floor(Math.random() * 40) + 60, // 60-100
       frequency: [700, 800, 900, 1800, 2100, 2300, 2500][Math.floor(Math.random() * 7)]
     };

@@ -1123,13 +1123,13 @@ function updateComparisonTable(data) {
             border-collapse: separate;
             border-spacing: 0;
             margin-bottom: 0;
-            background: white;
+            background: var(--bg-dark-2);
             border-radius: 10px;
             overflow: hidden;
         }
         
         .comparison-table thead {
-            background: #3498db;
+            background: var(--primary-color);
             color: white;
         }
         
@@ -1147,7 +1147,7 @@ function updateComparisonTable(data) {
         
         .comparison-table th:first-child {
             text-align: left;
-            background: #3498db;
+            background: var(--primary-color);
             color: white;
             border-radius: 10px 0 0 0;
         }
@@ -1155,7 +1155,7 @@ function updateComparisonTable(data) {
         .comparison-table td {
             padding: 16px 15px;
             text-align: center;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--bg-dark-3);
             transition: background-color 0.3s ease;
             font-size: 15px;
         }
@@ -1166,15 +1166,15 @@ function updateComparisonTable(data) {
         
         .comparison-table td:first-child {
             text-align: left;
-            background-color: #f8f9fa;
+            background-color: var(--bg-dark-3);
             font-weight: 600;
-            color: #333;
+            color: var(--text-light);
             position: sticky;
             left: 0;
         }
         
         .comparison-table tr:hover td:not(:first-child) {
-            background-color: #f5f9ff;
+            background-color: rgba(var(--primary-rgb), 0.1);
         }
         
         /* Plan Header Styling */
@@ -1225,25 +1225,25 @@ function updateComparisonTable(data) {
         .feature-value {
             font-weight: 500;
             transition: all 0.3s ease;
-            color: #444;
+            color: var(--text-light);
         }
         
         .feature-value.best {
-            background-color: rgba(52, 152, 219, 0.1);
+            background-color: rgba(var(--primary-rgb), 0.1);
             font-weight: 700;
-            color: #3498db;
-            border-left: 3px solid #3498db;
-            border-right: 3px solid #3498db;
+            color: var(--primary-color);
+            border-left: 3px solid var(--primary-color);
+            border-right: 3px solid var(--primary-color);
             animation: pulseFade 2s infinite;
         }
         
         .feature-value i.fas.fa-check {
-            color: #2ecc71;
+            color: var(--success-color);
             font-size: 18px;
         }
         
         .feature-value i.fas.fa-times {
-            color: #e74c3c;
+            color: var(--error);
             font-size: 18px;
         }
         
@@ -1262,7 +1262,7 @@ function updateComparisonTable(data) {
             width: 30%;
             margin-bottom: 30px;
             padding: 20px;
-            background-color: white;
+            background-color: var(--bg-dark-2);
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -1277,12 +1277,12 @@ function updateComparisonTable(data) {
             margin-bottom: 15px;
             font-weight: 600;
             font-size: 16px;
-            color: #333;
+            color: var(--text-light);
         }
         
         .meter-container {
             height: 20px;
-            background-color: #f1f1f1;
+            background-color: var(--bg-dark-3);
             border-radius: 10px;
             position: relative;
             overflow: hidden;
@@ -1297,19 +1297,19 @@ function updateComparisonTable(data) {
         
         /* Operator-specific colors */
         .value-meter.jio .meter-fill {
-            background: #0f3cc9;
+            background: var(--primary-color);
         }
         
         .value-meter.airtel .meter-fill {
-            background: #e40000;
+            background: var(--accent-color);
         }
         
         .value-meter.vi .meter-fill {
-            background: #ED1C24;
+            background: var(--primary-dark);
         }
         
         .value-meter.bsnl .meter-fill {
-            background: #1d965c;
+            background: var(--success-color);
         }
         
         .meter-value {
@@ -1318,18 +1318,18 @@ function updateComparisonTable(data) {
             right: 10px;
             font-size: 13px;
             line-height: 20px;
-            color: #333;
+            color: var(--text-light);
             font-weight: 700;
-            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.8);
         }
         
         /* Summary Container Styling */
         .text-summary-container {
             margin: 30px 0;
             padding: 22px;
-            background-color: white;
+            background-color: var(--bg-dark-2);
             border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            box-shadow: var(--shadow-md);
             animation: fadeInUp 1.2s ease-out forwards;
             animation-delay: 0.5s;
             opacity: 0;
@@ -1338,7 +1338,7 @@ function updateComparisonTable(data) {
         .comparison-summary {
             line-height: 1.7;
             font-size: 15px;
-            color: #444;
+            color: var(--text-light-muted);
         }
         
         /* Animations */
@@ -1365,9 +1365,9 @@ function updateComparisonTable(data) {
         }
         
         @keyframes pulseFade {
-            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.4); }
-            70% { box-shadow: 0 0 0 8px rgba(52, 152, 219, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(var(--primary-rgb), 0); }
+            100% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0); }
         }
         
         /* Responsive styles */
@@ -1422,20 +1422,161 @@ function updateComparisonTable(data) {
             row.style.opacity = '0';
         });
         
-        // Animate the best values with a delay
+        // Animate the best values with a staggered delay and pulse effect
         const bestValues = tbody.querySelectorAll('.feature-value.best');
         bestValues.forEach((cell, index) => {
-            cell.style.animationDelay = `${1 + (index * 0.1)}s`;
+            cell.style.animation = `fadeInUp 0.5s ease-out forwards, pulse-glow 2s infinite ease-in-out 1s`;
+            cell.style.animationDelay = `${0.8 + (index * 0.1)}s`;
         });
         
-        // Apply meter animations with delay
-        metersContainer.querySelectorAll('.value-meter').forEach((meter, index) => {
-            meter.style.animationDelay = `${0.7 + (index * 0.2)}s`;
+        // Apply animated entrance to value meters with staggered delay
+        const meters = metersContainer.querySelectorAll('.value-meter');
+        meters.forEach((meter, index) => {
+            meter.style.animation = `fadeInUp 0.7s ease-out forwards`;
+            meter.style.animationDelay = `${1.2 + (index * 0.2)}s`;
+            meter.style.opacity = '0';
+            
+            // Animate the meter fill after a delay
+            const meterFill = meter.querySelector('.meter-fill');
+            if (meterFill) {
+                setTimeout(() => {
+                    meterFill.style.transition = 'width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                }, 1500 + (index * 200));
+            }
+            
+            // Animate the operator icon with a bounce effect
+            const iconElement = meter.querySelector('.operator-icon-small');
+            if (iconElement) {
+                iconElement.style.animation = `bounceIn 0.6s ease-out forwards`;
+                iconElement.style.animationDelay = `${1.5 + (index * 0.2)}s`;
+                iconElement.style.opacity = '0';
+            }
+        });
+        
+        // Add smooth reveal animation to the text summary container
+        const summaryContainer = document.querySelector('.text-summary-container');
+        if (summaryContainer) {
+            summaryContainer.style.animation = `fadeInUp 0.8s ease-out forwards`;
+            summaryContainer.style.animationDelay = `0.5s`;
+            summaryContainer.style.opacity = '0';
+            
+            // Add typing animation effect to the summary text
+            const summaryText = summaryContainer.querySelector('.comparison-summary');
+            if (summaryText && summaryText.textContent.trim().length > 0) {
+                summaryText.style.animation = `fadeIn 1s ease-out forwards`;
+                summaryText.style.animationDelay = `1.2s`;
+                summaryText.style.opacity = '0';
+            }
+        }
+        
+        // Add hover effects for table elements
+        rows.forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                const cells = row.querySelectorAll('td:not(:first-child)');
+                cells.forEach(cell => {
+                    cell.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease';
+                    cell.style.transform = 'translateY(-3px)';
+                    cell.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+                    cell.style.backgroundColor = 'rgba(var(--primary-rgb), 0.15)';
+                });
+            });
+            
+            row.addEventListener('mouseleave', () => {
+                const cells = row.querySelectorAll('td:not(:first-child)');
+                cells.forEach(cell => {
+                    cell.style.transform = 'translateY(0)';
+                    cell.style.boxShadow = 'none';
+                    cell.style.backgroundColor = '';
+                });
+            });
+        });
+        
+        // Add ripple effect to plan headers
+        const planHeaders = table.querySelectorAll('.plan-header');
+        planHeaders.forEach(header => {
+            header.classList.add('ripple');
+            header.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
         });
     }, 100);
     
+    // Add extra animations to the comparison table
+    const comparisonTable = tableContainer.querySelector('.comparison-table');
+    if (comparisonTable) {
+        comparisonTable.style.animation = `fadeIn 0.8s ease-out forwards, float-subtle 6s infinite ease-in-out 2s`;
+        comparisonTable.style.animationDelay = `0.3s`;
+        comparisonTable.style.opacity = '0';
+    }
+    
     // Show the comparison result
     comparisonResult.style.display = 'block';
+    
+    // Add new animation styles
+    const animationStyle = document.createElement('style');
+    animationStyle.textContent = `
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes float-subtle {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.3); }
+            50% { box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.5); }
+            100% { box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.3); }
+        }
+        
+        .ripple {
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.4);
+            width: 100px;
+            height: 100px;
+            margin-top: -50px;
+            margin-left: -50px;
+            animation: ripple-animation 0.6s linear;
+            opacity: 0;
+        }
+        
+        @keyframes ripple-animation {
+            0% { transform: scale(0); opacity: 0.5; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(animationStyle);
     
     // Scroll to result after a short delay to ensure everything is rendered
     setTimeout(() => {
@@ -1443,7 +1584,7 @@ function updateComparisonTable(data) {
             behavior: 'smooth',
             block: 'start'
         });
-    }, 100);
+    }, 200);
 }
 
 /**
