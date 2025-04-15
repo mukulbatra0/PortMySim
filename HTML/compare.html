@@ -123,25 +123,42 @@
         <div class="section-title content-transition" data-animation="slide-up">
           <h2>Find the Best Network for Your Location</h2>
           <p>Enter your location to see which network offers the best coverage, speed and reliability in your area</p>
+          <span class="badge coverage-badge">Now with data for all states in India!</span>
         </div>
         
         <!-- Location Search Form -->
         <div class="comparison-filters content-transition" data-animation="fade-in" data-delay="0.3s">
-          <div class="location-search-wrapper">
-            <input type="text" class="location-search" id="location-search" placeholder="Enter your city, locality or area..." />
-            <button type="button" class="location-search-btn" id="location-search-btn">
-              <i class="fas fa-search"></i>
-            </button>
-            <button type="button" class="user-location-btn" id="user-location-btn" title="Use your current location">
-              <i class="fas fa-map-marker-alt"></i>
-            </button>
+          <div class="location-search-wrapper enhanced">
+            <div class="location-selection-grid">
+              <div class="location-select-group">
+                <label for="state-selector">Select State</label>
+                <select id="state-selector" class="location-select">
+                  <option value="">Choose a State</option>
+                  <!-- States will be populated dynamically -->
+                </select>
+              </div>
+              <div class="location-select-group">
+                <label for="city-selector">Select City</label>
+                <select id="city-selector" class="location-select">
+                  <option value="">Choose a City</option>
+                  <!-- Cities will be populated based on selected state -->
+                </select>
+              </div>
+              <button type="button" class="user-location-btn" id="user-location-btn" title="Use your current location">
+                <i class="fas fa-map-marker-alt"></i>
+              </button>
+            </div>
+            <div class="search-alternative">
+              <span>OR</span>
+              <div class="alternative-search">
+                <input type="text" class="location-search" id="location-search" placeholder="Search for any location..." />
+                <button type="button" class="location-search-btn" id="location-search-btn">
+                  <i class="fas fa-search"></i>
+                </button>
+              </div>
+            </div>
             <div class="location-suggestions" id="location-suggestions">
               <!-- Suggestions will be dynamically populated -->
-              <div class="location-suggestion-item">New Delhi</div>
-              <div class="location-suggestion-item">Mumbai</div>
-              <div class="location-suggestion-item">Chennai</div>
-              <div class="location-suggestion-item">Kolkata</div>
-              <div class="location-suggestion-item">Bangalore</div>
             </div>
           </div>
           
@@ -587,7 +604,7 @@
       }).addTo(coverageMap);
       
       // Sample city data
-      const cities = [
+      window.cities = [
         { name: 'Delhi', coords: [28.7041, 77.1025] },
         { name: 'Mumbai', coords: [19.0760, 72.8777] },
         { name: 'Chennai', coords: [13.0827, 80.2707] },
@@ -601,7 +618,7 @@
       ];
       
       // Add major city markers to the map
-      cities.forEach(city => {
+      window.cities.forEach(city => {
         L.marker(city.coords, {
           icon: L.divIcon({
             className: 'city-marker',

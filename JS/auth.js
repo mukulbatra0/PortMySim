@@ -1,5 +1,137 @@
 import { validateEmail, validatePhone, showError, clearError } from './utils.js';
 
+// Directly check for authentication token
+// This ensures we have the authentication token available ASAP
+console.log('Auth.js loaded, checking authentication token');
+const AUTH_TOKEN_KEY = 'portmysim_token';
+const AUTH_USER_KEY = 'portmysim_user';
+
+// Helper function to check if token is valid format
+function isValidToken(token) {
+    if (!token) return false;
+    if (token === 'null' || token === 'undefined') return false;
+    
+    // Check if it's a valid JWT format (simplified check)
+    // JWT format: xxxxx.yyyyy.zzzzz (three parts separated by dots)
+    const parts = token.split('.');
+    return parts.length === 3;
+}
+
+// Clean up the token if needed and reinstate it
+function ensureValidToken() {
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
+    
+    // Debug the token
+    if (token) {
+        console.log('Token exists in storage:', token.substring(0, 10) + '...');
+        if (!isValidToken(token)) {
+            console.warn('Token appears invalid, clearing token');
+            localStorage.removeItem(AUTH_TOKEN_KEY);
+            return null;
+        }
+        
+        // Remove any quotes if they got accidentally wrapped around the token
+        if (token.startsWith('"') && token.endsWith('"')) {
+            const cleanToken = token.substring(1, token.length - 1);
+            console.log('Fixing quoted token format');
+            localStorage.setItem(AUTH_TOKEN_KEY, cleanToken);
+            return cleanToken;
+        }
+        
+        return token;
+    }
+    return null;
+}
+
+// Run token check immediately
+const validToken = ensureValidToken();
+console.log('Valid token check result:', !!validToken);
+
+// Ensure the API client is available globally
+if (!window.PortMySimAPI) {
+    console.log('Creating global PortMySimAPI client');
+    window.PortMySimAPI = {
+        auth: {
+            login: async (email, password) => {
+                try {
+                    const response = await fetch('http://localhost:5000/api/auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.token) {
+                        // Ensure token is clean before storing
+                        const cleanToken = String(data.token).trim().replace(/^["'](.*)["']$/, '$1');
+                        console.log('Storing clean token after login');
+                        localStorage.setItem(AUTH_TOKEN_KEY, cleanToken);
+                        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+                    }
+                    
+                    return data;
+                } catch (error) {
+                    console.error('Login error:', error);
+                    return { success: false, message: 'Network error. Please try again.' };
+                }
+            },
+            logout: () => {
+                localStorage.removeItem(AUTH_TOKEN_KEY);
+                localStorage.removeItem(AUTH_USER_KEY);
+                window.location.href = '/HTML/index.html';
+            },
+            refreshToken: async () => {
+                try {
+                    // Try to refresh the token using a refresh endpoint
+                    const response = await fetch('http://localhost:5000/api/auth/refresh', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY)}`
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success && data.token) {
+                        // Store the new token
+                        const cleanToken = String(data.token).trim().replace(/^["'](.*)["']$/, '$1');
+                        localStorage.setItem(AUTH_TOKEN_KEY, cleanToken);
+                        console.log('Token refreshed successfully');
+                        return true;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error('Error refreshing token:', error);
+                    return false;
+                }
+            }
+        },
+        isAuthenticated: () => {
+            const token = localStorage.getItem(AUTH_TOKEN_KEY);
+            return !!token;
+        },
+        getToken: () => {
+            const token = localStorage.getItem(AUTH_TOKEN_KEY);
+            if (!token) return null;
+            
+            // Clean up token format if needed
+            if (token.startsWith('"') && token.endsWith('"')) {
+                return token.substring(1, token.length - 1);
+            }
+            return token;
+        },
+        getUser: () => {
+            const userData = localStorage.getItem(AUTH_USER_KEY);
+            return userData ? JSON.parse(userData) : null;
+        }
+    };
+}
+
 // Form Validation Functions
 const validatePassword = (password) => {
     // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
@@ -74,45 +206,126 @@ passwordToggles.forEach(toggle => {
 
 // Check auth state and update UI accordingly
 document.addEventListener('DOMContentLoaded', () => {
-    // If API client is loaded
-    if (window.PortMySimAPI) {
-        // Check if user is authenticated
-        if (window.PortMySimAPI.isAuthenticated()) {
-            const user = window.PortMySimAPI.getUser();
-            
-            // Update auth buttons in nav if they exist
-            const authBtns = document.querySelector('.auth-btns');
-            if (authBtns) {
-                const firstLetter = user.name.charAt(0).toUpperCase();
-                authBtns.innerHTML = `
-                    <div class="user-profile-dropdown">
-                        <div class="user-profile-circle" title="${user.name}">
-                            ${firstLetter}
-                        </div>
-                        <div class="dropdown-menu">
-                            <span class="user-greeting">Hello, ${user.name.split(' ')[0]}</span>
-                            <a href="/HTML/dashboard.html" class="dropdown-item">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                            <a href="/HTML/schedule-porting.html" class="dropdown-item">
-                                <i class="fas fa-calendar-alt"></i> Schedule Porting
-                            </a>
-                            <button id="logoutBtn" class="dropdown-item">
-                                <i class="fas fa-sign-out-alt"></i> Logout
-                            </button>
-                        </div>
-                    </div>
-                `;
+    // Initialize the API client if it doesn't exist
+    if (!window.PortMySimAPI) {
+        console.log('Initializing PortMySimAPI client');
+        
+        // Create the API client
+        window.PortMySimAPI = {
+            auth: {
+                login: async (email, password) => {
+                    try {
+                        const response = await fetch('http://localhost:5000/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ email, password })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success && data.token) {
+                            localStorage.setItem('portmysim_token', data.token);
+                            localStorage.setItem('portmysim_user', JSON.stringify(data.user));
+                        }
+                        
+                        return data;
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        return { success: false, message: 'Network error. Please try again.' };
+                    }
+                },
+                logout: () => {
+                    localStorage.removeItem('portmysim_token');
+                    localStorage.removeItem('portmysim_user');
+                    window.location.href = '/HTML/index.html';
+                },
+                refreshToken: async () => {
+                    try {
+                        // Try to refresh the token using a refresh endpoint
+                        const response = await fetch('http://localhost:5000/api/auth/refresh', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('portmysim_token')}`
+                            }
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.success && data.token) {
+                            // Store the new token
+                            const cleanToken = String(data.token).trim().replace(/^["'](.*)["']$/, '$1');
+                            localStorage.setItem('portmysim_token', cleanToken);
+                            console.log('Token refreshed successfully');
+                            return true;
+                        }
+                        
+                        return false;
+                    } catch (error) {
+                        console.error('Error refreshing token:', error);
+                        return false;
+                    }
+                }
+            },
+            isAuthenticated: () => {
+                const token = localStorage.getItem('portmysim_token');
+                return !!token;
+            },
+            getToken: () => {
+                const token = localStorage.getItem('portmysim_token');
+                if (!token) return null;
                 
-                // Setup dropdown functionality after DOM update
-                setupProfileDropdown();
+                // Clean up token format if needed
+                if (token.startsWith('"') && token.endsWith('"')) {
+                    return token.substring(1, token.length - 1);
+                }
+                return token;
+            },
+            getUser: () => {
+                const userData = localStorage.getItem('portmysim_user');
+                return userData ? JSON.parse(userData) : null;
             }
+        };
+    }
+
+    // Check if user is authenticated
+    if (window.PortMySimAPI.isAuthenticated()) {
+        const user = window.PortMySimAPI.getUser();
+        
+        // Update auth buttons in nav if they exist
+        const authBtns = document.querySelector('.auth-btns');
+        if (authBtns) {
+            const firstLetter = user.name.charAt(0).toUpperCase();
+            authBtns.innerHTML = `
+                <div class="user-profile-dropdown">
+                    <div class="user-profile-circle" title="${user.name}">
+                        ${firstLetter}
+                    </div>
+                    <div class="dropdown-menu">
+                        <span class="user-greeting">Hello, ${user.name.split(' ')[0]}</span>
+                        <a href="/HTML/dashboard.html" class="dropdown-item">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                        <a href="/HTML/schedule-porting.html" class="dropdown-item">
+                            <i class="fas fa-calendar-alt"></i> Schedule Porting
+                        </a>
+                        <button id="logoutBtn" class="dropdown-item">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            `;
             
-            // Redirect if on login/signup pages
-            if (window.location.pathname.includes('login.html') || 
-                window.location.pathname.includes('signup.html')) {
-                window.location.href = '/HTML/schedule-porting.html';
-            }
+            // Setup dropdown functionality after DOM update
+            setupProfileDropdown();
+        }
+        
+        // Redirect if on login/signup pages
+        if (window.location.pathname.includes('login.html') || 
+            window.location.pathname.includes('signup.html')) {
+            window.location.href = '/HTML/schedule-porting.html';
         }
     }
 });
@@ -540,4 +753,77 @@ if (resetPasswordForm) {
             }
         }
     });
-} 
+}
+
+// Add a direct login function for debugging and test authentication
+function loginDirectly(email, password) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log(`Attempting direct login for ${email}...`);
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success && data.token) {
+        console.log('Login successful, storing token');
+        // Clean token and store
+        const cleanToken = String(data.token).trim().replace(/^["'](.*)["']$/, '$1');
+        localStorage.setItem('portmysim_token', cleanToken);
+        localStorage.setItem('portmysim_user', JSON.stringify(data.user));
+        
+        // Test the token immediately
+        testStoredToken();
+        
+        resolve(true);
+      } else {
+        console.error('Login failed:', data.message);
+        reject(new Error(data.message || 'Login failed'));
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      reject(error);
+    }
+  });
+}
+
+// Function to test if the stored token is valid
+async function testStoredToken() {
+  const token = localStorage.getItem('portmysim_token');
+  if (!token) {
+    console.error('No token found in localStorage');
+    return false;
+  }
+  
+  try {
+    console.log('Testing token validity...');
+    const response = await fetch('http://localhost:5000/api/auth/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (response.ok) {
+      console.log('Token is valid');
+      return true;
+    } else {
+      console.error('Token validation failed with status:', response.status);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error testing token:', error);
+    return false;
+  }
+}
+
+// Expose these functions to the global window for debugging
+window.portmysimAuth = {
+  login: loginDirectly,
+  testToken: testStoredToken
+}; 

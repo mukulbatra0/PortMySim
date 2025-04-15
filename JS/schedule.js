@@ -7,6 +7,18 @@ const API_BASE_URL = 'http://localhost:5000/api';
 import { getNearbyPortingCenters, getFallbackPortingCenters } from "./api.js";
 import CONFIG from './config.js';
 
+// Override submitPortingRequest function with fixed version if available
+document.addEventListener('DOMContentLoaded', function() {
+  if (window.submitPortingWithFixedAuth) {
+    console.log('Overriding submitPortingRequest with fixed version');
+    window.originalSubmitPortingRequest = submitPortingRequest;
+    submitPortingRequest = async function(formData) {
+      console.log('Using fixed authentication for porting submission');
+      return await window.submitPortingWithFixedAuth(formData);
+    };
+  }
+});
+
 // Get user's location if allowed
 let userLocation = null;
 function getUserLocation() {
@@ -1456,37 +1468,66 @@ function submitForm(e) {
       location: document.getElementById('location').value
     };
     
+    // Log the form data for debugging
+    console.log('Form data collected:', formData);
+    
     // Actually send the data to the backend API
     submitPortingRequest(formData)
       .then(response => {
-        if (response.success) {
+        console.log('API response received:', response);
+        
+        if (response && response.success) {
           // Show success message
           const formSteps = document.querySelectorAll('.form-step');
           const formSuccess = document.querySelector('.form-success');
           
           if (formSteps && formSuccess) {
+            console.log('Showing success view');
+            
             // Hide all steps
             formSteps.forEach(step => {
               step.classList.remove('active');
+              step.style.display = 'none';
             });
             
             // Show success message
             formSuccess.classList.add('show');
+            formSuccess.style.display = 'block';
             
             // Calculate SMS date based on plan end date
             const smsDate = calculateSmsSendDate();
             const formattedSmsDate = formatDate(smsDate || new Date());
             
-            // Set displayed information from the actual API response
-            document.getElementById('refNumber').textContent = response.data.refNumber || `PORT-${Math.floor(Math.random() * 1000000)}`;
-            document.getElementById('smsDate').textContent = formatDate(new Date(response.data.smsDate)) || formattedSmsDate;
-            document.getElementById('guidDisplay').textContent = document.getElementById('portingGuid').textContent;
+            // Get response data safely
+            const responseData = response.data || {};
+            
+            // Set displayed information from the API response
+            document.getElementById('refNumber').textContent = responseData.refNumber || `PORT-${Math.floor(Math.random() * 100000)}`;
+            document.getElementById('smsDate').textContent = responseData.smsDate ? formatDate(new Date(responseData.smsDate)) : formattedSmsDate;
+            document.getElementById('guidDisplay').textContent = document.getElementById('portingGuid').textContent || 'PRT-' + Math.random().toString(36).substring(2, 10).toUpperCase();
             document.getElementById('portingDateDisplay').textContent = formatDate(new Date(formData.scheduledDate));
-            document.getElementById('currentProviderDisplay').textContent = formData.currentProvider;
+            
+            // Get provider name from select element
+            const currentProviderSelect = document.getElementById('currentProvider');
+            const selectedProviderIndex = currentProviderSelect.selectedIndex;
+            if (selectedProviderIndex !== -1) {
+              document.getElementById('currentProviderDisplay').textContent = currentProviderSelect.options[selectedProviderIndex].text;
+            } else {
+              document.getElementById('currentProviderDisplay').textContent = formData.currentProvider;
+            }
+            
+            // Set automation status
             document.getElementById('automationStatus').textContent = formData.automatePorting ? 'Automated' : 'Manual Process';
             
-            // Set timeline dates - use the API response date
-            document.getElementById('timelineSmsDate').textContent = formatDate(new Date(response.data.smsDate)) || formattedSmsDate;
+            // Set porting center details if available
+            if (responseData.portingCenterDetails) {
+              document.getElementById('portingCenter').textContent = responseData.portingCenterDetails.name || 'Nearest Service Center';
+            } else {
+              document.getElementById('portingCenter').textContent = 'To be determined';
+            }
+            
+            // Set timeline dates
+            document.getElementById('timelineSmsDate').textContent = responseData.smsDate ? formatDate(new Date(responseData.smsDate)) : formattedSmsDate;
             document.getElementById('timelinePortingDate').textContent = formatDate(new Date(formData.scheduledDate));
             
             // Update SMS step description if automation is enabled
@@ -1495,36 +1536,88 @@ function submitForm(e) {
               document.getElementById('upcStepDescription').textContent = 'PortMySim will retrieve and store your UPC code for the next step';
             }
             
+            // Scroll to top of success view
+            window.scrollTo({
+              top: 0,
+              behavior: 'smooth'
+            });
+            
             // Log the successful submission
-            console.log('Porting request submitted successfully:', response.data);
+            console.log('Porting request submitted successfully:', responseData);
+          } else {
+            console.error('Success elements not found in DOM');
+            alert('Request submitted, but there was an error displaying the confirmation. Please check your dashboard for details.');
           }
         } else {
           // Show error notification
-          alert('Error submitting porting request: ' + (response.error || 'Unknown error'));
-          console.error('Failed to submit porting request:', response.error);
+          console.error('Failed to submit porting request:', response?.error || 'Unknown error');
+          alert('Error submitting porting request: ' + (response?.error || 'Unknown error'));
         }
       })
       .catch(error => {
         // Show error notification
-        alert('Error submitting porting request: ' + (error.message || 'Network error'));
         console.error('Error submitting porting request:', error);
+        alert('Error submitting porting request: ' + (error.message || 'Network error'));
       })
       .finally(() => {
         // Reset button state
         submitButton.innerHTML = originalButtonText;
         submitButton.disabled = false;
       });
+  } else {
+    console.warn('Form validation failed');
   }
 }
 
 // Function to submit porting request to API
 async function submitPortingRequest(formData) {
   try {
-    // Check if the user is authenticated
-    if (!window.PortMySimAPI || !window.PortMySimAPI.isAuthenticated()) {
+    console.log('Checking authentication before submitting porting request');
+    
+    // First check if the global API client is available
+    const isApiClientAvailable = typeof window.PortMySimAPI !== 'undefined';
+    console.log('API client available:', isApiClientAvailable);
+    
+    // Try multiple auth methods
+    const directToken = localStorage.getItem('portmysim_token');
+    const apiAuthToken = isApiClientAvailable && window.PortMySimAPI.getToken ? window.PortMySimAPI.getToken() : null;
+    const isApiAuth = isApiClientAvailable && window.PortMySimAPI.isAuthenticated ? window.PortMySimAPI.isAuthenticated() : false;
+    
+    // Log auth status for debugging
+    console.log('Auth check - Direct token exists:', !!directToken);
+    console.log('Auth check - API token exists:', !!apiAuthToken);
+    console.log('Auth check - API Auth method result:', isApiAuth);
+    
+    // Use the first available token
+    const authToken = directToken || apiAuthToken;
+    
+    if (!authToken && !isApiAuth) {
+      console.error('Authentication required but no token found');
+      alert('You need to be logged in to schedule porting. Redirecting to login page...');
+      
       // Redirect to login if not authenticated
       window.location.href = '/HTML/login.html?redirect=schedule-porting.html';
       return { success: false, error: 'Authentication required' };
+    }
+    
+    // Validate required fields before submitting
+    const requiredFields = ['mobileNumber', 'currentProvider', 'currentCircle', 'newProvider', 
+                          'scheduledDate', 'planEndDate', 'fullName', 'email'];
+    const missingFields = [];
+    
+    requiredFields.forEach(field => {
+      if (!formData[field] || formData[field].trim() === '') {
+        missingFields.push(field);
+      }
+    });
+    
+    if (missingFields.length > 0) {
+      const errorMessage = `Missing required fields: ${missingFields.join(', ')}`;
+      console.error(errorMessage);
+      return { 
+        success: false, 
+        error: errorMessage
+      };
     }
     
     // Format location data if needed
@@ -1546,11 +1639,27 @@ async function submitPortingRequest(formData) {
       }
     }
     
-    // Prepare request data - fix potential issues with the data format
+    // Ensure dates are in proper format
+    if (formData.scheduledDate) {
+      // Ensure it's a valid date string in ISO format
+      const scheduledDate = new Date(formData.scheduledDate);
+      if (!isNaN(scheduledDate.getTime())) {
+        formData.scheduledDate = scheduledDate.toISOString().split('T')[0];
+      }
+    }
+    
+    if (formData.planEndDate) {
+      // Ensure it's a valid date string in ISO format
+      const planEndDate = new Date(formData.planEndDate);
+      if (!isNaN(planEndDate.getTime())) {
+        formData.planEndDate = planEndDate.toISOString().split('T')[0];
+      }
+    }
+    
+    // Prepare request data with proper formatting
     const requestData = {
       mobileNumber: formData.mobileNumber,
       currentProvider: formData.currentProvider,
-      // Fix the circle format - server expects standardized circle names
       currentCircle: normalizeCircleName(formData.currentCircle),
       newProvider: formData.newProvider,
       scheduledDate: formData.scheduledDate,
@@ -1559,10 +1668,8 @@ async function submitPortingRequest(formData) {
       fullName: formData.fullName,
       email: formData.email,
       alternateNumber: formData.alternateNumber || '',
-      // Convert booleans to strings for API compatibility
       automatePorting: formData.automatePorting ? 'true' : 'false',
       notifyUpdates: formData.notifyUpdates ? 'true' : 'false',
-      // Simplify location to avoid complex nested objects that might cause server errors
       location: typeof formData.location === 'object' ? {
         address: formData.location.address || '',
         lat: parseFloat(formData.location.lat) || 0,
@@ -1574,125 +1681,182 @@ async function submitPortingRequest(formData) {
       }
     };
 
-    console.log('Submitting porting request with data:', requestData);
+    // Get the user ID if available from the API client
+    if (window.PortMySimAPI && window.PortMySimAPI.getUser) {
+      const user = window.PortMySimAPI.getUser();
+      if (user && user._id) {
+        requestData.user = user._id;
+      }
+    }
 
-    // First try the direct API approach with additional error reporting
+    console.log('Submitting porting request with data:', requestData);
+    console.log('Using auth token:', authToken ? 'Present (length: ' + authToken.length + ')' : 'Missing');
+    
+    // Make the API request with proper authentication
     try {
-      const directResponse = await fetch('http://localhost:5000/api/porting/submit', {
+      // First try direct fetch with token
+      const token = authToken ? authToken.trim() : '';
+
+      // Check if token format is valid
+      if (!token || token === 'undefined' || token === 'null') {
+        throw new Error('Missing or invalid authentication token. Please log in again.');
+      }
+
+      // Ensure token is properly formatted (without extra quotes or spaces)
+      const formattedToken = token.replace(/^["'](.*)["']$/, '$1');
+      console.log('Using token for authentication:', formattedToken.substring(0, 5) + '...');
+
+      const response = await fetch('http://localhost:5000/api/porting/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('portmysim_token') || ''}`
+          'Authorization': `Bearer ${formattedToken}`
         },
         body: JSON.stringify(requestData)
       });
       
-      // Get the response text first to debug potential JSON parsing issues
-      const responseText = await directResponse.text();
+      // Get response as text first for better error handling
+      const responseText = await response.text();
+      let responseData;
       
       try {
-        // Attempt to parse JSON only after we've secured the text
-        const responseData = JSON.parse(responseText);
-        
-        if (directResponse.ok) {
-          console.log('Direct API connection successful:', responseData);
-          return responseData;
-        } else {
-          console.warn('Server returned error:', directResponse.status, responseData);
-          throw new Error(responseData.error || `Server returned ${directResponse.status}`);
-        }
-      } catch (jsonError) {
-        console.error('Error parsing JSON response:', jsonError, 'Response text:', responseText);
-        throw new Error('Invalid server response format');
+        // Try to parse as JSON
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        console.error('Failed to parse response as JSON:', responseText);
+        responseData = { 
+          success: false, 
+          error: `Server returned non-JSON response: ${responseText}`
+        };
       }
-    } catch (directError) {
-      console.warn('Direct API connection error:', directError);
       
-      // Try alternative approach with API helper
-      try {
-        console.log('Attempting API helper as fallback...');
-        const response = await window.PortMySimAPI.fetch('/porting/submit', {
-          method: 'POST',
-          body: JSON.stringify(requestData)
-        });
+      // Check if response is successful
+      if (!response.ok) {
+        console.error('Server returned error:', response.status, responseData);
+        throw new Error(responseData.error || `Request failed with status ${response.status}`);
+      }
+      
+      console.log('Porting request submitted successfully:', responseData);
+      return responseData;
+      
+    } catch (fetchError) {
+      console.error('Direct API request failed:', fetchError);
+      
+      // Check if this is an authentication error
+      if (fetchError.message && fetchError.message.includes('401')) {
+        console.log('Authentication error detected, attempting to refresh token...');
         
-        if (response && response.success) {
-          console.log('Porting request submitted successfully via API helper');
-          return response;
-        }
-        
-        console.warn('API helper request failed:', response?.error);
-        throw new Error(response?.error || 'Unknown API error');
-      } catch (apiError) {
-        console.error('All API submission attempts failed:', apiError);
-        
-        // Check if the server is running
-        try {
-          const pingResponse = await fetch('http://localhost:5000/api/health/check', { method: 'GET' });
-          if (!pingResponse.ok) {
-            throw new Error('Server appears to be down or unresponsive');
+        // Try to refresh the token if API client is available
+        if (window.PortMySimAPI && window.PortMySimAPI.refreshToken) {
+          const refreshed = await window.PortMySimAPI.refreshToken();
+          
+          if (refreshed) {
+            console.log('Token refreshed, retrying request with new token');
+            // Get the fresh token
+            const freshToken = window.PortMySimAPI.getToken();
+            
+            if (freshToken) {
+              // Retry the request with the fresh token
+              const retryResponse = await fetch('http://localhost:5000/api/porting/submit', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${freshToken}`
+                },
+                body: JSON.stringify(requestData)
+              });
+              
+              if (retryResponse.ok) {
+                const retryData = await retryResponse.json();
+                console.log('Request succeeded with refreshed token:', retryData);
+                return retryData;
+              }
+            }
+          } else {
+            console.log('Token refresh failed, redirecting to login');
+            alert('Your session has expired. Please log in again.');
+            window.location.href = '/HTML/login.html?redirect=schedule-porting.html';
+            return { success: false, error: 'Session expired' };
           }
-        } catch (pingError) {
-          console.error('Server health check failed:', pingError);
-          alert('Server appears to be down. Please ensure the backend server is running at http://localhost:5000');
-          return { success: false, error: 'Server connectivity issue. Please try again later.' };
         }
-        
-        // Return mock response as last resort but log this clearly
-        console.warn('FALLING BACK to mock response due to all API failures');
-        return generateMockResponse(formData);
       }
+      
+      // Try API client as fallback
+      console.error('Failed to submit porting request:', fetchError.message);
+      alert(`Error submitting porting request: ${fetchError.message}`);
+      return { success: false, error: fetchError.message };
     }
   } catch (error) {
-    console.error('Unexpected error in submitPortingRequest:', error);
+    console.error('Error submitting porting request:', error.message);
+    
+    // Show error alert
+    alert(`Error submitting porting request: ${error.message}`);
     
     // Return error response
     return { 
       success: false, 
-      error: error.message || 'An unexpected error occurred while submitting your porting request.' 
+      error: error.message || 'An unexpected error occurred'
     };
   }
 }
 
-// Helper function to generate a mock response
+// Function to generate a mock response for testing/development
 function generateMockResponse(formData) {
-  console.log('Using demo mode with mock response');
+  console.log('Generating mock response for testing');
   
-  // Generate mock data
-  const smsDate = new Date(formData.planEndDate);
-  smsDate.setDate(smsDate.getDate() - 3);
+  // Generate a unique reference number
+  const refNumber = `PORT-${Math.floor(Math.random() * 900000) + 100000}`;
   
-  // Generate unique reference number
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 6);
-  const refNumber = `PORT-${timestamp}-${random}`.toUpperCase();
+  // Calculate dates for the mock response
+  const now = new Date();
+  const smsDate = calculateSmsSendDate() || new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+  const scheduledDate = new Date(formData.scheduledDate);
   
-  // Return mock successful response
+  // Current circle and provider names
+  const currentCircleName = document.getElementById('currentCircle')?.options[document.getElementById('currentCircle')?.selectedIndex]?.text || 'Unknown Circle';
+  const currentProviderName = document.getElementById('currentProvider')?.options[document.getElementById('currentProvider')?.selectedIndex]?.text || 'Unknown Provider';
+  
+  // Create a realistic response object
   return {
     success: true,
+    message: 'Porting request submitted successfully',
     data: {
-      id: `mock-${Date.now()}`,
+      id: `mock_${Date.now()}`,
       refNumber: refNumber,
       status: 'pending',
-      smsDate: smsDate,
+      smsDate: smsDate.toISOString(),
+      scheduledDate: scheduledDate.toISOString(),
+      mobileNumber: formData.mobileNumber,
+      currentProvider: currentProviderName,
+      currentCircle: currentCircleName,
+      newProvider: formData.newProvider,
+      fullName: formData.fullName,
+      email: formData.email,
       portingCenterDetails: {
-        name: "Nearest Service Center",
-        address: formData.location?.address || "Default location",
+        name: 'Demo Porting Center',
+        address: '123 Test Street, Example City',
+        location: {
+          type: 'Point',
+          coordinates: [77.216721, 28.644800] // Example coordinates
+        },
+        openingHours: '9:00 AM - 6:00 PM'
       },
       notifications: [
         {
           type: 'sms',
-          scheduledFor: smsDate,
-          message: 'Your porting SMS will be sent on this date'
+          scheduledFor: smsDate.toISOString(),
+          message: `Please send SMS PORT to 1900 for your mobile number ${formData.mobileNumber} to start the porting process.`,
+          sent: false
         },
         {
-          type: 'porting',
-          scheduledFor: new Date(formData.scheduledDate),
-          message: 'Your number will be ported on this date'
+          type: 'email',
+          scheduledFor: scheduledDate.toISOString(),
+          message: 'Your porting is scheduled. Please visit your selected center with your UPC code.',
+          sent: false
         }
-      ]
-    },
-    message: 'Porting request submitted successfully (Demo Mode)'
+      ],
+      automatePorting: formData.automatePorting === true || formData.automatePorting === 'true'
+    }
   };
 }
 

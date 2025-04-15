@@ -11,9 +11,302 @@ let currentLocation = null;
 let towerLayers = {}; // For storing tower layers by network
 let userLocationMarker = null; // For marking user's selected location
 let userCoordinates = null; // For storing user's geolocation coordinates
+let selectedState = null; // For tracking the selected state
+let selectedCity = null; // For tracking the selected city
 const API_BASE_URL = 'http://localhost:5000/api';
 
-// DOM Elements
+// Define the cities array for state-city browser
+const cities = [
+  // Major Metros
+  { name: 'Delhi', coords: [28.7041, 77.1025] },
+  { name: 'New Delhi', coords: [28.6139, 77.2090] },
+  { name: 'Mumbai', coords: [19.0760, 72.8777] },
+  { name: 'Chennai', coords: [13.0827, 80.2707] },
+  { name: 'Kolkata', coords: [22.5726, 88.3639] },
+  { name: 'Bangalore', coords: [12.9716, 77.5946] },
+  { name: 'Hyderabad', coords: [17.3850, 78.4867] },
+  { name: 'Pune', coords: [18.5204, 73.8567] },
+  { name: 'Ahmedabad', coords: [23.0225, 72.5714] },
+  { name: 'Jaipur', coords: [26.9124, 75.7873] },
+  { name: 'Lucknow', coords: [26.8467, 80.9462] },
+  
+  // Andhra Pradesh
+  { name: 'Visakhapatnam', coords: [17.6868, 83.2185], state: 'Andhra Pradesh' },
+  { name: 'Vijayawada', coords: [16.5062, 80.6480], state: 'Andhra Pradesh' },
+  { name: 'Guntur', coords: [16.3067, 80.4365], state: 'Andhra Pradesh' },
+  { name: 'Nellore', coords: [14.4426, 79.9865], state: 'Andhra Pradesh' },
+  { name: 'Kurnool', coords: [15.8281, 78.0373], state: 'Andhra Pradesh' },
+  { name: 'Tirupati', coords: [13.6288, 79.4192], state: 'Andhra Pradesh' },
+  { name: 'Amaravati', coords: [16.5130, 80.5166], state: 'Andhra Pradesh' },
+  
+  // Arunachal Pradesh
+  { name: 'Itanagar', coords: [27.0844, 93.6053], state: 'Arunachal Pradesh' },
+  { name: 'Naharlagun', coords: [27.1036, 93.6962], state: 'Arunachal Pradesh' },
+  { name: 'Pasighat', coords: [28.0700, 95.3300], state: 'Arunachal Pradesh' },
+  { name: 'Tawang', coords: [27.5859, 91.8588], state: 'Arunachal Pradesh' },
+  
+  // Assam
+  { name: 'Guwahati', coords: [26.1445, 91.7362], state: 'Assam' },
+  { name: 'Silchar', coords: [24.8333, 92.7789], state: 'Assam' },
+  { name: 'Dibrugarh', coords: [27.4728, 94.9120], state: 'Assam' },
+  { name: 'Jorhat', coords: [26.7465, 94.2026], state: 'Assam' },
+  { name: 'Dispur', coords: [26.1433, 91.7898], state: 'Assam' },
+  
+  // Bihar
+  { name: 'Patna', coords: [25.5941, 85.1376], state: 'Bihar' },
+  { name: 'Gaya', coords: [24.7914, 84.9994], state: 'Bihar' },
+  { name: 'Bhagalpur', coords: [25.2425, 86.9842], state: 'Bihar' },
+  { name: 'Muzaffarpur', coords: [26.1197, 85.3910], state: 'Bihar' },
+  { name: 'Darbhanga', coords: [26.1542, 85.8918], state: 'Bihar' },
+  
+  // Chhattisgarh
+  { name: 'Raipur', coords: [21.2514, 81.6296], state: 'Chhattisgarh' },
+  { name: 'Bhilai', coords: [21.2090, 81.4280], state: 'Chhattisgarh' },
+  { name: 'Bilaspur', coords: [22.0797, 82.1409], state: 'Chhattisgarh' },
+  { name: 'Korba', coords: [22.3595, 82.7501], state: 'Chhattisgarh' },
+  { name: 'Durg', coords: [21.1906, 81.2849], state: 'Chhattisgarh' },
+  
+  // Goa
+  { name: 'Panaji', coords: [15.4909, 73.8278], state: 'Goa' },
+  { name: 'Margao', coords: [15.2832, 73.9862], state: 'Goa' },
+  { name: 'Vasco da Gama', coords: [15.3981, 73.8113], state: 'Goa' },
+  { name: 'Mapusa', coords: [15.5937, 73.8142], state: 'Goa' },
+  
+  // Gujarat
+  { name: 'Gandhinagar', coords: [23.2156, 72.6369], state: 'Gujarat' },
+  { name: 'Surat', coords: [21.1702, 72.8311], state: 'Gujarat' },
+  { name: 'Vadodara', coords: [22.3072, 73.1812], state: 'Gujarat' },
+  { name: 'Rajkot', coords: [22.2734, 70.7713], state: 'Gujarat' },
+  { name: 'Bhavnagar', coords: [21.7645, 72.1519], state: 'Gujarat' },
+  
+  // Haryana
+  { name: 'Chandigarh', coords: [30.7333, 76.7794], state: 'Haryana' },
+  { name: 'Faridabad', coords: [28.4089, 77.3178], state: 'Haryana' },
+  { name: 'Gurgaon', coords: [28.4595, 77.0266], state: 'Haryana' },
+  { name: 'Rohtak', coords: [28.8955, 76.6066], state: 'Haryana' },
+  { name: 'Hisar', coords: [29.1492, 75.7217], state: 'Haryana' },
+  { name: 'Panipat', coords: [29.3909, 76.9635], state: 'Haryana' },
+  
+  // Himachal Pradesh
+  { name: 'Shimla', coords: [31.1048, 77.1734], state: 'Himachal Pradesh' },
+  { name: 'Dharamshala', coords: [32.2160, 76.3197], state: 'Himachal Pradesh' },
+  { name: 'Mandi', coords: [31.7080, 76.9318], state: 'Himachal Pradesh' },
+  { name: 'Solan', coords: [30.9045, 77.0967], state: 'Himachal Pradesh' },
+  { name: 'Kullu', coords: [31.9592, 77.1089], state: 'Himachal Pradesh' },
+  
+  // Jharkhand
+  { name: 'Ranchi', coords: [23.3441, 85.3096], state: 'Jharkhand' },
+  { name: 'Jamshedpur', coords: [22.8046, 86.2029], state: 'Jharkhand' },
+  { name: 'Dhanbad', coords: [23.7957, 86.4304], state: 'Jharkhand' },
+  { name: 'Bokaro', coords: [23.6693, 86.1511], state: 'Jharkhand' },
+  
+  // Karnataka
+  { name: 'Mysore', coords: [12.2958, 76.6394], state: 'Karnataka' },
+  { name: 'Mangalore', coords: [12.9141, 74.8560], state: 'Karnataka' },
+  { name: 'Hubli-Dharwad', coords: [15.3647, 75.1240], state: 'Karnataka' },
+  { name: 'Belgaum', coords: [15.8497, 74.4977], state: 'Karnataka' },
+  { name: 'Gulbarga', coords: [17.3297, 76.8343], state: 'Karnataka' },
+  
+  // Kerala
+  { name: 'Thiruvananthapuram', coords: [8.5241, 76.9366], state: 'Kerala' },
+  { name: 'Kochi', coords: [9.9312, 76.2673], state: 'Kerala' },
+  { name: 'Kozhikode', coords: [11.2588, 75.7804], state: 'Kerala' },
+  { name: 'Thrissur', coords: [10.5276, 76.2144], state: 'Kerala' },
+  { name: 'Kollam', coords: [8.8932, 76.6141], state: 'Kerala' },
+  
+  // Madhya Pradesh
+  { name: 'Bhopal', coords: [23.2599, 77.4126], state: 'Madhya Pradesh' },
+  { name: 'Indore', coords: [22.7196, 75.8577], state: 'Madhya Pradesh' },
+  { name: 'Jabalpur', coords: [23.1815, 79.9864], state: 'Madhya Pradesh' },
+  { name: 'Gwalior', coords: [26.2183, 78.1828], state: 'Madhya Pradesh' },
+  { name: 'Ujjain', coords: [23.1765, 75.7885], state: 'Madhya Pradesh' },
+  
+  // Maharashtra
+  { name: 'Nagpur', coords: [21.1458, 79.0882], state: 'Maharashtra' },
+  { name: 'Nashik', coords: [19.9975, 73.7898], state: 'Maharashtra' },
+  { name: 'Aurangabad', coords: [19.8762, 75.3433], state: 'Maharashtra' },
+  { name: 'Solapur', coords: [17.6599, 75.9064], state: 'Maharashtra' },
+  { name: 'Amravati', coords: [20.9320, 77.7523], state: 'Maharashtra' },
+  
+  // Manipur
+  { name: 'Imphal', coords: [24.8170, 93.9368], state: 'Manipur' },
+  { name: 'Thoubal', coords: [24.6422, 94.0188], state: 'Manipur' },
+  { name: 'Bishnupur', coords: [24.6324, 93.7642], state: 'Manipur' },
+  { name: 'Churachandpur', coords: [24.3370, 93.6758], state: 'Manipur' },
+  
+  // Meghalaya
+  { name: 'Shillong', coords: [25.5788, 91.8933], state: 'Meghalaya' },
+  { name: 'Tura', coords: [25.5165, 90.2042], state: 'Meghalaya' },
+  { name: 'Jowai', coords: [25.4504, 92.1931], state: 'Meghalaya' },
+  { name: 'Nongstoin', coords: [25.5192, 91.2661], state: 'Meghalaya' },
+  
+  // Mizoram
+  { name: 'Aizawl', coords: [23.7271, 92.7176], state: 'Mizoram' },
+  { name: 'Lunglei', coords: [22.8808, 92.7420], state: 'Mizoram' },
+  { name: 'Champhai', coords: [23.4730, 93.3314], state: 'Mizoram' },
+  { name: 'Serchhip', coords: [23.3416, 92.8573], state: 'Mizoram' },
+  
+  // Nagaland
+  { name: 'Kohima', coords: [25.6701, 94.1077], state: 'Nagaland' },
+  { name: 'Dimapur', coords: [25.9091, 93.7270], state: 'Nagaland' },
+  { name: 'Mokokchung', coords: [26.3298, 94.5131], state: 'Nagaland' },
+  { name: 'Tuensang', coords: [26.2841, 94.8269], state: 'Nagaland' },
+  
+  // Odisha
+  { name: 'Bhubaneswar', coords: [20.2961, 85.8245], state: 'Odisha' },
+  { name: 'Cuttack', coords: [20.4625, 85.8830], state: 'Odisha' },
+  { name: 'Rourkela', coords: [22.2604, 84.8536], state: 'Odisha' },
+  { name: 'Berhampur', coords: [19.3149, 84.7941], state: 'Odisha' },
+  { name: 'Sambalpur', coords: [21.4669, 83.9756], state: 'Odisha' },
+  
+  // Punjab
+  { name: 'Ludhiana', coords: [30.9010, 75.8573], state: 'Punjab' },
+  { name: 'Amritsar', coords: [31.6340, 74.8723], state: 'Punjab' },
+  { name: 'Jalandhar', coords: [31.3260, 75.5762], state: 'Punjab' },
+  { name: 'Patiala', coords: [30.3398, 76.3869], state: 'Punjab' },
+  { name: 'Bathinda', coords: [30.2110, 74.9455], state: 'Punjab' },
+  
+  // Rajasthan
+  { name: 'Jodhpur', coords: [26.2389, 73.0243], state: 'Rajasthan' },
+  { name: 'Kota', coords: [25.2138, 75.8648], state: 'Rajasthan' },
+  { name: 'Bikaner', coords: [28.0229, 73.3119], state: 'Rajasthan' },
+  { name: 'Ajmer', coords: [26.4499, 74.6399], state: 'Rajasthan' },
+  { name: 'Udaipur', coords: [24.5854, 73.7125], state: 'Rajasthan' },
+  
+  // Sikkim
+  { name: 'Gangtok', coords: [27.3389, 88.6065], state: 'Sikkim' },
+  { name: 'Namchi', coords: [27.1675, 88.3636], state: 'Sikkim' },
+  { name: 'Gyalshing', coords: [27.2833, 88.2667], state: 'Sikkim' },
+  { name: 'Mangan', coords: [27.5075, 88.5322], state: 'Sikkim' },
+  
+  // Tamil Nadu
+  { name: 'Coimbatore', coords: [11.0168, 76.9558], state: 'Tamil Nadu' },
+  { name: 'Madurai', coords: [9.9252, 78.1198], state: 'Tamil Nadu' },
+  { name: 'Tiruchirappalli', coords: [10.7905, 78.7047], state: 'Tamil Nadu' },
+  { name: 'Salem', coords: [11.6643, 78.1460], state: 'Tamil Nadu' },
+  { name: 'Tirunelveli', coords: [8.7139, 77.7567], state: 'Tamil Nadu' },
+  
+  // Telangana
+  { name: 'Warangal', coords: [17.9689, 79.5941], state: 'Telangana' },
+  { name: 'Nizamabad', coords: [18.6725, 78.0941], state: 'Telangana' },
+  { name: 'Karimnagar', coords: [18.4392, 79.1324], state: 'Telangana' },
+  { name: 'Khammam', coords: [17.2473, 80.1514], state: 'Telangana' },
+  
+  // Tripura
+  { name: 'Agartala', coords: [23.8315, 91.2868], state: 'Tripura' },
+  { name: 'Udaipur', coords: [23.5372, 91.4860], state: 'Tripura' },
+  { name: 'Dharmanagar', coords: [24.3780, 92.1993], state: 'Tripura' },
+  { name: 'Kailashahar', coords: [24.3322, 92.0048], state: 'Tripura' },
+  
+  // Uttar Pradesh
+  { name: 'Kanpur', coords: [26.4499, 80.3319], state: 'Uttar Pradesh' },
+  { name: 'Varanasi', coords: [25.3176, 82.9739], state: 'Uttar Pradesh' },
+  { name: 'Agra', coords: [27.1767, 78.0081], state: 'Uttar Pradesh' },
+  { name: 'Meerut', coords: [28.9845, 77.7064], state: 'Uttar Pradesh' },
+  { name: 'Prayagraj', coords: [25.4358, 81.8463], state: 'Uttar Pradesh' },
+  { name: 'Bareilly', coords: [28.3670, 79.4304], state: 'Uttar Pradesh' },
+
+  // Uttarakhand
+  { name: 'Dehradun', coords: [30.3165, 78.0322], state: 'Uttarakhand' },
+  { name: 'Haridwar', coords: [29.9457, 78.1642], state: 'Uttarakhand' },
+  { name: 'Roorkee', coords: [29.8543, 77.8880], state: 'Uttarakhand' },
+  { name: 'Haldwani', coords: [29.2183, 79.5130], state: 'Uttarakhand' },
+  { name: 'Nainital', coords: [29.3919, 79.4542], state: 'Uttarakhand' },
+
+  // West Bengal
+  { name: 'Durgapur', coords: [23.5204, 87.3119], state: 'West Bengal' },
+  { name: 'Asansol', coords: [23.6739, 86.9524], state: 'West Bengal' },
+  { name: 'Siliguri', coords: [26.7271, 88.3953], state: 'West Bengal' },
+  { name: 'Howrah', coords: [22.5957, 88.2636], state: 'West Bengal' },
+  { name: 'Berhampore', coords: [24.1065, 88.2581], state: 'West Bengal' },
+
+  // Union Territories
+  { name: 'Puducherry', coords: [11.9416, 79.8083], state: 'Puducherry' },
+  { name: 'Jammu', coords: [32.7266, 74.8570], state: 'Jammu & Kashmir' },
+  { name: 'Srinagar', coords: [34.0837, 74.7973], state: 'Jammu & Kashmir' },
+  { name: 'Port Blair', coords: [11.6234, 92.7265], state: 'Andaman & Nicobar' },
+  { name: 'Kavaratti', coords: [10.5593, 72.6358], state: 'Lakshadweep' },
+  { name: 'Daman', coords: [20.3974, 72.8328], state: 'Daman & Diu' },
+  { name: 'Silvassa', coords: [20.2696, 72.9968], state: 'Dadra & Nagar Haveli' },
+  { name: 'Leh', coords: [34.1526, 77.5771], state: 'Ladakh' }
+];
+
+/**
+ * Gets a list of unique states from the cities array
+ * @returns {Array} Array of unique state names
+ */
+function getUniqueStates() {
+  const stateSet = new Set();
+  
+  cities.forEach(city => {
+    if (city.state) {
+      stateSet.add(city.state);
+    }
+  });
+  
+  return Array.from(stateSet).sort();
+}
+
+/**
+ * Gets cities belonging to a specific state
+ * @param {string} stateName - The name of the state to filter by
+ * @returns {Array} Array of cities in the specified state
+ */
+function getCitiesByState(stateId) {
+  // If no stateId provided, return all cities
+  if (!stateId) return cities;
+  
+  // Map state IDs to actual state names
+  const stateMapping = {
+    'delhi': 'Delhi',
+    'haryana': 'Haryana',
+    'himachal': 'Himachal Pradesh',
+    'jammu': 'Jammu & Kashmir',
+    'punjab': 'Punjab',
+    'uttarakhand': 'Uttarakhand',
+    'up': 'Uttar Pradesh',
+    'bihar': 'Bihar',
+    'jharkhand': 'Jharkhand',
+    'odisha': 'Odisha',
+    'west-bengal': 'West Bengal',
+    'assam': 'Assam',
+    'sikkim': 'Sikkim',
+    'arunachal': 'Arunachal Pradesh',
+    'manipur': 'Manipur',
+    'meghalaya': 'Meghalaya',
+    'mizoram': 'Mizoram',
+    'nagaland': 'Nagaland',
+    'tripura': 'Tripura',
+    'gujarat': 'Gujarat',
+    'maharashtra': 'Maharashtra',
+    'goa': 'Goa',
+    'rajasthan': 'Rajasthan',
+    'chandigarh': 'Chandigarh',
+    'daman-diu': 'Daman & Diu',
+    'dadra': 'Dadra & Nagar Haveli',
+    'lakshadweep': 'Lakshadweep',
+    'pondicherry': 'Puducherry',
+    'andaman': 'Andaman & Nicobar',
+    'ladakh': 'Ladakh',
+    'andhra': 'Andhra Pradesh',
+    'karnataka': 'Karnataka',
+    'kerala': 'Kerala',
+    'tamil-nadu': 'Tamil Nadu',
+    'telangana': 'Telangana',
+    'chhattisgarh': 'Chhattisgarh',
+    'madhya-pradesh': 'Madhya Pradesh'
+  };
+  
+  // Get the actual state name
+  const stateName = stateMapping[stateId];
+  
+  if (!stateName) return [];
+  
+  // Filter cities by state name 
+  return cities.filter(city => city.state === stateName);
+}
+
+// Wait for DOM to be fully loaded before initializing
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize the page
   initComparePage();
@@ -26,70 +319,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Check authentication status and update UI
   updateAuthUI();
+  
+  // Initialize the improved city selection UI
+  initializeCitySelectionUI();
+  
+  // Initialize state item listeners
+  initializeStateItemListeners();
 });
-
-// Update authentication UI based on login status
-function updateAuthUI() {
-  // If API client is loaded
-  if (window.PortMySimAPI) {
-    // Check if user is authenticated
-    if (window.PortMySimAPI.isAuthenticated()) {
-      const user = window.PortMySimAPI.getUser();
-      
-      // Update auth buttons in nav if they exist
-      const authBtns = document.querySelector('.auth-btns');
-      if (authBtns) {
-        const firstLetter = user.name.charAt(0).toUpperCase();
-        authBtns.innerHTML = `
-          <div class="user-profile-dropdown">
-            <div class="user-profile-circle" title="${user.name}">
-              ${firstLetter}
-            </div>
-            <div class="dropdown-menu">
-              <span class="user-greeting">Hello, ${user.name.split(' ')[0]}</span>
-              <a href="/HTML/dashboard.html" class="dropdown-item">
-                <i class="fas fa-tachometer-alt"></i> Dashboard
-              </a>
-              <a href="/HTML/schedule-porting.html" class="dropdown-item">
-                <i class="fas fa-calendar-alt"></i> Schedule Porting
-              </a>
-              <button id="logoutBtn" class="dropdown-item">
-                <i class="fas fa-sign-out-alt"></i> Logout
-              </button>
-            </div>
-          </div>
-        `;
-        
-        // Add event listener for logout button
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-          logoutBtn.addEventListener('click', function() {
-            window.PortMySimAPI.clearAuth();
-            window.location.reload();
-          });
-        }
-        
-        // Add event listener for dropdown toggle
-        const profileCircle = document.querySelector('.user-profile-circle');
-        if (profileCircle) {
-          profileCircle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const dropdown = document.querySelector('.dropdown-menu');
-            dropdown.classList.toggle('show');
-          });
-        }
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function() {
-          const dropdown = document.querySelector('.dropdown-menu');
-          if (dropdown && dropdown.classList.contains('show')) {
-            dropdown.classList.remove('show');
-          }
-        });
-      }
-    }
-  }
-}
 
 // Initialize all components of the compare page
 async function initComparePage() {
@@ -102,6 +338,9 @@ async function initComparePage() {
   
   // Initialize location autocomplete
   await initLocationSuggestions();
+  
+  // Setup state-city browser
+  setupStateCityBrowser();
 
   // Initialize tower layers (empty initially)
   towerLayers = {
@@ -112,27 +351,62 @@ async function initComparePage() {
   
   // Define the updateMapLayers function
   window.updateMapLayers = function() {
-    const selectedNetwork = document.getElementById('network-select').value;
-    const selectedCoverage = document.querySelector('input[name="coverage-type"]:checked').value;
+    const networkSelect = document.getElementById('network-select');
+    const selectedNetwork = networkSelect ? networkSelect.value : 'all';
     
-    // Sample city data
-    const cities = [
-      { name: 'Delhi', coords: [28.7041, 77.1025] },
-      { name: 'Mumbai', coords: [19.0760, 72.8777] },
-      { name: 'Chennai', coords: [13.0827, 80.2707] },
-      { name: 'Kolkata', coords: [22.5726, 88.3639] },
-      { name: 'Bangalore', coords: [12.9716, 77.5946] },
-      { name: 'Hyderabad', coords: [17.3850, 78.4867] },
-      { name: 'Pune', coords: [18.5204, 73.8567] },
-      { name: 'Ahmedabad', coords: [23.0225, 72.5714] },
-      { name: 'Jaipur', coords: [26.9124, 75.7873] },
-      { name: 'Lucknow', coords: [26.8467, 80.9462] }
+    const coverageTypeRadio = document.querySelector('input[name="coverage-type"]:checked');
+    const selectedCoverage = coverageTypeRadio ? coverageTypeRadio.value : '4g';
+    
+    // Use the global cities variable or create an extended version if we need more cities
+    const allCities = window.cities || [];
+    
+    // Additional cities for coverage if needed
+    const additionalCities = [
+      // State Capitals and Major Cities (one per state)
+      { name: 'Amaravati', coords: [16.5130, 80.5166] },  // Andhra Pradesh
+      { name: 'Itanagar', coords: [27.0844, 93.6053] },   // Arunachal Pradesh
+      { name: 'Dispur', coords: [26.1433, 91.7898] },     // Assam
+      { name: 'Patna', coords: [25.5941, 85.1376] },      // Bihar
+      { name: 'Raipur', coords: [21.2514, 81.6296] },     // Chhattisgarh
+      { name: 'Panaji', coords: [15.4909, 73.8278] },     // Goa
+      { name: 'Gandhinagar', coords: [23.2156, 72.6369] }, // Gujarat
+      { name: 'Chandigarh', coords: [30.7333, 76.7794] }, // Haryana & Punjab
+      { name: 'Shimla', coords: [31.1048, 77.1734] },     // Himachal Pradesh
+      { name: 'Ranchi', coords: [23.3441, 85.3096] },     // Jharkhand
+      { name: 'Thiruvananthapuram', coords: [8.5241, 76.9366] }, // Kerala
+      { name: 'Bhopal', coords: [23.2599, 77.4126] },     // Madhya Pradesh
+      { name: 'Imphal', coords: [24.8170, 93.9368] },     // Manipur
+      { name: 'Shillong', coords: [25.5788, 91.8933] },   // Meghalaya
+      { name: 'Aizawl', coords: [23.7271, 92.7176] },     // Mizoram
+      { name: 'Kohima', coords: [25.6701, 94.1077] },     // Nagaland
+      { name: 'Bhubaneswar', coords: [20.2961, 85.8245] }, // Odisha
+      { name: 'Gangtok', coords: [27.3389, 88.6065] },    // Sikkim
+      { name: 'Agartala', coords: [23.8315, 91.2868] },   // Tripura
+      { name: 'Dehradun', coords: [30.3165, 78.0322] },   // Uttarakhand
+      
+      // Union Territories
+      { name: 'Port Blair', coords: [11.6234, 92.7265] }, // Andaman & Nicobar
+      { name: 'Daman', coords: [20.3974, 72.8328] },      // Daman & Diu
+      { name: 'Silvassa', coords: [20.2696, 72.9968] },   // Dadra & Nagar Haveli
+      { name: 'Kavaratti', coords: [10.5593, 72.6358] },  // Lakshadweep
+      { name: 'Puducherry', coords: [11.9416, 79.8083] }, // Puducherry
+      { name: 'Jammu', coords: [32.7266, 74.8570] },      // Jammu
+      { name: 'Srinagar', coords: [34.0837, 74.7973] },   // Kashmir
+      { name: 'Leh', coords: [34.1526, 77.5771] }         // Ladakh
     ];
     
+    // Merge the city lists if we have additional cities
+    const cities = [...allCities, ...additionalCities];
+    
     // Remove existing layers
-    Object.values(window.networkLayers).forEach(layer => {
-      layer.clearLayers();
-    });
+    if (window.networkLayers) {
+      Object.values(window.networkLayers).forEach(layer => {
+        layer.clearLayers();
+      });
+    } else {
+      console.warn('Network layers not initialized yet');
+      return; // Exit the function if layers aren't initialized
+    }
     
     // For demonstration, we'll use simple circle overlays with different colors
     // In a real app, you would use GeoJSON data for accurate coverage areas
@@ -180,7 +454,11 @@ async function initComparePage() {
         });
         
         // Add to appropriate layer group
-        window.networkLayers[network].addLayer(circle);
+        if (window.networkLayers && window.networkLayers[network]) {
+          window.networkLayers[network].addLayer(circle);
+        } else {
+          console.warn(`Network layer "${network}" not initialized`);
+        }
       });
     }
     
@@ -514,6 +792,15 @@ function setupEventListeners() {
 
   // Setup layer management event listeners
   setupLayerManagement();
+
+  // Initialize our new state and city selectors
+  initializeStateAndCitySelectors();
+
+  // Set up the compare button event
+  setupCompareButtonEvent();
+  
+  // Set up the state-city browser
+  setupStateCityBrowser();
 }
 
 // Filter location suggestions based on input text
@@ -676,71 +963,199 @@ async function searchLocation(location) {
       { name: 'Guntur', coords: [16.3067, 80.4365] },
       { name: 'Nellore', coords: [14.4426, 79.9865] },
       { name: 'Kurnool', coords: [15.8281, 78.0373] },
+      { name: 'Tirupati', coords: [13.6288, 79.4192] },
+      { name: 'Amaravati', coords: [16.5130, 80.5166] }, // Capital of Andhra Pradesh
+      
+      // Arunachal Pradesh
+      { name: 'Itanagar', coords: [27.0844, 93.6053] }, // Capital
+      { name: 'Naharlagun', coords: [27.1036, 93.6962] },
+      { name: 'Pasighat', coords: [28.0700, 95.3300] },
+      { name: 'Tawang', coords: [27.5859, 91.8588] },
+      
+      // Assam
+      { name: 'Guwahati', coords: [26.1445, 91.7362] },
+      { name: 'Silchar', coords: [24.8333, 92.7789] },
+      { name: 'Dibrugarh', coords: [27.4728, 94.9120] },
+      { name: 'Jorhat', coords: [26.7465, 94.2026] },
+      { name: 'Dispur', coords: [26.1433, 91.7898] }, // Capital
+      
+      // Bihar
+      { name: 'Patna', coords: [25.5941, 85.1376] }, // Capital
+      { name: 'Gaya', coords: [24.7914, 84.9994] },
+      { name: 'Bhagalpur', coords: [25.2425, 86.9842] },
+      { name: 'Muzaffarpur', coords: [26.1197, 85.3910] },
+      { name: 'Darbhanga', coords: [26.1542, 85.8918] },
+      
+      // Chhattisgarh
+      { name: 'Raipur', coords: [21.2514, 81.6296] }, // Capital
+      { name: 'Bhilai', coords: [21.2090, 81.4280] },
+      { name: 'Bilaspur', coords: [22.0797, 82.1409] },
+      { name: 'Korba', coords: [22.3595, 82.7501] },
+      { name: 'Durg', coords: [21.1906, 81.2849] },
+      
+      // Goa
+      { name: 'Panaji', coords: [15.4909, 73.8278] }, // Capital
+      { name: 'Margao', coords: [15.2832, 73.9862] },
+      { name: 'Vasco da Gama', coords: [15.3981, 73.8113] },
+      { name: 'Mapusa', coords: [15.5937, 73.8142] },
       
       // Gujarat
+      { name: 'Gandhinagar', coords: [23.2156, 72.6369] }, // Capital
       { name: 'Surat', coords: [21.1702, 72.8311] },
       { name: 'Vadodara', coords: [22.3072, 73.1812] },
       { name: 'Rajkot', coords: [22.2734, 70.7713] },
+      { name: 'Bhavnagar', coords: [21.7645, 72.1519] },
+      
+      // Haryana
+      { name: 'Chandigarh', coords: [30.7333, 76.7794] }, // Capital (shared with Punjab)
+      { name: 'Faridabad', coords: [28.4089, 77.3178] },
+      { name: 'Gurgaon', coords: [28.4595, 77.0266] },
+      { name: 'Rohtak', coords: [28.8955, 76.6066] },
+      { name: 'Hisar', coords: [29.1492, 75.7217] },
+      { name: 'Panipat', coords: [29.3909, 76.9635] },
+      
+      // Himachal Pradesh
+      { name: 'Shimla', coords: [31.1048, 77.1734] }, // Capital
+      { name: 'Dharamshala', coords: [32.2160, 76.3197] },
+      { name: 'Mandi', coords: [31.7080, 76.9318] },
+      { name: 'Solan', coords: [30.9045, 77.0967] },
+      { name: 'Kullu', coords: [31.9592, 77.1089] },
+      
+      // Jharkhand
+      { name: 'Ranchi', coords: [23.3441, 85.3096] }, // Capital
+      { name: 'Jamshedpur', coords: [22.8046, 86.2029] },
+      { name: 'Dhanbad', coords: [23.7957, 86.4304] },
+      { name: 'Bokaro', coords: [23.6693, 86.1511] },
+      
+      // Karnataka
+      { name: 'Mysore', coords: [12.2958, 76.6394] },
+      { name: 'Mangalore', coords: [12.9141, 74.8560] },
+      { name: 'Hubli-Dharwad', coords: [15.3647, 75.1240] },
+      { name: 'Belgaum', coords: [15.8497, 74.4977] },
+      { name: 'Gulbarga', coords: [17.3297, 76.8343] },
+      
+      // Kerala
+      { name: 'Thiruvananthapuram', coords: [8.5241, 76.9366] }, // Capital
+      { name: 'Kochi', coords: [9.9312, 76.2673] },
+      { name: 'Kozhikode', coords: [11.2588, 75.7804] },
+      { name: 'Thrissur', coords: [10.5276, 76.2144] },
+      { name: 'Kollam', coords: [8.8932, 76.6141] },
+      
+      // Madhya Pradesh
+      { name: 'Bhopal', coords: [23.2599, 77.4126] }, // Capital
+      { name: 'Indore', coords: [22.7196, 75.8577] },
+      { name: 'Jabalpur', coords: [23.1815, 79.9864] },
+      { name: 'Gwalior', coords: [26.2183, 78.1828] },
+      { name: 'Ujjain', coords: [23.1765, 75.7885] },
       
       // Maharashtra
       { name: 'Nagpur', coords: [21.1458, 79.0882] },
       { name: 'Nashik', coords: [19.9975, 73.7898] },
       { name: 'Aurangabad', coords: [19.8762, 75.3433] },
+      { name: 'Solapur', coords: [17.6599, 75.9064] },
+      { name: 'Amravati', coords: [20.9320, 77.7523] },
       
-      // Tamil Nadu
-      { name: 'Coimbatore', coords: [11.0168, 76.9558] },
-      { name: 'Madurai', coords: [9.9252, 78.1198] },
-      { name: 'Tiruchirappalli', coords: [10.7905, 78.7047] },
+      // Manipur
+      { name: 'Imphal', coords: [24.8170, 93.9368] }, // Capital
+      { name: 'Thoubal', coords: [24.6422, 94.0188] },
+      { name: 'Bishnupur', coords: [24.6324, 93.7642] },
+      { name: 'Churachandpur', coords: [24.3370, 93.6758] },
       
-      // Karnataka
-      { name: 'Mysore', coords: [12.2958, 76.6394] },
-      { name: 'Mangalore', coords: [12.9141, 74.8560] },
+      // Meghalaya
+      { name: 'Shillong', coords: [25.5788, 91.8933] }, // Capital
+      { name: 'Tura', coords: [25.5165, 90.2042] },
+      { name: 'Jowai', coords: [25.4504, 92.1931] },
+      { name: 'Nongstoin', coords: [25.5192, 91.2661] },
       
-      // Uttar Pradesh
-      { name: 'Kanpur', coords: [26.4499, 80.3319] },
-      { name: 'Varanasi', coords: [25.3176, 82.9739] },
-      { name: 'Agra', coords: [27.1767, 78.0081] },
+      // Mizoram
+      { name: 'Aizawl', coords: [23.7271, 92.7176] }, // Capital
+      { name: 'Lunglei', coords: [22.8808, 92.7420] },
+      { name: 'Champhai', coords: [23.4730, 93.3314] },
+      { name: 'Serchhip', coords: [23.3416, 92.8573] },
       
-      // West Bengal
-      { name: 'Durgapur', coords: [23.5204, 87.3119] },
-      { name: 'Asansol', coords: [23.6739, 86.9524] },
-      { name: 'Siliguri', coords: [26.7271, 88.3953] },
+      // Nagaland
+      { name: 'Kohima', coords: [25.6701, 94.1077] }, // Capital
+      { name: 'Dimapur', coords: [25.9091, 93.7270] },
+      { name: 'Mokokchung', coords: [26.3298, 94.5131] },
+      { name: 'Tuensang', coords: [26.2841, 94.8269] },
       
-      // Kerala
-      { name: 'Thiruvananthapuram', coords: [8.5241, 76.9366] },
-      { name: 'Kochi', coords: [9.9312, 76.2673] },
-      { name: 'Kozhikode', coords: [11.2588, 75.7804] },
-      
-      // Madhya Pradesh
-      { name: 'Indore', coords: [22.7196, 75.8577] },
-      { name: 'Bhopal', coords: [23.2599, 77.4126] },
-      { name: 'Jabalpur', coords: [23.1815, 79.9864] },
-      
-      // Rajasthan
-      { name: 'Jodhpur', coords: [26.2389, 73.0243] },
-      { name: 'Kota', coords: [25.2138, 75.8648] },
-      { name: 'Bikaner', coords: [28.0229, 73.3119] },
-      
-      // Bihar
-      { name: 'Patna', coords: [25.5941, 85.1376] },
-      { name: 'Gaya', coords: [24.7914, 84.9994] },
-      { name: 'Bhagalpur', coords: [25.2425, 86.9842] },
+      // Odisha
+      { name: 'Bhubaneswar', coords: [20.2961, 85.8245] }, // Capital
+      { name: 'Cuttack', coords: [20.4625, 85.8830] },
+      { name: 'Rourkela', coords: [22.2604, 84.8536] },
+      { name: 'Berhampur', coords: [19.3149, 84.7941] },
+      { name: 'Sambalpur', coords: [21.4669, 83.9756] },
       
       // Punjab
       { name: 'Ludhiana', coords: [30.9010, 75.8573] },
       { name: 'Amritsar', coords: [31.6340, 74.8723] },
       { name: 'Jalandhar', coords: [31.3260, 75.5762] },
+      { name: 'Patiala', coords: [30.3398, 76.3869] },
+      { name: 'Bathinda', coords: [30.2110, 74.9455] },
       
-      // Haryana
-      { name: 'Faridabad', coords: [28.4089, 77.3178] },
-      { name: 'Gurgaon', coords: [28.4595, 77.0266] },
-      { name: 'Rohtak', coords: [28.8955, 76.6066] },
+      // Rajasthan
+      { name: 'Jodhpur', coords: [26.2389, 73.0243] },
+      { name: 'Kota', coords: [25.2138, 75.8648] },
+      { name: 'Bikaner', coords: [28.0229, 73.3119] },
+      { name: 'Ajmer', coords: [26.4499, 74.6399] },
+      { name: 'Udaipur', coords: [24.5854, 73.7125] },
       
+      // Sikkim
+      { name: 'Gangtok', coords: [27.3389, 88.6065] }, // Capital
+      { name: 'Namchi', coords: [27.1675, 88.3636] },
+      { name: 'Gyalshing', coords: [27.2833, 88.2667] },
+      { name: 'Mangan', coords: [27.5075, 88.5322] },
+      
+      // Tamil Nadu
+      { name: 'Coimbatore', coords: [11.0168, 76.9558] },
+      { name: 'Madurai', coords: [9.9252, 78.1198] },
+      { name: 'Tiruchirappalli', coords: [10.7905, 78.7047] },
+      { name: 'Salem', coords: [11.6643, 78.1460] },
+      { name: 'Tirunelveli', coords: [8.7139, 77.7567] },
+      
+      // Telangana
+      { name: 'Warangal', coords: [17.9689, 79.5941] },
+      { name: 'Nizamabad', coords: [18.6725, 78.0941] },
+      { name: 'Karimnagar', coords: [18.4392, 79.1324] },
+      { name: 'Khammam', coords: [17.2473, 80.1514] },
+      
+      // Tripura
+      { name: 'Agartala', coords: [23.8315, 91.2868] }, // Capital
+      { name: 'Udaipur', coords: [23.5372, 91.4860] }, // Tripura Udaipur
+      { name: 'Dharmanagar', coords: [24.3780, 92.1993] },
+      { name: 'Kailashahar', coords: [24.3322, 92.0048] },
+      
+      // Uttar Pradesh
+      { name: 'Kanpur', coords: [26.4499, 80.3319] },
+      { name: 'Varanasi', coords: [25.3176, 82.9739] },
+      { name: 'Agra', coords: [27.1767, 78.0081] },
+      { name: 'Meerut', coords: [28.9845, 77.7064] },
+      { name: 'Prayagraj', coords: [25.4358, 81.8463] },
+      { name: 'Bareilly', coords: [28.3670, 79.4304] },
+
+      // Uttarakhand
+      { name: 'Dehradun', coords: [30.3165, 78.0322] },
+      { name: 'Haridwar', coords: [29.9457, 78.1642] },
+      { name: 'Roorkee', coords: [29.8543, 77.8880] },
+      { name: 'Haldwani', coords: [29.2183, 79.5130] },
+      { name: 'Nainital', coords: [29.3919, 79.4542] },
+
+      // West Bengal
+      { name: 'Durgapur', coords: [23.5204, 87.3119] },
+      { name: 'Asansol', coords: [23.6739, 86.9524] },
+      { name: 'Siliguri', coords: [26.7271, 88.3953] },
+      { name: 'Howrah', coords: [22.5957, 88.2636] },
+      { name: 'Berhampore', coords: [24.1065, 88.2581] },
+
       // Union Territories
-      { name: 'Chandigarh', coords: [30.7333, 76.7794] },
       { name: 'Puducherry', coords: [11.9416, 79.8083] },
       { name: 'Jammu', coords: [32.7266, 74.8570] },
-      { name: 'Srinagar', coords: [34.0837, 74.7973] }
+      { name: 'Srinagar', coords: [34.0837, 74.7973] },
+      { name: 'Port Blair', coords: [11.6234, 92.7265] },
+      { name: 'Kavaratti', coords: [10.5593, 72.6358] },
+      { name: 'Daman', coords: [20.3974, 72.8328] },
+      { name: 'Silvassa', coords: [20.2696, 72.9968] },
+      { name: 'Leh', coords: [34.1526, 77.5771] }
     ];
     
     let coords;
@@ -839,910 +1254,338 @@ async function searchLocation(location) {
   }
 }
 
-// Function to specifically handle network comparison
-async function compareNetworksAction(location) {
-  if (!location) return;
+/**
+ * Action function triggered when the compare button is clicked
+ * Updates the coverage results for the selected location
+ * 
+ * @param {string} locationName - The name of the location to compare networks for
+ * @param {string} stateName - Optional state name for better context
+ */
+function compareNetworksAction(locationName, stateName = null) {
+  // Show loading state
+  const compareBtn = document.getElementById('compare-btn');
+  const originalBtnText = compareBtn.innerHTML;
+  compareBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Comparing...`;
+  compareBtn.disabled = true;
   
-  try {
-    // Update selected location text
-    const selectedLocationElement = document.getElementById('selected-location');
-    if (selectedLocationElement) {
-      selectedLocationElement.textContent = location;
-    }
-    
-    // First search for the location to update the map
-    await searchLocation(location);
-    
-    // Then fetch network comparison data from API
-    let lat = null;
-    let lng = null;
-    
-    // If we have userCoordinates and the location is "My Current Location"
-    if (userCoordinates && location === 'My Current Location') {
-      lat = userCoordinates.lat;
-      lng = userCoordinates.lng;
-    }
-    
-    // Show loading state in UI
-    showLoadingState();
-    
-    // Prepare parameters for API call
-    const params = {
-      location: location,
-      lat: lat,
-      lng: lng,
-      operators: 'jio,airtel,vi',
-      includeDistrict: true // Add flag to include district-level data
-    };
-    
-    console.log('Fetching network comparison data for:', location);
-    
+  // If we have a stateName and it wasn't already part of the location, add it for context
+  const fullLocationName = stateName && !locationName.includes(stateName) 
+    ? `${locationName}, ${stateName}` 
+    : locationName;
+  
+  // Update the UI to show we're comparing networks
+  updateLocationDisplay(fullLocationName);
+  
+  // Scroll to the results section
+  const resultsSection = document.querySelector('.comparison-results-section');
+  if (resultsSection) {
+    resultsSection.scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  // Update the coverage results
+  updateCoverageResults(locationName)
+    .then(() => {
+      // Restore the button state
+      compareBtn.innerHTML = originalBtnText;
+      compareBtn.disabled = false;
+    })
+    .catch(error => {
+      console.error('Error comparing networks:', error);
+      showNotification('Failed to compare networks. Please try again.', 'error');
+      compareBtn.innerHTML = originalBtnText;
+      compareBtn.disabled = false;
+    });
+}
+
+/**
+ * Updates the coverage results for a given location
+ * 
+ * @param {string} locationName - The name of the location to get coverage for
+ * @returns {Promise} - A promise that resolves when coverage data has been updated
+ */
+function updateCoverageResults(locationName) {
+  return new Promise(async (resolve, reject) => {
     try {
-      // Use the global PortMySimAPI object to call the API function
-      const comparisonData = await window.PortMySimAPI.compareNetworks(location);
+      const resultsContainer = document.querySelector('.coverage-results-section');
+      if (!resultsContainer) {
+        console.error('Results container not found');
+        reject(new Error('Results container not found'));
+        return;
+      }
       
-      // Hide loading state
-      hideLoadingState();
+      resultsContainer.classList.add('loading');
       
-      console.log('Received comparison data:', comparisonData);
+      // Try to find the location in our data first
+      const locationData = cities.find(city => city.name.toLowerCase() === locationName.toLowerCase());
       
-      // If we got good data, update the UI
-      if (comparisonData && comparisonData.bestNetwork) {
-        updateBestNetworkUI(comparisonData);
-        updateNetworkRankings(comparisonData.rankings);
-        highlightBestNetwork(comparisonData.bestNetwork.operator);
-        updateDetailedComparisonTable(comparisonData);
-        
-        // If district data is available, update district comparison
-        if (comparisonData.districtData) {
-          updateDistrictComparison(comparisonData.districtData);
+      if (locationData) {
+        // If we found it in our data, update the map
+        if (map) {
+          map.setView(locationData.coords, 10);
+          updateLocationMarker(locationData.coords);
         }
-      } else {
-        // Use fallback data without error message
-        console.log('Using fallback network data for', location);
-        const fallbackData = getFallbackNetworkData(location);
-        console.log('Generated fallback data:', fallbackData);
-        updateBestNetworkUI(fallbackData);
-        updateNetworkRankings(fallbackData.rankings);
-        highlightBestNetwork(fallbackData.bestNetwork.operator);
+        
+        // Update query parameters in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('location', locationName);
+        
+        // Replace current URL with updated parameters
+        const newUrl = window.location.pathname + '?' + urlParams.toString();
+        window.history.replaceState({}, '', newUrl);
+      }
+      
+      // Fetch network coverage data from API
+      try {
+        const response = await fetch(`${API_BASE_URL}/coverage?location=${encodeURIComponent(locationName)}`);
+        if (!response.ok) throw new Error('Failed to fetch coverage data');
+        
+        const coverageData = await response.json();
+        
+        // Update the comparison table with the coverage data
+        updateDetailedComparisonTable(coverageData);
+        
+        // Visualize the networks on the map
+        if (map) {
+          // Clear existing layers
+          Object.values(networkLayers).forEach(layer => {
+            if (map.hasLayer(layer)) {
+              map.removeLayer(layer);
+            }
+          });
+          
+          // Add new layers for each network
+          coverageData.forEach(network => {
+            addCoverageForNetwork(network.operator, network.coverageType, 0.7);
+          });
+          
+          // Refresh tower visualization if enabled
+          const showTowersCheckbox = document.getElementById('show-towers');
+          if (showTowersCheckbox && showTowersCheckbox.checked) {
+            await visualizeTowers();
+          }
+        }
+        
+        showNotification(`Network comparison for ${locationName} updated successfully`, 'success');
+        resultsContainer.classList.remove('loading');
+        resolve(coverageData);
+      } catch (error) {
+        console.error('Error fetching coverage data:', error);
+        
+        // Use fallback data if API request fails
+        const fallbackData = getFallbackNetworkData(locationName);
         updateDetailedComparisonTable(fallbackData);
         
-        // Generate fallback district data if needed
-        const fallbackDistrictData = generateFallbackDistrictData(location);
-        updateDistrictComparison(fallbackDistrictData);
+        showNotification('Using simulated data for comparison (API unavailable)', 'warning');
+        resultsContainer.classList.remove('loading');
+        resolve(fallbackData);
       }
     } catch (error) {
-      // Hide loading state
-      hideLoadingState();
-      
-      // Use fallback data if API call fails
-      console.log('Using fallback network data due to API error');
-      const fallbackData = getFallbackNetworkData(location);
-      console.log('Generated fallback data after error:', fallbackData);
-      updateBestNetworkUI(fallbackData);
-      updateNetworkRankings(fallbackData.rankings);
-      highlightBestNetwork(fallbackData.bestNetwork.operator);
-      updateDetailedComparisonTable(fallbackData);
-      
-      // Generate fallback district data if needed
-      const fallbackDistrictData = generateFallbackDistrictData(location);
-      updateDistrictComparison(fallbackDistrictData);
-    }
-  } catch (error) {
-    // Hide loading state
-    hideLoadingState();
-    
-    console.log('Error in compareNetworksAction, using fallback data');
-    // Generate fallback data even in case of general function errors
-    const fallbackData = getFallbackNetworkData(location);
-    console.log('Generated fallback data after general error:', fallbackData);
-    updateBestNetworkUI(fallbackData);
-    updateNetworkRankings(fallbackData.rankings);
-    highlightBestNetwork(fallbackData.bestNetwork.operator);
-    updateDetailedComparisonTable(fallbackData);
-    
-    // Generate fallback district data if needed
-    const fallbackDistrictData = generateFallbackDistrictData(location);
-    updateDistrictComparison(fallbackDistrictData);
-  }
-}
-
-// Show loading state in UI
-function showLoadingState() {
-  // Create or update loading overlay
-  let loadingOverlay = document.querySelector('.loading-overlay');
-  if (!loadingOverlay) {
-    loadingOverlay = document.createElement('div');
-    loadingOverlay.className = 'loading-overlay';
-    loadingOverlay.innerHTML = `
-      <div class="loading-spinner">
-        <i class="fas fa-circle-notch fa-spin"></i>
-      </div>
-      <div class="loading-text">Analyzing network data...</div>
-    `;
-    document.body.appendChild(loadingOverlay);
-  }
-  
-  // Show the loading overlay
-  loadingOverlay.style.display = 'flex';
-  
-  // Update compare button to show loading state
-  const compareBtn = document.getElementById('compare-btn');
-  if (compareBtn) {
-    compareBtn.classList.add('loading');
-    compareBtn.disabled = true;
-  }
-}
-
-// Hide loading state in UI
-function hideLoadingState() {
-  // Hide loading overlay
-  const loadingOverlay = document.querySelector('.loading-overlay');
-  if (loadingOverlay) {
-    loadingOverlay.style.display = 'none';
-  }
-  
-  // Reset compare button state
-  const compareBtn = document.getElementById('compare-btn');
-  if (compareBtn) {
-    compareBtn.classList.remove('loading');
-    compareBtn.disabled = false;
-  }
-}
-
-// Generate fallback district data for a location
-function generateFallbackDistrictData(location) {
-  const locationSeed = location.charCodeAt(0) + location.length;
-  
-  // Create some nearby districts based on the location
-  const districtCount = 3 + (locationSeed % 5); // 3-7 districts
-  const districts = [];
-  
-  // Generate district names
-  for (let i = 0; i < districtCount; i++) {
-    const districtName = `${location} District ${i + 1}`;
-    
-    // Create district data with random scores for each operator
-    const jioScore = 75 + (locationSeed + i) % 20;
-    const airtelScore = 75 + (locationSeed + i + 3) % 20;
-    const viScore = 70 + (locationSeed + i + 7) % 20;
-    
-    // Determine best operator
-    let bestOperator = 'jio';
-    let bestScore = jioScore;
-    
-    if (airtelScore > bestScore) {
-      bestOperator = 'airtel';
-      bestScore = airtelScore;
-    }
-    
-    if (viScore > bestScore) {
-      bestOperator = 'vi';
-      bestScore = viScore;
-    }
-    
-    // Create district object
-    districts.push({
-      name: districtName,
-      operators: {
-        jio: {
-          score: jioScore,
-          coverage4g: 85 + (locationSeed + i) % 15,
-          coverage5g: 60 + (locationSeed + i) % 30,
-          downloadSpeed: 18 + (locationSeed + i) % 15,
-          signalStrength: 'Good'
-        },
-        airtel: {
-          score: airtelScore,
-          coverage4g: 88 + (locationSeed + i + 2) % 12,
-          coverage5g: 65 + (locationSeed + i + 2) % 25,
-          downloadSpeed: 22 + (locationSeed + i + 2) % 13,
-          signalStrength: 'Excellent'
-        },
-        vi: {
-          score: viScore,
-          coverage4g: 80 + (locationSeed + i + 4) % 15,
-          coverage5g: 50 + (locationSeed + i + 4) % 25,
-          downloadSpeed: 15 + (locationSeed + i + 4) % 12,
-          signalStrength: 'Average'
-        }
-      },
-      bestOperator: bestOperator
-    });
-  }
-  
-  return {
-    mainLocation: location,
-    districts: districts
-  };
-}
-
-// Update UI with district comparison data
-function updateDistrictComparison(districtData) {
-  // First, check if the district comparison section exists
-  let districtSection = document.querySelector('.district-comparison-section');
-  
-  // If not, create it
-  if (!districtSection) {
-    districtSection = document.createElement('div');
-    districtSection.className = 'district-comparison-section content-transition';
-    districtSection.setAttribute('data-animation', 'fade-in');
-    districtSection.setAttribute('data-delay', '1.0s');
-    
-    // Find where to insert it (after detailed comparison section)
-    const comparisonTable = document.querySelector('.comparison-table-container');
-    if (comparisonTable && comparisonTable.parentNode) {
-      comparisonTable.parentNode.insertBefore(districtSection, comparisonTable.nextSibling);
-    } else {
-      // Fallback insertion point
-      const networkComparisonSection = document.getElementById('network-comparison-section');
-      if (networkComparisonSection) {
-        networkComparisonSection.appendChild(districtSection);
-      } else {
-        console.error('Could not find a container to insert district comparison section');
-        return;
-      }
-    }
-  }
-  
-  // Create the content
-  let districtHTML = `
-    <div class="district-comparison-container">
-      <h3>Network Comparison by District</h3>
-      <p>Below is a comparison of network performance across districts near ${districtData.mainLocation}</p>
-      
-      <div class="district-cards">
-  `;
-  
-  // Add cards for each district
-  districtData.districts.forEach(district => {
-    // Get operator display names and colors
-    const operatorDisplayNames = {
-      jio: 'Jio',
-      airtel: 'Airtel',
-      vi: 'Vi'
-    };
-    
-    const operatorColors = {
-      jio: '#E53935',
-      airtel: '#1E88E5',
-      vi: '#7B1FA2'
-    };
-    
-    const bestOperatorDisplay = operatorDisplayNames[district.bestOperator] || district.bestOperator;
-    const bestOperatorColor = operatorColors[district.bestOperator] || '#333';
-    const bestOperatorImgSrc = `../images/${district.bestOperator}.${district.bestOperator === 'jio' ? 'jpeg' : 'png'}`;
-    
-    // Create the district card
-    districtHTML += `
-      <div class="district-card">
-        <h4 class="district-name">${district.name}</h4>
-        <div class="district-best-network" style="border-color: ${bestOperatorColor}">
-          <div class="district-best-logo">
-            <img src="${bestOperatorImgSrc}" alt="${bestOperatorDisplay}" />
-          </div>
-          <div class="district-best-details">
-            <h5>Best Network: ${bestOperatorDisplay}</h5>
-            <div class="district-score">Score: ${district.operators[district.bestOperator].score}/100</div>
-          </div>
-        </div>
-        <div class="district-metrics">
-          <div class="district-metric">
-            <div class="metric-name">4G Coverage</div>
-            <div class="mini-bars">
-              <div class="mini-bar">
-                <div class="mini-label">Jio</div>
-                <div class="mini-progress">
-                  <div class="mini-fill" style="width: ${district.operators.jio.coverage4g}%; background-color: ${operatorColors.jio}"></div>
-                </div>
-                <div class="mini-value">${district.operators.jio.coverage4g}%</div>
-              </div>
-              <div class="mini-bar">
-                <div class="mini-label">Airtel</div>
-                <div class="mini-progress">
-                  <div class="mini-fill" style="width: ${district.operators.airtel.coverage4g}%; background-color: ${operatorColors.airtel}"></div>
-                </div>
-                <div class="mini-value">${district.operators.airtel.coverage4g}%</div>
-              </div>
-              <div class="mini-bar">
-                <div class="mini-label">Vi</div>
-                <div class="mini-progress">
-                  <div class="mini-fill" style="width: ${district.operators.vi.coverage4g}%; background-color: ${operatorColors.vi}"></div>
-                </div>
-                <div class="mini-value">${district.operators.vi.coverage4g}%</div>
-              </div>
-            </div>
-          </div>
-          <div class="district-metric">
-            <div class="metric-name">Download Speed</div>
-            <div class="mini-bars">
-              <div class="mini-bar">
-                <div class="mini-label">Jio</div>
-                <div class="mini-progress">
-                  <div class="mini-fill" style="width: ${district.operators.jio.downloadSpeed * 2}%; background-color: ${operatorColors.jio}"></div>
-                </div>
-                <div class="mini-value">${district.operators.jio.downloadSpeed} Mbps</div>
-              </div>
-              <div class="mini-bar">
-                <div class="mini-label">Airtel</div>
-                <div class="mini-progress">
-                  <div class="mini-fill" style="width: ${district.operators.airtel.downloadSpeed * 2}%; background-color: ${operatorColors.airtel}"></div>
-                </div>
-                <div class="mini-value">${district.operators.airtel.downloadSpeed} Mbps</div>
-              </div>
-              <div class="mini-bar">
-                <div class="mini-label">Vi</div>
-                <div class="mini-progress">
-                  <div class="mini-fill" style="width: ${district.operators.vi.downloadSpeed * 2}%; background-color: ${operatorColors.vi}"></div>
-                </div>
-                <div class="mini-value">${district.operators.vi.downloadSpeed} Mbps</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  
-  // Close the container
-  districtHTML += `
-      </div>
-    </div>
-  `;
-  
-  // Set the HTML
-  districtSection.innerHTML = districtHTML;
-  
-  // Make sure the section is visible
-  districtSection.style.display = 'block';
-}
-
-// Make functions accessible globally for HTML event handlers
-window.searchLocation = searchLocation;
-window.compareNetworksAction = compareNetworksAction;
-
-// Enhance the updateBestNetworkUI function to create a more visually appealing section
-function updateBestNetworkUI(data) {
-  // Check if data is valid
-  if (!data || !data.bestNetwork) {
-    console.error('Invalid network data provided to updateBestNetworkUI:', data);
-    return; // Exit early if data or bestNetwork is missing
-  }
-
-  console.log('Updating best network UI with data:', data);
-
-  // Check if best network section already exists
-  let bestNetworkSection = document.querySelector('.best-network-section');
-  
-  if (!bestNetworkSection) {
-    // Create it if it doesn't exist
-    console.log('Creating new best-network-section as it does not exist');
-    bestNetworkSection = document.createElement('div');
-    bestNetworkSection.className = 'best-network-section content-transition';
-    bestNetworkSection.setAttribute('data-animation', 'fade-in');
-    bestNetworkSection.setAttribute('data-delay', '0.5s');
-    
-    // Find where to insert it (after map container)
-    const mapContainer = document.querySelector('.india-map-container');
-    if (mapContainer && mapContainer.parentNode) {
-      mapContainer.parentNode.insertBefore(bestNetworkSection, mapContainer.nextSibling);
-    } else {
-      console.error('Could not find .india-map-container to insert best network section after');
-      // Try an alternative insertion point
-      const comparisonSection = document.getElementById('network-comparison-section');
-      if (comparisonSection) {
-        comparisonSection.appendChild(bestNetworkSection);
-      } else {
-        console.error('Could not find any container to insert best network section');
-        return;
-      }
-    }
-  }
-  
-  // Get criteria display text
-  let criteriaText = 'overall performance';
-  switch (data.criteria) {
-    case 'coverage': criteriaText = 'network coverage'; break;
-    case 'speed': criteriaText = 'data speed'; break;
-    case 'callQuality': criteriaText = 'call quality'; break;
-    case 'indoorReception': criteriaText = 'indoor reception'; break;
-  }
-  
-  // Make sure the operator value exists and is valid
-  const operator = data.bestNetwork.operator || 'unknown';
-  const operatorDisplay = operator.toUpperCase();
-  const operatorImgSrc = `../images/${operator}.${operator === 'jio' ? 'jpeg' : 'png'}`;
-  
-  // Create badges for the top features of this network
-  let featureBadges = '';
-  
-  // Add some feature badges based on the operator
-  if (operator === 'jio') {
-    featureBadges = `
-      <div class="feature-badges">
-        <span class="feature-badge"><i class="fas fa-wifi"></i> Wide 5G Coverage</span>
-        <span class="feature-badge"><i class="fas fa-tachometer-alt"></i> Fast Data Speeds</span>
-        <span class="feature-badge"><i class="fas fa-tags"></i> Affordable Plans</span>
-      </div>
-    `;
-  } else if (operator === 'airtel') {
-    featureBadges = `
-      <div class="feature-badges">
-        <span class="feature-badge"><i class="fas fa-phone-alt"></i> Best Call Quality</span>
-        <span class="feature-badge"><i class="fas fa-signal"></i> Reliable Network</span>
-        <span class="feature-badge"><i class="fas fa-map-marker-alt"></i> Rural Coverage</span>
-      </div>
-    `;
-  } else if (operator === 'vi') {
-    featureBadges = `
-      <div class="feature-badges">
-        <span class="feature-badge"><i class="fas fa-film"></i> Entertainment Bundles</span>
-        <span class="feature-badge"><i class="fas fa-calendar-week"></i> Weekend Data Benefits</span>
-        <span class="feature-badge"><i class="fas fa-rupee-sign"></i> Value Pricing</span>
-      </div>
-    `;
-  }
-  
-  // Set the content with enhanced visual elements
-  bestNetworkSection.innerHTML = `
-    <div class="best-network-container">
-      <h3>Best Network in <span class="location-highlight">${data.location || 'Selected Area'}</span></h3>
-      <div class="best-network-card">
-        <div class="network-logo">
-          <img src="${operatorImgSrc}" alt="${operatorDisplay}">
-        </div>
-        <div class="best-network-details">
-          <div class="network-header">
-            <h4>${operatorDisplay}</h4>
-            <div class="network-ranking-badge">
-              <i class="fas fa-trophy"></i> #1 in your area
-            </div>
-          </div>
-          <div class="network-score">Score: <span>${data.bestNetwork.score || 'N/A'}/100</span></div>
-          <p>Based on ${criteriaText} in your selected area.</p>
-          ${featureBadges}
-        </div>
-      </div>
-      <div class="network-recommendation">
-        <i class="fas fa-info-circle recommendation-icon"></i>
-        <p>We analyzed network performance in <strong>${data.location || 'your area'}</strong> and found that <strong>${operatorDisplay}</strong> 
-        provides the best ${criteriaText}. See the comparison table below for details.</p>
-      </div>
-    </div>
-  `;
-  
-  // No need to add custom CSS here as it's now in the compare-networks.css file
-  
-  // Ensure the section is visible
-  bestNetworkSection.style.display = 'block';
-  console.log('Best network UI updated successfully');
-  
-  // Scroll to show this section
-  setTimeout(() => {
-    bestNetworkSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, 300);
-}
-
-// Enhanced function to update the network rankings with a better visual appearance
-function updateNetworkRankings(rankings) {
-  // Ensure rankings is valid and not empty
-  if (!rankings || !Array.isArray(rankings) || rankings.length === 0) {
-    console.warn('Invalid rankings data provided to updateNetworkRankings:', rankings);
-    return;
-  }
-
-  console.log('Updating network rankings with data:', rankings);
-
-  const rankingContainer = document.querySelector('.network-ranking');
-  if (!rankingContainer) {
-    console.error('network-ranking container not found in the DOM');
-    return;
-  }
-  
-  // Get all ranking items
-  const rankingItems = rankingContainer.querySelectorAll('.ranking-item');
-  if (!rankingItems || rankingItems.length === 0) {
-    console.error('No ranking-item elements found in the network-ranking container');
-    return;
-  }
-  
-  // Update each item with data from rankings
-  for (let i = 0; i < Math.min(rankingItems.length, rankings.length); i++) {
-    const item = rankingItems[i];
-    const ranking = rankings[i];
-    
-    // Skip invalid rankings
-    if (!ranking || !ranking.operator) continue;
-    
-    // Update rank number if needed
-    const rankNumber = item.querySelector('.rank-number');
-    if (rankNumber) {
-      rankNumber.textContent = i + 1;
-    }
-    
-    // Update network image and name
-    const networkElem = item.querySelector('.rank-network');
-    if (networkElem) {
-      const img = networkElem.querySelector('img');
-      const span = networkElem.querySelector('span');
-      
-      if (img) {
-        img.src = `../images/${ranking.operator}.${ranking.operator === 'jio' ? 'jpeg' : 'png'}`;
-        img.alt = ranking.operator.toUpperCase();
-      }
-      
-      if (span) {
-        span.textContent = ranking.operator.toUpperCase();
-      }
-    }
-    
-    // Update score
-    const scoreElem = item.querySelector('.rank-score');
-    if (scoreElem) {
-      // Remove any existing score indicators first
-      const existingIndicator = scoreElem.querySelector('.score-indicator');
-      if (existingIndicator) {
-        existingIndicator.remove();
-      }
-      
-      // Set the score text
-      scoreElem.textContent = `${ranking.score || 0}/100`;
-      
-      // Create a small circular progress indicator next to the score
-      const progressIndicator = document.createElement('div');
-      progressIndicator.className = 'score-indicator';
-      
-      // Now with more simplified styling since we've added proper CSS
-      // Just set the background gradient dynamically
-      progressIndicator.style.background = `conic-gradient(
-        var(--success-color) ${(ranking.score || 0)}%, 
-        var(--bg-dark-4) ${(ranking.score || 0)}% 100%
-      )`;
-      
-      // Add the inner circle for the donut effect
-      const innerCircle = document.createElement('div');
-      innerCircle.className = 'score-indicator-inner';
-      progressIndicator.appendChild(innerCircle);
-      
-      // Add the indicator next to the score
-      scoreElem.appendChild(progressIndicator);
-    }
-    
-    // Add top-rank class to first item, remove from others
-    if (i === 0) {
-      item.classList.add('top-rank');
-    } else {
-      item.classList.remove('top-rank');
-    }
-  }
-  
-  console.log('Network rankings updated successfully');
-}
-
-// Highlight the best network in the UI
-function highlightBestNetwork(operator) {
-  // If no operator is provided, exit early
-  if (!operator) {
-    console.warn('No operator provided to highlightBestNetwork');
-    return;
-  }
-
-  console.log('Highlighting best network:', operator);
-
-  // Network cards have been removed, so skip this section
-  
-  // Update comparison table highlights
-  const comparisonTable = document.querySelector('.comparison-table table');
-  if (!comparisonTable) {
-    console.error('comparison-table table not found in the DOM');
-  } else {
-    const headerRow = comparisonTable.querySelector('thead tr');
-    if (headerRow) {
-      // Find which column corresponds to the best operator
-      let bestColumnIndex = -1;
-      const headers = headerRow.querySelectorAll('th');
-      
-      for (let i = 0; i < headers.length; i++) {
-        const operatorDisplayNames = {
-          jio: 'Jio',
-          airtel: 'Airtel',
-          vi: 'Vi',
-          bsnl: 'BSNL',
-          mtnl: 'MTNL'
-        };
-        const operatorDisplay = operatorDisplayNames[operator] || operator;
-        
-        if (headers[i].textContent.trim() === operatorDisplay) {
-          bestColumnIndex = i;
-          break;
-        }
-      }
-      
-      if (bestColumnIndex > 0) { // Skip first column (feature names)
-        // Add a visual highlight to the header of the best operator
-        headers.forEach((header, index) => {
-          if (index === bestColumnIndex) {
-            header.classList.add('best-operator');
-          } else {
-            header.classList.remove('best-operator');
-          }
-        });
-        
-        // Note: We don't override the feature-specific 'best' highlights
-        // Those are handled by highlightBestValues() function
-      } else {
-        console.warn(`Could not find column for operator '${operator}' in comparison table`);
-      }
-    }
-  }
-  
-  // Highlight in the selected networks section
-  const selectedNetworks = document.querySelectorAll('.selected-network');
-  if (selectedNetworks && selectedNetworks.length > 0) {
-    selectedNetworks.forEach(network => {
-      if (network.dataset.operator === operator) {
-        network.classList.add('best-network');
-      } else {
-        network.classList.remove('best-network');
-      }
-    });
-  }
-  
-  // Also update the metric items in the coverage metrics section
-  updateCoverageMetrics(operator);
-  
-  console.log('Best network highlighting completed');
-}
-
-// Update coverage metrics section based on best operator
-function updateCoverageMetrics(bestOperator) {
-  const metricsContainer = document.querySelector('.coverage-metrics');
-  if (!metricsContainer) {
-    console.warn('coverage-metrics container not found in the DOM');
-    return;
-  }
-  
-  const metricItems = metricsContainer.querySelectorAll('.metric-item');
-  metricItems.forEach(item => {
-    const label = item.querySelector('.metric-label');
-    if (label && label.textContent.toLowerCase().includes(bestOperator)) {
-      item.classList.add('best-metric');
-    } else {
-      item.classList.remove('best-metric');
+      console.error('Error updating coverage results:', error);
+      reject(error);
     }
   });
-}
-
-// Get user's current location using browser geolocation API
-function getUserLocation() {
-  if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser');
-    return;
-  }
-  
-  const userLocationBtn = document.getElementById('user-location-btn');
-  userLocationBtn.classList.add('loading');
-  
-  navigator.geolocation.getCurrentPosition(
-    // Success handler
-    function(position) {
-      userLocationBtn.classList.remove('loading');
-      
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
-      userCoordinates = { lat: latitude, lng: longitude };
-      
-      // Set a descriptive location name
-      const locationInput = document.getElementById('location-search');
-      locationInput.value = 'My Current Location';
-      
-      // Set current location to 'Current Location' for UI updates
-      currentLocation = 'Current Location';
-      
-      // Update the selected location display
-      const selectedLocationElement = document.getElementById('selected-location');
-      if (selectedLocationElement) {
-        selectedLocationElement.textContent = 'Your Current Location';
-      }
-      
-      // Call compareNetworksAction to complete the comparison
-      compareNetworksAction('My Current Location');
-    },
-    // Error handler
-    function(error) {
-      userLocationBtn.classList.remove('loading');
-      let errorMessage;
-      
-      switch(error.code) {
-        case error.PERMISSION_DENIED:
-          errorMessage = 'Location access was denied. Please allow location access or enter your location manually.';
-          break;
-        case error.POSITION_UNAVAILABLE:
-          errorMessage = 'Location information is unavailable. Please enter your location manually.';
-          break;
-        case error.TIMEOUT:
-          errorMessage = 'Location request timed out. Please try again or enter your location manually.';
-          break;
-        default:
-          errorMessage = 'An unknown error occurred. Please enter your location manually.';
-          break;
-      }
-      
-      alert(errorMessage);
-    },
-    // Options
-    {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    }
-  );
-}
-
-// Attempt to get address from coordinates using reverse geocoding
-async function reverseGeocode(latitude, longitude) {
-  try {
-    // Use a free geocoding service
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`);
-    
-    if (response.ok) {
-      const data = await response.json();
-      let locationName = '';
-      
-      if (data.address) {
-        // Construct a readable location name
-        const address = data.address;
-        if (address.city) {
-          locationName = address.city;
-        } else if (address.town) {
-          locationName = address.town;
-        } else if (address.village) {
-          locationName = address.village;
-        } else if (address.suburb) {
-          locationName = address.suburb;
-        }
-        
-        if (address.state) {
-          if (locationName) {
-            locationName += `, ${address.state}`;
-          } else {
-            locationName = address.state;
-          }
-        }
-      }
-      
-      if (locationName) {
-        // Update the UI with a proper location name
-        const locationInput = document.getElementById('location-search');
-        const selectedLocationElement = document.getElementById('selected-location');
-        
-        if (locationInput) {
-          locationInput.value = locationName;
-        }
-        
-        if (selectedLocationElement) {
-          selectedLocationElement.textContent = locationName;
-        }
-        
-        currentLocation = locationName;
-      }
-    }
-  } catch (error) {
-    console.warn('Error with reverse geocoding:', error);
-  }
 }
 
 // Function to visualize towers on the map
 async function visualizeTowers() {
-  // Clear existing tower layers
-  removeTowerLayers();
-  
-  // Create a new combined tower layer for all towers
-  let towerLayer = L.layerGroup().addTo(map);
-  
-  // Get center point and radius
-  let centerLat, centerLng;
-  
-  // Sample city data - use the same data format as in other functions
-  const cities = [
-    { name: 'Delhi', coords: [28.7041, 77.1025] },
-    { name: 'Mumbai', coords: [19.0760, 72.8777] },
-    { name: 'Chennai', coords: [13.0827, 80.2707] },
-    { name: 'Kolkata', coords: [22.5726, 88.3639] },
-    { name: 'Bangalore', coords: [12.9716, 77.5946] },
-    { name: 'Hyderabad', coords: [17.3850, 78.4867] },
-    { name: 'Pune', coords: [18.5204, 73.8567] },
-    { name: 'Ahmedabad', coords: [23.0225, 72.5714] },
-    { name: 'Jaipur', coords: [26.9124, 75.7873] },
-    { name: 'Lucknow', coords: [26.8467, 80.9462] }
-  ];
-  
-  // Check if a user input location is selected
-  const locationInputElement = document.getElementById('location-input');
-  const locationInput = locationInputElement ? locationInputElement.value.trim() : '';
-  
-  // Find matching city
-  const matchedCity = cities.find(city => city.name === locationInput);
-  
-  if (matchedCity) {
-    // Use the coordinates from the matched city
-    centerLat = matchedCity.coords[0];
-    centerLng = matchedCity.coords[1];
-  } else {
-    // Use map center if no valid location is entered
-    const center = map.getCenter();
-    centerLat = center.lat;
-    centerLng = center.lng;
-  }
-  
-  // Get radius from slider
-  const radiusSlider = document.getElementById('radius-slider');
-  const radius = radiusSlider ? radiusSlider.value : 5; // Default to 5 if element not found
-  
-  // Show loading indicator
-  const loadingIndicator = document.getElementById('loading-indicator');
-  const towerCount = document.getElementById('tower-count');
-  
-  if (loadingIndicator) loadingIndicator.style.display = 'block';
-  if (towerCount) towerCount.textContent = 'Loading...';
-  
-  try {
-    // Try to fetch data from API
-    let towerData = await fetchTowerData(centerLat, centerLng, radius);
-    
-    // If API failed or returned null, use fallback data
-    if (!towerData) {
-      console.log('Using fallback tower data generator');
-      towerData = generateFallbackTowerData(centerLat, centerLng, radius);
-      // Show warning to user
-      showNotification('API unavailable - using simulated tower data', 'warning', 5000);
+    // Check if map exists
+    if (!map) {
+        console.error("Map is not initialized");
+        return;
     }
     
-    // Create tower markers
-    towerData.forEach(tower => {
-      // Get lat/lng values, checking both possible property names
-      const lat = tower.lat || tower.latitude;
-      const lng = tower.lng || tower.longitude;
-      
-      // Skip creating marker if coordinates are missing or invalid
-      if (!lat || !lng) {
-        console.warn('Skipping tower with invalid coordinates:', tower);
-        return;
-      }
-      
-      const towerIcon = L.divIcon({
-        className: 'tower-icon',
-        html: `<div class="tower ${tower.operator.toLowerCase()}"></div>`,
-        iconSize: [20, 20]
-      });
-      
-      const marker = L.marker([lat, lng], { icon: towerIcon }).addTo(towerLayer);
-      
-      // Create popup content
-      const popupContent = `
-        <div class="tower-popup">
-          <h3>${tower.operator} Tower</h3>
-          <p><strong>Type:</strong> ${tower.type || tower.towerType || 'Unknown'}</p>
-          <p><strong>Technology:</strong> ${Array.isArray(tower.technology || tower.technologySupported) ? (tower.technology || tower.technologySupported).join(', ') : (tower.technology || tower.technologySupported || 'Unknown')}</p>
-          <p><strong>Signal Strength:</strong> ${tower.signalStrength || 'N/A'} dBm</p>
-          <p><strong>Frequency:</strong> ${tower.frequency || 'N/A'} MHz</p>
-        </div>
-      `;
-      
-      marker.bindPopup(popupContent);
-    });
+    // Clear existing tower layers if any
+    if (window.towerLayer) {
+        map.removeLayer(window.towerLayer);
+    }
     
-    // Update tower count
-    if (towerCount) towerCount.textContent = `${towerData.length} towers found`;
+    // Create a new layer group for towers
+    window.towerLayer = L.layerGroup();
     
-  } catch (error) {
-    console.error('Error in visualizeTowers:', error);
-    if (towerCount) towerCount.textContent = 'Error loading tower data';
-    showNotification('Error loading tower data. Please try again.', 'error', 5000);
-  } finally {
-    // Hide loading indicator
-    if (loadingIndicator) loadingIndicator.style.display = 'none';
-  }
+    // Initialize towerLayers object if it doesn't exist
+    if (!window.towerLayers) {
+        window.towerLayers = {
+            jio: L.layerGroup(),
+            airtel: L.layerGroup(),
+            vi: L.layerGroup()
+        };
+    }
+    
+    // Get values from UI elements
+    const towerRadiusSlider = document.getElementById('tower-radius');
+    const networkSelect = document.getElementById('network-select');
+    const radius = towerRadiusSlider ? parseFloat(towerRadiusSlider.value) : 5;
+    const provider = networkSelect ? networkSelect.value : 'jio';
+    
+    // Get current map center coordinates
+    const mapCenter = map.getCenter();
+    const lat = mapCenter.lat;
+    const lng = mapCenter.lng;
+    
+    let usedFallback = false;
+    let towerData = null;
+    let notificationShown = false;
+    
+    try {
+        // Check if we have a location from user input - simplified without citiesData
+        const locationName = document.getElementById('location-search')?.value || 'Current Location';
+        
+        try {
+            // Try to get real tower data from API
+            towerData = await fetchTowerData(provider, lat, lng, radius);
+            
+            // If API returned null or empty array, use fallback data
+            if (!towerData || towerData.length === 0) {
+                console.warn("API returned no tower data, using fallback data");
+                towerData = generateFallbackTowerData(lat, lng, radius, provider);
+                usedFallback = true;
+                
+                // Notify user we're using simulated data
+                if (!notificationShown) {
+                    showNotification(`Using simulated tower data for ${locationName}`, 'warning');
+                    notificationShown = true;
+                }
+            }
+        } catch (err) {
+            // If API call fails, use fallback data
+            console.error("Error fetching tower data:", err);
+            towerData = generateFallbackTowerData(lat, lng, radius, provider);
+            usedFallback = true;
+            
+            // Notify user we're using simulated data
+            if (!notificationShown) {
+                showNotification(`Using simulated tower data for ${locationName}`, 'warning');
+                notificationShown = true;
+            }
+        }
+        
+        // Create marker for each tower
+        if (towerData && towerData.length > 0) {
+            towerData.forEach(tower => {
+                // Make sure we have valid lat/lng values
+                if (!tower.lat || !tower.lng || isNaN(tower.lat) || isNaN(tower.lng)) {
+                    // Use latitude/longitude if lat/lng not available
+                    if (tower.latitude && tower.longitude) {
+                        tower.lat = tower.latitude;
+                        tower.lng = tower.longitude;
+                    } else {
+                        console.warn('Invalid tower coordinates, skipping marker', tower);
+                        return; // Skip this tower
+                    }
+                }
+                
+                const towerIcon = L.divIcon({
+                    html: `<div class="tower"></div>`,
+                    className: `tower-icon ${provider.toLowerCase()} ${usedFallback ? 'fallback' : ''}`,
+                    iconSize: [20, 20]
+                });
+                
+                const marker = L.marker([tower.lat, tower.lng], { icon: towerIcon }).addTo(window.towerLayer);
+                
+                // Add popup with tower info
+                let popupContent = `<div class="tower-popup">
+                    <h4>${provider} Tower ${usedFallback ? '<span class="simulated-label">Simulated</span>' : ''}</h4>
+                    <div class="tower-info">
+                        <p><strong>ID:</strong> ${tower.id || 'Unknown'}</p>
+                        <p><strong>Type:</strong> ${tower.type || 'Standard'}</p>
+                        <p><strong>Signal Strength:</strong> ${tower.signal || 'Good'}</p>
+                        <p><strong>Location:</strong> ${tower.lat.toFixed(6)}, ${tower.lng.toFixed(6)}</p>
+                    </div>`;
+                
+                if (usedFallback) {
+                    popupContent += `<div class="simulated-data-note">
+                        This is simulated data based on typical tower distribution patterns.
+                    </div>`;
+                }
+                
+                popupContent += `</div>`;
+                
+                marker.bindPopup(popupContent);
+            });
+        }
+        
+        // Add tower layer to map
+        window.towerLayer.addTo(map);
+        
+        // Update tower count
+        updateTowerCount(provider, towerData.length, usedFallback);
+        
+    } catch (error) {
+        console.error("Error visualizing towers:", error);
+        
+        // Even if we encounter an error, still try to show fallback data
+        if (!towerData) {
+            towerData = generateFallbackTowerData(lat, lng, radius, provider);
+            usedFallback = true;
+            
+            // Create marker for each fallback tower
+            towerData.forEach(tower => {
+                // Make sure we have valid lat/lng values
+                if (!tower.lat || !tower.lng || isNaN(tower.lat) || isNaN(tower.lng)) {
+                    // Use latitude/longitude if lat/lng not available
+                    if (tower.latitude && tower.longitude) {
+                        tower.lat = tower.latitude;
+                        tower.lng = tower.longitude;
+                    } else {
+                        console.warn('Invalid tower coordinates, skipping marker', tower);
+                        return; // Skip this tower
+                    }
+                }
+                
+                const towerIcon = L.divIcon({
+                    html: `<div class="tower"></div>`,
+                    className: `tower-icon ${provider.toLowerCase()} fallback`,
+                    iconSize: [20, 20]
+                });
+                
+                const marker = L.marker([tower.lat, tower.lng], { icon: towerIcon }).addTo(window.towerLayer);
+                
+                // Add popup with tower info
+                const popupContent = `<div class="tower-popup">
+                    <h4>${provider} Tower <span class="simulated-label">Simulated</span></h4>
+                    <div class="tower-info">
+                        <p><strong>ID:</strong> ${tower.id || 'Unknown'}</p>
+                        <p><strong>Type:</strong> ${tower.type || 'Standard'}</p>
+                        <p><strong>Signal Strength:</strong> ${tower.signal || 'Good'}</p>
+                        <p><strong>Location:</strong> ${tower.lat.toFixed(6)}, ${tower.lng.toFixed(6)}</p>
+                    </div>
+                    <div class="simulated-data-note">
+                        This is simulated data based on typical tower distribution patterns.
+                    </div>
+                </div>`;
+                
+                marker.bindPopup(popupContent);
+            });
+            
+            // Add tower layer to map
+            window.towerLayer.addTo(map);
+            
+            // Update tower count with fallback indication
+            updateTowerCount(provider, towerData.length, true);
+            
+            // Show notification about simulated data
+            showNotification("Using simulated tower data due to an error", "warning");
+        }
+    }
+}
+
+function updateTowerCount(provider, count, isSimulated = false) {
+    const countElement = document.getElementById(`${provider.toLowerCase()}-tower-count`);
+    if (countElement) {
+        countElement.textContent = count;
+        
+        // If using simulated data, add an indicator
+        const labelElement = countElement.closest('.tower-count-item').querySelector('.label');
+        if (labelElement) {
+            if (isSimulated) {
+                if (!labelElement.innerHTML.includes('(Simulated)')) {
+                    labelElement.innerHTML = `${provider} Towers <small>(Simulated)</small>`;
+                }
+            } else {
+                labelElement.textContent = `${provider} Towers`;
+            }
+        }
+    }
 }
 
 // Helper function to show notifications
@@ -1767,11 +1610,18 @@ function createNotificationElement() {
 }
 
 // Function to fetch tower data from the API
-async function fetchTowerData(lat, lng, radius) {
+async function fetchTowerData(provider, lat, lng, radius) {
   // Check if API is available
-  if (!API_BASE_URL) {
-    console.log('API is not available. Using fallback data.');
-    return null;
+  // Define API_BASE_URL if it's not already defined
+  if (typeof API_BASE_URL === 'undefined' || !API_BASE_URL) {
+    // Try to get it from window.PortMySimAPI if available
+    if (window.PortMySimAPI && window.PortMySimAPI.apiBaseUrl) {
+      API_BASE_URL = window.PortMySimAPI.apiBaseUrl;
+    } else {
+      // Fallback to default API URL
+      API_BASE_URL = 'http://localhost:5000/api';
+      console.log('API_BASE_URL was not defined, using default:', API_BASE_URL);
+    }
   }
   
   // Validate input parameters
@@ -1784,12 +1634,32 @@ async function fetchTowerData(lat, lng, radius) {
   const validRadius = Number(radius) || 5;
 
   try {
-    // Format parameters to ensure they are valid numbers with correct precision
-    const formattedLat = parseFloat(lat).toFixed(6);
-    const formattedLng = parseFloat(lng).toFixed(6);
+    // First, try to get a location name using reverse geocoding
+    let locationName = null;
+    try {
+      const locationInfo = await reverseGeocode(lat, lng);
+      if (locationInfo && locationInfo.city) {
+        locationName = locationInfo.city;
+      } else if (locationInfo && locationInfo.address) {
+        // Use the most specific locality available
+        locationName = locationInfo.address.city || 
+                      locationInfo.address.town || 
+                      locationInfo.address.village || 
+                      locationInfo.address.county ||
+                      locationInfo.address.state;
+      }
+    } catch (error) {
+      console.warn('Reverse geocoding failed:', error);
+    }
     
-    const url = `${API_BASE_URL}/network-coverage/tower-data?lat=${formattedLat}&lng=${formattedLng}&radius=${validRadius}`;
-    console.log(`Fetching tower data from: ${url}`);
+    if (!locationName) {
+      console.log('Could not determine location name, using fallback data.');
+      return null; // Use fallback data if we can't get a location name
+    }
+    
+    // Use the location name for the API request
+    const url = `${API_BASE_URL}/network-coverage/tower-data?location=${encodeURIComponent(locationName)}&provider=${encodeURIComponent(provider)}`;
+    console.log(`Fetching tower data by location: ${url}`);
     
     // Create abort controller for timeout
     const controller = new AbortController();
@@ -1832,7 +1702,15 @@ async function fetchTowerData(lat, lng, radius) {
 }
 
 // Function to generate fallback tower data
-function generateFallbackTowerData(lat, lng, radius) {
+function generateFallbackTowerData(lat, lng, radius, provider) {
+  // Validate inputs to prevent errors
+  if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+    console.warn('Invalid coordinates for fallback tower data', { lat, lng });
+    // Default to center of India if coordinates are invalid
+    lat = 20.5937;
+    lng = 78.9629;
+  }
+  
   const towerCount = Math.floor(Math.random() * 15) + 10; // 10-25 towers
   const towers = [];
   
@@ -1848,13 +1726,18 @@ function generateFallbackTowerData(lat, lng, radius) {
     
     const tower = {
       id: `fallback-${i}`,
+      // Store coordinates in both formats for compatibility
       latitude: lat + offsetLat,
       longitude: lng + offsetLng,
-      operator: ["Airtel", "Jio", "Vodafone", "BSNL"][Math.floor(Math.random() * 4)],
+      // Add lat/lng properties that Leaflet uses
+      lat: lat + offsetLat,
+      lng: lng + offsetLng,
+      operator: provider || ["Airtel", "Jio", "Vodafone", "BSNL"][Math.floor(Math.random() * 4)],
       towerType: ["Roof Top", "Ground Based", "COW"][Math.floor(Math.random() * 3)],
       technologySupported: [["4G"], ["5G"], ["3G", "4G"]][Math.floor(Math.random() * 3)],
       signalStrength: Math.floor(Math.random() * 40) + 60, // 60-100
-      frequency: [700, 800, 900, 1800, 2100, 2300, 2500][Math.floor(Math.random() * 7)]
+      frequency: [700, 800, 900, 1800, 2100, 2300, 2500][Math.floor(Math.random() * 7)],
+      signal: 'Good' // Add default signal for display
     };
     
     towers.push(tower);
@@ -1988,26 +1871,44 @@ function updateTowerCountDisplay(towerCounts) {
 
 // Remove all tower layers from the map
 function removeTowerLayers() {
-  if (!map) return;
-  
-  Object.values(towerLayers).forEach(layer => {
-    if (map.hasLayer(layer)) {
-      map.removeLayer(layer);
+  try {
+    // Remove the main tower layer group if it exists
+    if (window.towerLayer && map) {
+      map.removeLayer(window.towerLayer);
+      window.towerLayer = null;
     }
-  });
-  
-  // Reset tower count display
-  const jioCountElem = document.getElementById('jio-tower-count');
-  const airtelCountElem = document.getElementById('airtel-tower-count');
-  const viCountElem = document.getElementById('vi-tower-count');
-  const towerInfoPanel = document.getElementById('tower-info-panel');
-  
-  if (jioCountElem) jioCountElem.textContent = '0';
-  if (airtelCountElem) airtelCountElem.textContent = '0';
-  if (viCountElem) viCountElem.textContent = '0';
-  
-  // Hide tower info panel
-  if (towerInfoPanel) towerInfoPanel.style.display = 'none';
+    
+    // Also remove any network-specific tower layers
+    if (window.towerLayers) {
+      Object.keys(window.towerLayers).forEach(network => {
+        if (map && window.towerLayers[network]) {
+          map.removeLayer(window.towerLayers[network]);
+        }
+      });
+    }
+    
+    // Clear tower counts
+    const operators = ['jio', 'airtel', 'vi'];
+    operators.forEach(operator => {
+      const countElement = document.getElementById(`${operator}-tower-count`);
+      if (countElement) {
+        countElement.textContent = '0';
+        
+        // Find the label element through the parent-child relationship
+        const towerCountItem = countElement.closest('.tower-count-item');
+        if (towerCountItem) {
+          const labelElement = towerCountItem.querySelector('.label');
+          if (labelElement) {
+            labelElement.textContent = `${operator.charAt(0).toUpperCase() + operator.slice(1)} Towers`;
+          }
+        }
+      }
+    });
+    
+    console.log('All tower layers have been removed from the map');
+  } catch (error) {
+    console.error('Error removing tower layers:', error);
+  }
 }
 
 // Helper function to get fallback network data
@@ -2134,6 +2035,12 @@ function optimizeHeatmapCanvas() {
 
 // Fix the issue with manageLayers for better control of map elements and avoid overlapping
 function manageLayers() {
+  // Check if map is initialized
+  if (!map) {
+    console.error("Map is not initialized");
+    return;
+  }
+
   const showTowersCheckbox = document.getElementById('show-towers');
   const networkSelect = document.getElementById('network-select');
   const coverageTypeRadios = document.querySelectorAll('input[name="coverage-type"]');
@@ -2162,13 +2069,19 @@ function manageLayers() {
     });
     
     // Handle tower layers visibility based on selected network
+    // Check if towerLayers exists
+    if (!window.towerLayers) {
+      console.warn("towerLayers is not initialized");
+      return;
+    }
+    
     if (selectedNetwork !== 'all') {
       // When a specific network is selected, show only that network's towers prominently
-      Object.keys(towerLayers).forEach(network => {
+      Object.keys(window.towerLayers).forEach(network => {
         if (network === selectedNetwork) {
           // Make the selected network tower layer fully visible
-          if (towerLayers[network]) {
-            towerLayers[network].eachLayer(layer => {
+          if (window.towerLayers[network]) {
+            window.towerLayers[network].eachLayer(layer => {
               if (layer instanceof L.CircleMarker) {
                 layer.setStyle({ 
                   opacity: 1, 
@@ -2187,8 +2100,8 @@ function manageLayers() {
           }
         } else {
           // Fade other networks' tower layers
-          if (towerLayers[network]) {
-            towerLayers[network].eachLayer(layer => {
+          if (window.towerLayers[network]) {
+            window.towerLayers[network].eachLayer(layer => {
               if (layer instanceof L.CircleMarker) {
                 layer.setStyle({ 
                   opacity: 0.3, 
@@ -2209,9 +2122,9 @@ function manageLayers() {
       });
     } else {
       // When all networks are selected, show all tower layers with balanced visibility
-      Object.keys(towerLayers).forEach(network => {
-        if (towerLayers[network]) {
-          towerLayers[network].eachLayer(layer => {
+      Object.keys(window.towerLayers).forEach(network => {
+        if (window.towerLayers[network]) {
+          window.towerLayers[network].eachLayer(layer => {
             if (layer instanceof L.CircleMarker) {
               layer.setStyle({ 
                 opacity: 0.8, 
@@ -2240,11 +2153,13 @@ function manageLayers() {
     });
     
     // Hide tower layers or clean them up
-    Object.keys(towerLayers).forEach(network => {
-      if (map.hasLayer(towerLayers[network])) {
-        map.removeLayer(towerLayers[network]);
-      }
-    });
+    if (window.towerLayers) {
+      Object.keys(window.towerLayers).forEach(network => {
+        if (map.hasLayer(window.towerLayers[network])) {
+          map.removeLayer(window.towerLayers[network]);
+        }
+      });
+    }
   }
   
   // Update the legend to reflect current visibility
@@ -2726,4 +2641,632 @@ function setupViewDetailsButtons() {
   
   // Network cards have been removed, so this function is now empty
   // Keeping the function for compatibility with any existing code
+}
+
+/**
+ * Sets up the state-city browser functionality
+ */
+function setupStateCityBrowser() {
+  const browseToggle = document.getElementById('browse-toggle');
+  const statesGrid = document.getElementById('states-grid');
+  const citiesPanel = document.getElementById('cities-panel');
+  const closeCitiesPanel = document.getElementById('close-cities-panel');
+  
+  // Since we removed these elements, just exit early if any are missing
+  if (!browseToggle || !statesGrid || !citiesPanel) return;
+  
+  // Toggle states grid visibility
+  browseToggle.addEventListener('click', function() {
+    const isOpen = statesGrid.classList.contains('open');
+    
+    if (isOpen) {
+      statesGrid.classList.remove('open');
+      browseToggle.classList.remove('active');
+    } else {
+      statesGrid.classList.add('open');
+      browseToggle.classList.add('active');
+      
+      // Close the cities panel if it's open
+      citiesPanel.classList.remove('open');
+    }
+  });
+  
+  // Close cities panel button
+  if (closeCitiesPanel) {
+    closeCitiesPanel.addEventListener('click', function() {
+      citiesPanel.classList.remove('open');
+    });
+  }
+  
+  // Initialize state item click listeners
+  initializeStateItemListeners();
+}
+
+/**
+ * Initializes the map and UI elements
+ */
+function initializeMap() {
+    // ... existing code ...
+    
+    // Add state selector to the search container
+    const searchContainer = document.querySelector('.search-container');
+    const stateSelector = document.createElement('select');
+    stateSelector.id = 'state-selector';
+    stateSelector.className = 'form-control mb-2';
+    
+    // Add a default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'All States';
+    stateSelector.appendChild(defaultOption);
+    
+    // Add state options
+    const states = getUniqueStates();
+    states.forEach(state => {
+        const option = document.createElement('option');
+        option.value = state;
+        option.textContent = state;
+        stateSelector.appendChild(option);
+    });
+    
+    // Insert state selector before the search input
+    searchContainer.insertBefore(stateSelector, document.getElementById('search-input'));
+    
+    // Add event listener to state selector
+    stateSelector.addEventListener('change', function(e) {
+        const selectedState = e.target.value;
+        populateCityDropdown(selectedState);
+    });
+    
+    // Create city dropdown
+    const cityDropdown = document.createElement('select');
+    cityDropdown.id = 'city-dropdown';
+    cityDropdown.className = 'form-control mb-2';
+    
+    // Add a default option for city dropdown
+    const defaultCityOption = document.createElement('option');
+    defaultCityOption.value = '';
+    defaultCityOption.textContent = 'Select a City';
+    cityDropdown.appendChild(defaultCityOption);
+    
+    // Add initial cities (all)
+    populateCityDropdown('');
+    
+    // Insert city dropdown after state selector
+    searchContainer.insertBefore(cityDropdown, document.getElementById('search-input'));
+    
+    // Add event listener to city dropdown
+    cityDropdown.addEventListener('change', function(e) {
+        const selectedCity = e.target.value;
+        const city = cities.find(c => c.name === selectedCity);
+        if (city) {
+            // Set the search input value to the selected city
+            document.getElementById('search-input').value = city.name;
+            // Center map on selected city
+            map.setView(city.coords, 12);
+            // Set current location
+            currentLocation = { name: city.name, coords: city.coords };
+            // Update UI to show the selected location
+            updateLocationDisplay(city.name);
+            // Clear previous user location marker
+            if (userLocationMarker) {
+                map.removeLayer(userLocationMarker);
+            }
+            // Add marker for selected location
+            userLocationMarker = L.marker(city.coords).addTo(map);
+        }
+    });
+}
+
+/**
+ * Populates the city dropdown based on the selected state
+ * @param {string} stateName - The name of the state to filter by
+ */
+function populateCityDropdown(stateName) {
+    const cityDropdown = document.getElementById('city-dropdown');
+    // Clear existing options except the default
+    while (cityDropdown.options.length > 1) {
+        cityDropdown.remove(1);
+    }
+    
+    // Get cities for the selected state
+    const filteredCities = getCitiesByState(stateName);
+    
+    // Add city options
+    filteredCities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city.name;
+        option.textContent = city.name;
+        cityDropdown.appendChild(option);
+    });
+}
+
+/**
+ * Updates the UI to show the selected location
+ * @param {string} locationName - The name of the selected location
+ */
+function updateLocationDisplay(locationName) {
+    const locationDisplay = document.getElementById('selected-location');
+    if (locationDisplay) {
+        locationDisplay.textContent = locationName;
+    } else {
+        // Create location display element if it doesn't exist
+        const compareContainer = document.querySelector('.compare-container');
+        const locationDiv = document.createElement('div');
+        locationDiv.className = 'selected-location-container mt-2';
+        locationDiv.innerHTML = `<strong>Selected Location:</strong> <span id="selected-location">${locationName}</span>`;
+        compareContainer.insertBefore(locationDiv, compareContainer.firstChild);
+    }
+}
+
+/**
+ * Initialize city selection UI components - now only handles the state-selector and city-selector in the main form
+ */
+function initializeCitySelectionUI() {
+  // We're now using new elements in the comparison-filters section
+  const stateSelector = document.getElementById('state-selector');
+  const citySelector = document.getElementById('city-selector');
+  
+  // Exit early if essential elements don't exist
+  if (!stateSelector || !citySelector) return;
+  
+  // The old state-dropdown and city-dropdown were removed with the Browse All States section
+  const oldStateDropdown = document.getElementById('state-dropdown');
+  const oldCitySelector = document.getElementById('city-selector');
+  
+  // If we find the old elements (which we shouldn't), just exit to avoid errors
+  if (oldStateDropdown) return;
+}
+
+/**
+ * Populate the city selector dropdown based on selected state
+ * @param {string} stateId - The ID of the selected state
+ */
+function populateCitySelector(stateId) {
+  const citySelector = document.getElementById('city-selector');
+  
+  // Clear existing options except the default one
+  while (citySelector.options.length > 1) {
+    citySelector.remove(1);
+  }
+  
+  // Get filtered cities for the selected state
+  const filteredCities = getCitiesByState(stateId);
+  
+  // Sort cities alphabetically
+  filteredCities.sort((a, b) => a.name.localeCompare(b.name));
+  
+  // Add city options
+  filteredCities.forEach(city => {
+    const option = document.createElement('option');
+    option.value = city.name;
+    option.textContent = city.name;
+    citySelector.appendChild(option);
+  });
+}
+
+/**
+ * Update user location marker on the map
+ * @param {Array} coords - Coordinates [lat, lng] for the marker
+ */
+function updateLocationMarker(coords) {
+  // Remove existing marker if any
+  if (userLocationMarker) {
+    map.removeLayer(userLocationMarker);
+  }
+  
+  // Add new marker
+  userLocationMarker = L.marker(coords, {
+    icon: L.divIcon({
+      className: 'selected-location-marker',
+      html: '<i class="fas fa-map-marker-alt"></i>',
+      iconSize: [30, 30],
+      iconAnchor: [15, 30]
+    })
+  }).addTo(map);
+}
+
+/**
+ * Convert a state name to a state ID for use in the UI
+ * @param {string} stateName - The full state name
+ * @returns {string} The state ID
+ */
+function getStateIdFromName(stateName) {
+  // Define mapping of state names to IDs (inverse of stateMapping in getCitiesByState)
+  const nameToId = {
+    'Delhi': 'delhi',
+    'Haryana': 'haryana',
+    'Himachal Pradesh': 'himachal',
+    'Jammu & Kashmir': 'jammu',
+    'Punjab': 'punjab',
+    'Uttarakhand': 'uttarakhand',
+    'Uttar Pradesh': 'up',
+    'Bihar': 'bihar',
+    'Jharkhand': 'jharkhand',
+    'Odisha': 'odisha',
+    'West Bengal': 'west-bengal',
+    'Assam': 'assam',
+    'Sikkim': 'sikkim',
+    'Arunachal Pradesh': 'arunachal',
+    'Manipur': 'manipur',
+    'Meghalaya': 'meghalaya',
+    'Mizoram': 'mizoram',
+    'Nagaland': 'nagaland',
+    'Tripura': 'tripura',
+    'Gujarat': 'gujarat',
+    'Maharashtra': 'maharashtra',
+    'Goa': 'goa',
+    'Rajasthan': 'rajasthan',
+    'Chandigarh': 'chandigarh',
+    'Daman & Diu': 'daman-diu',
+    'Dadra & Nagar Haveli': 'dadra',
+    'Lakshadweep': 'lakshadweep',
+    'Puducherry': 'pondicherry',
+    'Andaman & Nicobar': 'andaman',
+    'Ladakh': 'ladakh',
+    'Andhra Pradesh': 'andhra',
+    'Karnataka': 'karnataka',
+    'Kerala': 'kerala',
+    'Tamil Nadu': 'tamil-nadu',
+    'Telangana': 'telangana',
+    'Chhattisgarh': 'chhattisgarh',
+    'Madhya Pradesh': 'madhya-pradesh'
+  };
+  
+  return nameToId[stateName] || '';
+}
+
+/**
+ * Show cities for a selected state
+ * @param {string} stateId - The ID of the selected state
+ */
+function showCitiesForState(stateId) {
+  const citiesPanel = document.getElementById('cities-panel');
+  const citiesGrid = document.getElementById('cities-grid');
+  const selectedStateElement = document.getElementById('selected-state-name');
+  
+  // Exit early if any required element doesn't exist
+  if (!citiesPanel || !citiesGrid) return;
+  
+  // Clear existing city items
+  citiesGrid.innerHTML = '';
+  
+  // Get cities for the selected state
+  const filteredCities = getCitiesByState(stateId);
+  
+  // Get state name from ID for display
+  const stateName = getStateNameFromId(stateId) || 'All States';
+  if (selectedStateElement) {
+    selectedStateElement.textContent = stateName;
+  }
+  
+  // Show cities panel
+  citiesPanel.classList.add('visible');
+  
+  // If cities found, display them
+  if (filteredCities && filteredCities.length > 0) {
+    // Sort cities alphabetically
+    filteredCities.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Create city items
+    filteredCities.forEach(city => {
+      const cityItem = document.createElement('div');
+      cityItem.className = 'city-item';
+      cityItem.innerHTML = `
+        <div class="city-name">${city.name}</div>
+        <div class="city-state">${city.state || ''}</div>
+      `;
+      
+      // Add click handler
+      cityItem.addEventListener('click', function() {
+        // Center map on selected city
+        map.setView(city.coords, 12);
+        // Set current location
+        currentLocation = { name: city.name, coords: city.coords };
+        // Update UI to show the selected location
+        updateLocationDisplay(city.name);
+        // Update location marker
+        updateLocationMarker(city.coords);
+        // Compare networks at this location
+        compareNetworksAction(city.name);
+      });
+      
+      citiesGrid.appendChild(cityItem);
+    });
+  } else {
+    // Show message if no cities found
+    const message = document.createElement('div');
+    message.className = 'no-cities-message';
+    message.textContent = `No major cities found for ${stateName}`;
+    citiesGrid.appendChild(message);
+  }
+}
+
+/**
+ * Get state name from state ID
+ * @param {string} stateId - The ID of the state
+ * @returns {string} The state name
+ */
+function getStateNameFromId(stateId) {
+  // Map of state IDs to state names (from the mapping in getCitiesByState)
+  const stateMapping = {
+    'delhi': 'Delhi',
+    'haryana': 'Haryana',
+    'himachal': 'Himachal Pradesh',
+    'jammu': 'Jammu & Kashmir',
+    'punjab': 'Punjab',
+    'uttarakhand': 'Uttarakhand',
+    'up': 'Uttar Pradesh',
+    'bihar': 'Bihar',
+    'jharkhand': 'Jharkhand',
+    'odisha': 'Odisha',
+    'west-bengal': 'West Bengal',
+    'assam': 'Assam',
+    'sikkim': 'Sikkim',
+    'arunachal': 'Arunachal Pradesh',
+    'manipur': 'Manipur',
+    'meghalaya': 'Meghalaya',
+    'mizoram': 'Mizoram',
+    'nagaland': 'Nagaland',
+    'tripura': 'Tripura',
+    'gujarat': 'Gujarat',
+    'maharashtra': 'Maharashtra',
+    'goa': 'Goa',
+    'rajasthan': 'Rajasthan',
+    'chandigarh': 'Chandigarh',
+    'daman-diu': 'Daman & Diu',
+    'dadra': 'Dadra & Nagar Haveli',
+    'lakshadweep': 'Lakshadweep',
+    'pondicherry': 'Puducherry',
+    'andaman': 'Andaman & Nicobar',
+    'ladakh': 'Ladakh',
+    'andhra': 'Andhra Pradesh',
+    'karnataka': 'Karnataka',
+    'kerala': 'Kerala',
+    'tamil-nadu': 'Tamil Nadu',
+    'telangana': 'Telangana',
+    'chhattisgarh': 'Chhattisgarh',
+    'madhya-pradesh': 'Madhya Pradesh'
+  };
+  
+  return stateMapping[stateId] || '';
+}
+
+/**
+ * Initialize event listeners for state items in the state list
+ */
+function initializeStateItemListeners() {
+  const stateItems = document.querySelectorAll('.state-item');
+  const selectedStateName = document.getElementById('selected-state-name');
+  const citiesPanel = document.getElementById('cities-panel');
+  
+  // Exit early if elements don't exist or if there are no state items
+  if (!stateItems.length || !citiesPanel || !selectedStateName) return;
+  
+  stateItems.forEach(item => {
+    item.addEventListener('click', function() {
+      const stateId = this.getAttribute('data-state');
+      const stateName = this.textContent.trim();
+      
+      // Update the selected state name display
+      selectedStateName.textContent = stateName;
+      
+      // Show cities for the selected state
+      showCitiesForState(stateId);
+      
+      // Open the cities panel
+      citiesPanel.classList.add('open');
+    });
+  });
+}
+
+// Modify the document ready function to initialize our new UI
+document.addEventListener('DOMContentLoaded', function() {
+  // ... existing code ...
+  
+  // Initialize the improved city selection UI
+  initializeCitySelectionUI();
+  
+  // Initialize state item listeners
+  initializeStateItemListeners();
+  
+  // ... existing code ...
+});
+
+// Define getUserLocation function if it doesn't exist
+function getUserLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        if (map) {
+          map.setView([latitude, longitude], 12);
+          updateLocationMarker([latitude, longitude]);
+        }
+        userCoordinates = [latitude, longitude];
+        // Update display to show "Current Location"
+        if (locationSearchInput) {
+          locationSearchInput.value = 'My Current Location';
+        }
+      },
+      (error) => {
+        console.error('Error getting user location:', error);
+        showNotification('Could not access your location. Please check your browser permissions.', 'error');
+      }
+    );
+  } else {
+    showNotification('Geolocation is not supported by your browser.', 'error');
+  }
+}
+
+// Update authentication UI based on login status
+function updateAuthUI() {
+  // If API client is loaded
+  if (window.PortMySimAPI) {
+    // Check if user is authenticated
+    if (window.PortMySimAPI.isAuthenticated()) {
+      const user = window.PortMySimAPI.getUser();
+      
+      // Update auth buttons in nav if they exist
+      const authBtns = document.querySelector('.auth-btns');
+      if (authBtns) {
+        const firstLetter = user.name.charAt(0).toUpperCase();
+        authBtns.innerHTML = `
+          <div class="user-profile-dropdown">
+            <div class="user-profile-circle" title="${user.name}">
+              ${firstLetter}
+            </div>
+            <div class="dropdown-menu">
+              <span class="user-greeting">Hello, ${user.name.split(' ')[0]}</span>
+              <a href="/HTML/dashboard.html" class="dropdown-item">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+              </a>
+              <a href="/HTML/schedule-porting.html" class="dropdown-item">
+                <i class="fas fa-calendar-alt"></i> Schedule Porting
+              </a>
+              <button id="logoutBtn" class="dropdown-item">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </button>
+            </div>
+          </div>
+        `;
+        
+        // Add event listener for logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function() {
+            window.PortMySimAPI.clearAuth();
+            window.location.reload();
+          });
+        }
+        
+        // Add event listener for dropdown toggle
+        const profileCircle = document.querySelector('.user-profile-circle');
+        if (profileCircle) {
+          profileCircle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = document.querySelector('.dropdown-menu');
+            dropdown.classList.toggle('show');
+          });
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+          const dropdown = document.querySelector('.dropdown-menu');
+          if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
+          }
+        });
+      }
+    }
+  }
+}
+
+// Initialize the state and city selectors
+function initializeStateAndCitySelectors() {
+  const stateSelector = document.getElementById('state-selector');
+  const citySelector = document.getElementById('city-selector');
+  
+  if (!stateSelector || !citySelector) return;
+  
+  // Get unique states and sort them
+  const states = getUniqueStates();
+  
+  // Populate the state dropdown
+  states.forEach(state => {
+    const option = document.createElement('option');
+    option.value = getStateIdFromName(state);
+    option.textContent = state;
+    stateSelector.appendChild(option);
+  });
+  
+  // Add event listener for state selection change
+  stateSelector.addEventListener('change', function() {
+    selectedState = this.value;
+    if (selectedState) {
+      populateCityDropdown(getStateNameFromId(selectedState));
+      // Reset city selection
+      citySelector.value = '';
+      selectedCity = null;
+    } else {
+      // Clear city dropdown if no state is selected
+      citySelector.innerHTML = '<option value="">Choose a City</option>';
+      selectedCity = null;
+    }
+  });
+  
+  // Add event listener for city selection change
+  citySelector.addEventListener('change', function() {
+    selectedCity = this.options[this.selectedIndex].text;
+    if (selectedCity) {
+      // Find the city in our data
+      const cityData = findCityByNameAndState(selectedCity, getStateNameFromId(selectedState));
+      if (cityData) {
+        searchLocation(cityData.name);
+        updateLocationDisplay(cityData.name);
+      }
+    }
+  });
+}
+
+// Find a city by name and state in our data
+function findCityByNameAndState(cityName, stateName) {
+  return cities.find(city => city.name === cityName && city.state === stateName);
+}
+
+// Update the compare button event to handle the new selection interface
+function setupCompareButtonEvent() {
+  const compareBtn = document.getElementById('compare-btn');
+  
+  if (!compareBtn) return;
+  
+  compareBtn.addEventListener('click', function() {
+    let locationName = '';
+    let stateName = null;
+    
+    // Check if a city is selected from dropdowns
+    if (selectedCity && selectedState) {
+      locationName = selectedCity;
+      stateName = getStateNameFromId(selectedState);
+    } else {
+      // Fall back to the search input
+      const locationSearch = document.getElementById('location-search');
+      locationName = locationSearch.value.trim();
+    }
+    
+    if (locationName) {
+      compareNetworksAction(locationName, stateName);
+    } else {
+      showNotification('Please select a location or enter a search term', 'error');
+    }
+  });
+}
+
+/**
+ * Populates the city dropdown with cities from the selected state
+ * @param {string} stateName - The name of the state to get cities for
+ */
+function populateCityDropdown(stateName) {
+  const citySelector = document.getElementById('city-selector');
+  
+  if (!citySelector) return;
+  
+  // Clear existing options except the first one
+  citySelector.innerHTML = '<option value="">Choose a City</option>';
+  
+  // Get cities for the selected state
+  const stateCities = getCitiesByState(stateName);
+  
+  if (stateCities && stateCities.length > 0) {
+    // Sort cities alphabetically
+    stateCities.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Add cities to the dropdown
+    stateCities.forEach(city => {
+      const option = document.createElement('option');
+      option.value = city.name;
+      option.textContent = city.name;
+      citySelector.appendChild(option);
+    });
+  }
 }

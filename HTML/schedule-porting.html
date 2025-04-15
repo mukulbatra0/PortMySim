@@ -804,6 +804,9 @@
                     <small class="form-help-text">Choose a date to visit the porting center. The date should be after your SMS date.</small>
                 </div>
 
+                <!-- Hidden time slot field -->
+                <input type="hidden" id="timeSlot" name="timeSlot" value="10:00 AM - 12:00 PM">
+
                 <div class="form-group">
                     <label for="location" class="form-label">Your Location</label>
                     <div class="input-with-icon">
@@ -1114,6 +1117,7 @@
     <script src="../JS/auth.js" type="module"></script>
     <script src="../JS/config.js" type="module"></script>
     <script src="../JS/api.js" type="module"></script>
+    <script src="../JS/fix-auth.js"></script>
     <script src="../JS/schedule.js" type="module"></script>
     <script>
       // Extra script to update displayed information in the success section
@@ -1134,6 +1138,43 @@
             // Porting date and SMS date will be set by the main JavaScript
             // Porting center will be set by the backend response
           });
+        }
+      });
+    </script>
+    
+    <!-- Authentication Verification Script -->
+    <script>
+      // Check for authentication when page loads
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('Checking authentication status on schedule-porting page');
+        
+        // Try different methods to check authentication
+        const hasLocalToken = !!localStorage.getItem('portmysim_token');
+        const hasApiAuth = window.PortMySimAPI && window.PortMySimAPI.isAuthenticated && window.PortMySimAPI.isAuthenticated();
+        
+        console.log('Authentication check - Local token exists:', hasLocalToken);
+        console.log('Authentication check - API Auth available:', hasApiAuth);
+        
+        // If no authentication, redirect to login
+        if (!hasLocalToken && !hasApiAuth) {
+          console.warn('User not authenticated, redirecting to login page');
+          alert('Please log in to access the schedule porting page.');
+          window.location.href = 'login.html?redirect=schedule-porting.html';
+        } else {
+          console.log('User is authenticated, can proceed with porting request');
+          
+          // Add a helper to the form submit button
+          const submitButton = document.querySelector('.btn-submit');
+          if (submitButton) {
+            submitButton.addEventListener('click', function(e) {
+              // This doesn't prevent the normal form submission
+              // It just adds extra logging before the submission
+              console.log('Schedule porting button clicked');
+              console.log('Authentication check - Token exists:', !!localStorage.getItem('portmysim_token'));
+              console.log('Authentication check - API Auth available:', 
+                !!(window.PortMySimAPI && window.PortMySimAPI.isAuthenticated && window.PortMySimAPI.isAuthenticated()));
+            });
+          }
         }
       });
     </script>
