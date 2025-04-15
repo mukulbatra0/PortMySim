@@ -13,7 +13,7 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
       socketTimeoutMS: 45000, // Set socket timeout to 45 seconds
       connectTimeoutMS: 30000, // Set connect timeout to 30 seconds
       maxPoolSize: 10, // Set maximum connection pool size
-      bufferCommands: false, // Disable command buffering to prevent timeouts
+      bufferCommands: true, // Enable command buffering to prevent errors when querying before connection is established
       autoIndex: process.env.NODE_ENV !== 'production'
     });
 

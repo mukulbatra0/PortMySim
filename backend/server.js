@@ -45,14 +45,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB but don't crash if it fails
-connectDB().catch(err => {
-    console.error('Failed to connect to MongoDB:', err);
-    console.warn('Server will continue running with limited functionality using in-memory database');
-    console.warn('Predefined test user: demo@example.com / Password123');
-    // Don't exit the process on connection failure
-});
-
 // Enable CORS for all routes
 app.use(cors());
 
@@ -259,10 +251,27 @@ async function initializePortingRules() {
   }
 }
 
-// Call the function to initialize porting rules
-await initializePortingRules();
+// Main async function to handle startup sequence
+async function startServer() {
+  try {
+    // Connect to MongoDB first
+    await connectDB();
+    
+    // Initialize porting rules after successful connection
+    await initializePortingRules();
+    
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Failed to start server properly:', err);
+    // Still start the server even if there are database issues
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT} (with limited functionality)`);
+    });
+  }
+}
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-}); 
+startServer(); 
