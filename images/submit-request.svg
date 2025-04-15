@@ -3,7 +3,7 @@
     <title>Submit Porting Request Illustration</title>
     <defs>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-primary">
-            <stop stop-color="#F0B67F" offset="0%"></stop>
+            <stop stop-color="#6C5CE7" offset="0%"></stop>
             <stop stop-color="#D89A61" offset="100%"></stop>
         </linearGradient>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-secondary">
@@ -98,7 +98,7 @@
             <line x1="20" y1="25" x2="80" y2="25" stroke="#333" stroke-width="1"></line>
             <line x1="20" y1="40" x2="80" y2="40" stroke="#333" stroke-width="1"></line>
             <line x1="20" y1="55" x2="60" y2="55" stroke="#333" stroke-width="1"></line>
-            <rect x="20" y="70" width="60" height="40" rx="3" fill="#F0B67F" opacity="0.5"></rect>
+            <rect x="20" y="70" width="60" height="40" rx="3" fill="#6C5CE7" opacity="0.5"></rect>
         </g>
         
         <g transform="translate(380, 80)" filter="url(#shadow)">

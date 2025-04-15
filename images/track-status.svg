@@ -3,7 +3,7 @@
     <title>Track Your Status Illustration</title>
     <defs>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-primary">
-            <stop stop-color="#F0B67F" offset="0%"></stop>
+            <stop stop-color="#6C5CE7" offset="0%"></stop>
             <stop stop-color="#D89A61" offset="100%"></stop>
         </linearGradient>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-secondary">

@@ -232,69 +232,92 @@ const sendAppNotification = async (userId, title, body, data = {}) => {
  */
 const processPendingNotifications = async () => {
   // Find all unsent notifications scheduled for now or in the past
-  const now = new Date();
-  const portingRequests = await PortingRequest.find({
-    'notifications.sent': false,
-    'notifications.scheduledFor': { $lte: now }
-  }).populate('user', 'email phoneNumber');
-  
-  let processed = 0;
-  
-  for (const request of portingRequests) {
-    const user = await User.findById(request.user);
-    if (!user) continue;
+  try {
+    const now = new Date();
     
-    for (let i = 0; i < request.notifications.length; i++) {
-      const notification = request.notifications[i];
+    // Add timeout options and limit the query
+    const options = { 
+      maxTimeMS: 8000, // 8 second timeout for the query
+      limit: 50 // Process max 50 requests at once
+    };
+    
+    const portingRequests = await PortingRequest.find({
+      'notifications.sent': false,
+      'notifications.scheduledFor': { $lte: now }
+    }, null, options).populate('user', 'email phoneNumber');
+    
+    let processed = 0;
+    
+    for (const request of portingRequests) {
+      const user = await User.findById(request.user);
+      if (!user) continue;
       
-      // Skip if already sent or scheduled for future
-      if (notification.sent || notification.scheduledFor > now) continue;
+      const pendingNotifications = request.notifications.filter(
+        n => !n.sent && n.scheduledFor <= now
+      );
       
-      let result = { success: false };
+      // Skip if no pending notifications
+      if (pendingNotifications.length === 0) continue;
       
-      // Send notification based on type
-      switch (notification.type) {
-        case 'sms':
-          result = await sendSMS(request.mobileNumber, notification.message);
-          break;
-        case 'email':
-          result = await sendEmail(
-            user.email,
-            'PortMySim - Important Porting Update',
-            `<h2>Porting Update</h2><p>${notification.message}</p>`
-          );
-          break;
-        case 'app':
-          result = await sendAppNotification(
-            request.user.toString(),
-            'Porting Update',
-            notification.message
-          );
-          break;
-        case 'mobile_sms':
-          // This will be handled by the mobile app, just mark it as ready for the app to process
-          console.log(`Automated SMS to ${notification.targetNumber} ready for mobile app pickup: ${notification.message}`);
-          result = await prepareAutomatedSms(
-            request.user.toString(),
-            notification.targetNumber,
-            notification.message
-          );
-          break;
+      // Update notifications in batch
+      const updatedNotifications = [...request.notifications];
+      
+      for (let i = 0; i < updatedNotifications.length; i++) {
+        const notification = updatedNotifications[i];
+        
+        // Skip if already sent or scheduled for future
+        if (notification.sent || notification.scheduledFor > now) continue;
+        
+        let result = { success: false };
+        
+        // Send notification based on type
+        switch (notification.type) {
+          case 'sms':
+            result = await sendSMS(request.mobileNumber, notification.message);
+            break;
+          case 'email':
+            result = await sendEmail(
+              user.email,
+              'PortMySim - Important Porting Update',
+              `<h2>Porting Update</h2><p>${notification.message}</p>`
+            );
+            break;
+          case 'app':
+            result = await sendAppNotification(
+              request.user.toString(),
+              'Porting Update',
+              notification.message
+            );
+            break;
+          case 'mobile_sms':
+            // This will be handled by the mobile app, just mark it as ready for the app to process
+            console.log(`Automated SMS to ${notification.targetNumber} ready for mobile app pickup: ${notification.message}`);
+            result = await prepareAutomatedSms(
+              request.user.toString(),
+              notification.targetNumber,
+              notification.message
+            );
+            break;
+        }
+        
+        // Update notification status in database
+        if (result.success) {
+          updatedNotifications[i].sent = true;
+          updatedNotifications[i].sentAt = new Date();
+          processed++;
+        }
       }
       
-      // Update notification status in database
-      if (result.success) {
-        request.notifications[i].sent = true;
-        request.notifications[i].sentAt = new Date();
-        processed++;
-      }
+      // Save the updated document
+      request.notifications = updatedNotifications;
+      await request.save();
     }
     
-    // Save the updated document
-    await request.save();
+    return processed;
+  } catch (error) {
+    console.error('Error processing pending notifications:', error);
+    return 0;
   }
-  
-  return processed;
 };
 
 /**

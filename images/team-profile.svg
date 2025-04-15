@@ -3,7 +3,7 @@
     <title>Team Member Profile Template</title>
     <defs>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="profileGradient">
-            <stop stop-color="#F0B67F" offset="0%"></stop>
+            <stop stop-color="#6C5CE7" offset="0%"></stop>
             <stop stop-color="#FE5F55" offset="100%"></stop>
         </linearGradient>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="blueGradient">
@@ -25,7 +25,7 @@
             <circle cx="150" cy="120" r="75"></circle>
         </clipPath>
         <pattern id="profilePattern" patternUnits="userSpaceOnUse" width="60" height="60" patternTransform="rotate(45)">
-            <rect width="60" height="60" fill="#F0B67F" opacity="0.03"></rect>
+            <rect width="60" height="60" fill="#6C5CE7" opacity="0.03"></rect>
             <circle cx="30" cy="30" r="15" fill="#0B3954" opacity="0.05"></circle>
             <path d="M0,30 L60,30" stroke="#FE5F55" stroke-width="1" opacity="0.1"></path>
         </pattern>

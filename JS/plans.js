@@ -54,30 +54,39 @@ function initPlanCardHover() {
     const planCards = document.querySelectorAll('.plan-card');
 
     planCards.forEach(card => {
+        // Remove continuous movement animations
+        card.style.animation = 'none';
+        card.style.transform = 'none';
+        
+        // Remove shiny button effects
+        const buttons = card.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.style.animation = 'none';
+            button.style.transform = 'none';
+            button.classList.remove('shine', 'pulse', 'glow');
+        });
+        
+        // Simplified hover effect
         card.addEventListener('mouseenter', () => {
-            planCards.forEach(c => {
-                if (c !== card) {
-                    c.style.transform = 'scale(0.95)';
-                    c.style.opacity = '0.7';
-                }
-            });
+            card.style.transform = 'translateY(-5px)';
         });
         
         card.addEventListener('mouseleave', () => {
-            planCards.forEach(c => {
-                c.style.transform = '';
-                c.style.opacity = '';
-            });
+            card.style.transform = 'translateY(0)';
         });
     });
 }
 
-// Initialize animations
+// Initialize animations with reduced effects
 function initAnimations() {
     const animateOnScroll = (entries, observer) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
                 entry.target.classList.add('animate');
+                // Remove continuous animations after initial animation
+                setTimeout(() => {
+                    entry.target.style.animation = 'none';
+                }, 1000);
                 observer.unobserve(entry.target);
             }
         });
@@ -1517,7 +1526,7 @@ function updateComparisonTable(data) {
     // Add extra animations to the comparison table
     const comparisonTable = tableContainer.querySelector('.comparison-table');
     if (comparisonTable) {
-        comparisonTable.style.animation = `fadeIn 0.8s ease-out forwards, float-subtle 6s infinite ease-in-out 2s`;
+        comparisonTable.style.animation = `fadeIn 0.8s ease-out forwards`;
         comparisonTable.style.animationDelay = `0.3s`;
         comparisonTable.style.opacity = '0';
     }
@@ -1538,12 +1547,6 @@ function updateComparisonTable(data) {
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
-        }
-        
-        @keyframes float-subtle {
-            0% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0); }
         }
         
         @keyframes pulse-glow {

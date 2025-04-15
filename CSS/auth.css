@@ -456,16 +456,15 @@
 }
 
 .auth-image {
-    background-color: rgba(var(--bg-dark-3-rgb), 0.7);
-    padding: 3rem;
+    background: linear-gradient(145deg, rgba(var(--primary-rgb), 0.2) 0%, rgba(var(--accent-rgb), 0.1) 100%);
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    color: var(--text-light);
-    border-left: 1px solid rgba(var(--bg-dark-4-rgb), 0.4);
-    position: relative;
+    justify-content: center;
     overflow: hidden;
+    position: relative;
+    border-left: 1px solid rgba(var(--bg-dark-4-rgb), 0.6);
+    padding: 2rem;
 }
 
 .auth-image::before {
@@ -475,22 +474,71 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(circle at 70% 30%, rgba(var(--primary-rgb), 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle at center, rgba(var(--primary-rgb), 0.15) 0%, transparent 70%);
     z-index: 0;
+    animation: pulse 8s infinite alternate ease-in-out;
 }
 
-.auth-image img {
-    max-width: 85%;
+.auth-image-container {
+    position: relative;
+    width: 100%;
+    height: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.auth-image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(var(--primary-rgb), 0.05) 0%, rgba(var(--bg-dark-1-rgb), 0.2) 80%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.auth-hero-image {
+    max-width: 90%;
     height: auto;
-    margin-bottom: 2.5rem;
+    object-fit: contain;
     position: relative;
     z-index: 1;
-    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.15));
-    transition: transform 0.5s ease;
+    transition: all 0.5s ease;
+    transform: translateY(0);
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.3));
+    animation: float 6s infinite ease-in-out;
+    border-radius: 12px;
 }
 
-.auth-image:hover img {
-    transform: translateY(-5px);
+.auth-image:hover .auth-hero-image {
+    transform: translateY(-10px) scale(1.02);
+}
+
+.auth-image-text {
+    text-align: center;
+    z-index: 2;
+    color: var(--text-light);
+}
+
+.auth-image-text h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+}
+
+.auth-image-text p {
+    color: var(--text-light-muted);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 80%;
+    margin: 0 auto;
 }
 
 .auth-features {

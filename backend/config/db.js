@@ -9,7 +9,11 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
     
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 15000, // Increased from 5000ms to 15000ms
+      socketTimeoutMS: 45000, // Set socket timeout to 45 seconds
+      connectTimeoutMS: 30000, // Set connect timeout to 30 seconds
+      maxPoolSize: 10, // Set maximum connection pool size
+      bufferCommands: false, // Disable command buffering to prevent timeouts
       autoIndex: process.env.NODE_ENV !== 'production'
     });
 

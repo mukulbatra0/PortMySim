@@ -3,7 +3,7 @@
     <title>Mobile Number Portability Illustration</title>
     <defs>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-primary">
-            <stop stop-color="#F0B67F" offset="0%"></stop>
+            <stop stop-color="#6C5CE7" offset="0%"></stop>
             <stop stop-color="#D89A61" offset="100%"></stop>
         </linearGradient>
         <linearGradient x1="0%" y1="0%" x2="100%" y2="100%" id="gradient-secondary">
@@ -45,11 +45,11 @@
             <rect x="48" y="210" width="24" height="4" rx="2" fill="#444"></rect>
             
             <!-- Phone Content -->
-            <rect x="20" y="40" width="80" height="15" rx="3" fill="#F0B67F"></rect>
+            <rect x="20" y="40" width="80" height="15" rx="3" fill="#6C5CE7"></rect>
             <rect x="20" y="65" width="60" height="10" rx="2" fill="#5B7C99" opacity="0.8"></rect>
             <rect x="20" y="85" width="40" height="10" rx="2" fill="#5B7C99" opacity="0.6"></rect>
             
-            <circle cx="40" cy="120" r="20" fill="#F0B67F" opacity="0.8"></circle>
+            <circle cx="40" cy="120" r="20" fill="#6C5CE7" opacity="0.8"></circle>
             <text x="40" y="125" font-family="Arial" font-size="16" fill="white" text-anchor="middle">01</text>
             
             <rect x="70" y="110" width="30" height="8" rx="2" fill="#5B7C99" opacity="0.7"></rect>
@@ -58,7 +58,7 @@
             <rect x="20" y="150" width="80" height="1" fill="#444" opacity="0.5"></rect>
             
             <rect x="25" y="160" width="70" height="25" rx="4" fill="#5B7C99" opacity="0.2"></rect>
-            <text x="60" y="176" font-family="Arial" font-size="10" fill="#F0B67F" text-anchor="middle">OPERATOR A</text>
+            <text x="60" y="176" font-family="Arial" font-size="10" fill="#6C5CE7" text-anchor="middle">OPERATOR A</text>
         </g>
         
         <!-- Right Phone (Destination) -->
@@ -93,10 +93,10 @@
             
             <!-- Centered Number -->
             <rect x="30" y="35" width="40" height="30" rx="5" fill="#222831" filter="url(#shadow)"></rect>
-            <text x="50" y="55" font-family="Arial" font-size="14" font-weight="bold" fill="#F0B67F" text-anchor="middle">01</text>
+            <text x="50" y="55" font-family="Arial" font-size="14" font-weight="bold" fill="#6C5CE7" text-anchor="middle">01</text>
             
             <!-- Curved Arrow -->
-            <path d="M0,50 C20,0 80,0 100,50" stroke="#F0B67F" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+            <path d="M0,50 C20,0 80,0 100,50" stroke="#6C5CE7" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
             
             <!-- Subtle Pulse Animation -->
             <style>
@@ -124,14 +124,14 @@
         </g>
         
         <g transform="translate(370, 230)">
-            <rect x="0" y="0" width="60" height="20" rx="5" fill="#F0B67F" opacity="0.6"></rect>
+            <rect x="0" y="0" width="60" height="20" rx="5" fill="#6C5CE7" opacity="0.6"></rect>
             <text x="30" y="14" font-family="Arial" font-size="10" fill="white" text-anchor="middle">MEDIA</text>
         </g>
         
         <!-- Arrow Marker Definition -->
         <defs>
             <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M 0 0 L 10 5 L 0 10 z" fill="#F0B67F"/>
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#6C5CE7"/>
             </marker>
         </defs>
     </g>
