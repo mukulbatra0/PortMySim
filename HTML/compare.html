@@ -86,10 +86,10 @@
           </p>
           <div class="hero-buttons">
             <a href="#network-comparison-section" class="hero-btn primary">
-              <i class="fas fa-signal"></i> Compare Now
+              Compare Now <i class="fas fa-signal"></i>
             </a>
             <a href="plans.html" class="hero-btn secondary">
-              <i class="fas fa-mobile-alt"></i> View Plans
+              View Plans <i class="fas fa-mobile-alt"></i>
             </a>
           </div>
         </div>
@@ -526,10 +526,10 @@
           <p>Port your number seamlessly with PortMySim. Keep your number, choose a better network!</p>
           <div class="cta-buttons">
             <a href="plans.html" class="hero-btn primary">
-              <i class="fas fa-mobile-alt"></i> View Plans
+              View Plans <i class="fas fa-mobile-alt"></i>
             </a>
             <a href="schedule-porting.html" class="hero-btn secondary">
-              <i class="fas fa-exchange-alt"></i> Start Porting
+              Start Porting <i class="fas fa-exchange-alt"></i>
             </a>
           </div>
         </div>
@@ -674,6 +674,85 @@
         // Logic to show/hide layers based on selection will be implemented in compare.js
         // This is just a placeholder function that will be overridden
       };
+    </script>
+    
+    <!-- Script to ensure dark theme is applied to dropdown options -->
+    <script>
+      // Apply dark theme to select dropdowns when they're clicked/focused
+      document.addEventListener('DOMContentLoaded', function() {
+        const stateSelector = document.getElementById('state-selector');
+        const citySelector = document.getElementById('city-selector');
+        
+        // Function to apply dark theme to a select element's options
+        function applyDarkThemeToOptions(selectElement) {
+          if (!selectElement) return;
+          
+          // Apply initially
+          const initialOptions = selectElement.querySelectorAll('option');
+          initialOptions.forEach(option => {
+            option.style.backgroundColor = '#212529';
+            option.style.color = '#ffffff';
+            option.style.padding = '10px 15px';
+          });
+        }
+        
+        // Apply immediately on page load
+        applyDarkThemeToOptions(stateSelector);
+        applyDarkThemeToOptions(citySelector);
+        
+        // Ensure dark theme is applied when dropdown is opened
+        if (stateSelector) {
+          stateSelector.addEventListener('mousedown', function() {
+            // Force dark style on all options
+            setTimeout(() => {
+              const options = this.querySelectorAll('option');
+              options.forEach(option => {
+                option.style.backgroundColor = '#212529'; // Use hex instead of CSS var
+                option.style.color = '#ffffff';
+                option.style.padding = '10px 15px';
+              });
+            }, 0);
+          });
+          
+          // Also apply on focus
+          stateSelector.addEventListener('focus', function() {
+            setTimeout(() => {
+              const options = this.querySelectorAll('option');
+              options.forEach(option => {
+                option.style.backgroundColor = '#212529';
+                option.style.color = '#ffffff';
+                option.style.padding = '10px 15px';
+              });
+            }, 0);
+          });
+        }
+        
+        // Apply the same to the city selector
+        if (citySelector) {
+          citySelector.addEventListener('mousedown', function() {
+            setTimeout(() => {
+              const options = this.querySelectorAll('option');
+              options.forEach(option => {
+                option.style.backgroundColor = '#212529';
+                option.style.color = '#ffffff';
+                option.style.padding = '10px 15px';
+              });
+            }, 0);
+          });
+          
+          // Also apply on focus
+          citySelector.addEventListener('focus', function() {
+            setTimeout(() => {
+              const options = this.querySelectorAll('option');
+              options.forEach(option => {
+                option.style.backgroundColor = '#212529';
+                option.style.color = '#ffffff';
+                option.style.padding = '10px 15px';
+              });
+            }, 0);
+          });
+        }
+      });
     </script>
   </body>
 </html> 
