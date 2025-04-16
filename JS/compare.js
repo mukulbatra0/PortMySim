@@ -1303,42 +1303,13 @@ function compareNetworksAction(locationName, stateName = null) {
  * @param {string} locationName - The name of the location to get coverage for
  * @returns {Promise} - A promise that resolves when coverage data has been updated
  */
-function updateCoverageResults(locationName) {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const resultsContainer = document.querySelector('.coverage-results-section');
-      if (!resultsContainer) {
-        console.error('Results container not found');
-        reject(new Error('Results container not found'));
-        return;
-      }
-      
-      resultsContainer.classList.add('loading');
-      
-      // Try to find the location in our data first
-      const locationData = cities.find(city => city.name.toLowerCase() === locationName.toLowerCase());
-      
-      if (locationData) {
-        // If we found it in our data, update the map
-        if (map) {
-          map.setView(locationData.coords, 10);
-          updateLocationMarker(locationData.coords);
-        }
-        
-        // Update query parameters in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set('location', locationName);
-        
-        // Replace current URL with updated parameters
-        const newUrl = window.location.pathname + '?' + urlParams.toString();
-        window.history.replaceState({}, '', newUrl);
-      }
-      
+async function updateCoverageResults(locationName) {
+  try {
       // Fetch network coverage data from API
-      try {
-        const response = await fetch(`${API_BASE_URL}/coverage?location=${encodeURIComponent(locationName)}`);
-        if (!response.ok) throw new Error('Failed to fetch coverage data');
+    const response = await fetch(`${API_BASE_URL}/network-coverage?location=${encodeURIComponent(locationName)}`)
+      .catch(() => null);
         
+    if (response && response.ok) {
         const coverageData = await response.json();
         
         // Update the comparison table with the coverage data
@@ -1366,24 +1337,19 @@ function updateCoverageResults(locationName) {
         }
         
         showNotification(`Network comparison for ${locationName} updated successfully`, 'success');
-        resultsContainer.classList.remove('loading');
-        resolve(coverageData);
-      } catch (error) {
-        console.error('Error fetching coverage data:', error);
-        
+      return coverageData;
+    } else {
         // Use fallback data if API request fails
         const fallbackData = getFallbackNetworkData(locationName);
         updateDetailedComparisonTable(fallbackData);
         
         showNotification('Using simulated data for comparison (API unavailable)', 'warning');
-        resultsContainer.classList.remove('loading');
-        resolve(fallbackData);
+      return fallbackData;
       }
     } catch (error) {
       console.error('Error updating coverage results:', error);
-      reject(error);
+    return null;
     }
-  });
 }
 
 // Function to visualize towers on the map
@@ -2688,54 +2654,31 @@ function setupStateCityBrowser() {
 function initializeMap() {
     // ... existing code ...
     
-    // Add state selector to the search container
-    const searchContainer = document.querySelector('.search-container');
-    const stateSelector = document.createElement('select');
-    stateSelector.id = 'state-selector';
-    stateSelector.className = 'form-control mb-2';
-    
-    // Add a default option
-    const defaultOption = document.createElement('option');
-    defaultOption.value = '';
-    defaultOption.textContent = 'All States';
-    stateSelector.appendChild(defaultOption);
-    
-    // Add state options
-    const states = getUniqueStates();
-    states.forEach(state => {
-        const option = document.createElement('option');
-        option.value = state;
-        option.textContent = state;
-        stateSelector.appendChild(option);
-    });
-    
-    // Insert state selector before the search input
-    searchContainer.insertBefore(stateSelector, document.getElementById('search-input'));
-    
+    // Use the existing state selector instead of creating a new one
+    const stateSelector = document.getElementById('state-selector');
+    if (stateSelector) {
+        // If the state-selector element already exists, use it
     // Add event listener to state selector
     stateSelector.addEventListener('change', function(e) {
         const selectedState = e.target.value;
         populateCityDropdown(selectedState);
     });
+    } else {
+        console.log('state-selector not found, cannot initialize dropdown');
+    }
     
     // Create city dropdown
-    const cityDropdown = document.createElement('select');
-    cityDropdown.id = 'city-dropdown';
-    cityDropdown.className = 'form-control mb-2';
-    
-    // Add a default option for city dropdown
-    const defaultCityOption = document.createElement('option');
-    defaultCityOption.value = '';
-    defaultCityOption.textContent = 'Select a City';
-    cityDropdown.appendChild(defaultCityOption);
-    
+    const cityDropdown = document.getElementById('city-selector');
+    if (cityDropdown) {
+        // If the city-selector element already exists, use it instead of creating a new one
     // Add initial cities (all)
     populateCityDropdown('');
-    
-    // Insert city dropdown after state selector
-    searchContainer.insertBefore(cityDropdown, document.getElementById('search-input'));
-    
-    // Add event listener to city dropdown
+    } else {
+        console.log('city-selector not found, cannot initialize dropdown');
+    }
+
+    // Add event listener to city dropdown if it exists
+    if (cityDropdown) {
     cityDropdown.addEventListener('change', function(e) {
         const selectedCity = e.target.value;
         const city = cities.find(c => c.name === selectedCity);
@@ -2756,28 +2699,33 @@ function initializeMap() {
             userLocationMarker = L.marker(city.coords).addTo(map);
         }
     });
+    }
 }
 
 /**
  * Populates the city dropdown based on the selected state
- * @param {string} stateName - The name of the state to filter by
+ * @param {string} stateId - The ID of the selected state
  */
-function populateCityDropdown(stateName) {
-    const cityDropdown = document.getElementById('city-dropdown');
+function populateCityDropdown(stateId) {
+    const citySelector = document.getElementById('city-selector');
+    
     // Clear existing options except the default
-    while (cityDropdown.options.length > 1) {
-        cityDropdown.remove(1);
+    while (citySelector.options.length > 1) {
+        citySelector.remove(1);
     }
     
     // Get cities for the selected state
-    const filteredCities = getCitiesByState(stateName);
+    const filteredCities = getCitiesByState(stateId);
+    
+    // Sort cities alphabetically
+    filteredCities.sort((a, b) => a.name.localeCompare(b.name));
     
     // Add city options
     filteredCities.forEach(city => {
         const option = document.createElement('option');
         option.value = city.name;
         option.textContent = city.name;
-        cityDropdown.appendChild(option);
+        citySelector.appendChild(option);
     });
 }
 
@@ -2812,7 +2760,7 @@ function initializeCitySelectionUI() {
   
   // The old state-dropdown and city-dropdown were removed with the Browse All States section
   const oldStateDropdown = document.getElementById('state-dropdown');
-  const oldCitySelector = document.getElementById('city-selector');
+  const oldCitySelector = document.getElementById('city-dropdown');
   
   // If we find the old elements (which we shouldn't), just exit to avoid errors
   if (oldStateDropdown) return;
@@ -2823,26 +2771,8 @@ function initializeCitySelectionUI() {
  * @param {string} stateId - The ID of the selected state
  */
 function populateCitySelector(stateId) {
-  const citySelector = document.getElementById('city-selector');
-  
-  // Clear existing options except the default one
-  while (citySelector.options.length > 1) {
-    citySelector.remove(1);
-  }
-  
-  // Get filtered cities for the selected state
-  const filteredCities = getCitiesByState(stateId);
-  
-  // Sort cities alphabetically
-  filteredCities.sort((a, b) => a.name.localeCompare(b.name));
-  
-  // Add city options
-  filteredCities.forEach(city => {
-    const option = document.createElement('option');
-    option.value = city.name;
-    option.textContent = city.name;
-    citySelector.appendChild(option);
-  });
+  // This function is deprecated. Use populateCityDropdown instead.
+  populateCityDropdown(stateId);
 }
 
 /**
@@ -3162,111 +3092,141 @@ function updateAuthUI() {
   }
 }
 
-// Initialize the state and city selectors
-function initializeStateAndCitySelectors() {
+/**
+ * Populates the state dropdown with unique states
+ * @param {Array} states - Array of unique state names
+ */
+function populateStateDropdown(states) {
   const stateSelector = document.getElementById('state-selector');
-  const citySelector = document.getElementById('city-selector');
   
-  if (!stateSelector || !citySelector) return;
+  // Clear existing options except the default one
+  while (stateSelector.options.length > 1) {
+    stateSelector.remove(1);
+  }
   
-  // Get unique states and sort them
-  const states = getUniqueStates();
-  
-  // Populate the state dropdown
+  // Add state options, using the state name as the display text
+  // and using a state ID from the mapping as the value
   states.forEach(state => {
     const option = document.createElement('option');
     option.value = getStateIdFromName(state);
     option.textContent = state;
     stateSelector.appendChild(option);
   });
-  
-  // Add event listener for state selection change
-  stateSelector.addEventListener('change', function() {
-    selectedState = this.value;
-    if (selectedState) {
-      populateCityDropdown(getStateNameFromId(selectedState));
-      // Reset city selection
-      citySelector.value = '';
-      selectedCity = null;
-    } else {
-      // Clear city dropdown if no state is selected
-      citySelector.innerHTML = '<option value="">Choose a City</option>';
-      selectedCity = null;
-    }
-  });
-  
-  // Add event listener for city selection change
-  citySelector.addEventListener('change', function() {
-    selectedCity = this.options[this.selectedIndex].text;
-    if (selectedCity) {
-      // Find the city in our data
-      const cityData = findCityByNameAndState(selectedCity, getStateNameFromId(selectedState));
-      if (cityData) {
-        searchLocation(cityData.name);
-        updateLocationDisplay(cityData.name);
-      }
-    }
-  });
-}
-
-// Find a city by name and state in our data
-function findCityByNameAndState(cityName, stateName) {
-  return cities.find(city => city.name === cityName && city.state === stateName);
-}
-
-// Update the compare button event to handle the new selection interface
-function setupCompareButtonEvent() {
-  const compareBtn = document.getElementById('compare-btn');
-  
-  if (!compareBtn) return;
-  
-  compareBtn.addEventListener('click', function() {
-    let locationName = '';
-    let stateName = null;
-    
-    // Check if a city is selected from dropdowns
-    if (selectedCity && selectedState) {
-      locationName = selectedCity;
-      stateName = getStateNameFromId(selectedState);
-    } else {
-      // Fall back to the search input
-      const locationSearch = document.getElementById('location-search');
-      locationName = locationSearch.value.trim();
-    }
-    
-    if (locationName) {
-      compareNetworksAction(locationName, stateName);
-    } else {
-      showNotification('Please select a location or enter a search term', 'error');
-    }
-  });
 }
 
 /**
- * Populates the city dropdown with cities from the selected state
- * @param {string} stateName - The name of the state to get cities for
+ * Applies dark theme styling to select dropdown options
+ * @param {HTMLElement} selectElement - The select element to style
  */
-function populateCityDropdown(stateName) {
+function applyDarkThemeToSelect(selectElement) {
+  if (!selectElement) return;
+  
+  // Force dark theme on all options
+  const options = selectElement.querySelectorAll('option');
+  options.forEach(option => {
+    option.style.backgroundColor = 'var(--dark-3)';
+    option.style.color = 'var(--white)';
+    option.style.padding = '10px 15px';
+  });
+}
+
+// Initialize the state and city selectors
+function initializeStateAndCitySelectors() {
+  console.log('Initializing state and city selectors');
+  
+  // Get elements
+  const stateSelector = document.getElementById('state-selector');
   const citySelector = document.getElementById('city-selector');
   
-  if (!citySelector) return;
+  // Debug logging
+  console.log('State selector found:', !!stateSelector, stateSelector ? stateSelector.id : 'not found');
+  console.log('City selector found:', !!citySelector, citySelector ? citySelector.id : 'not found');
   
-  // Clear existing options except the first one
-  citySelector.innerHTML = '<option value="">Choose a City</option>';
-  
-  // Get cities for the selected state
-  const stateCities = getCitiesByState(stateName);
-  
-  if (stateCities && stateCities.length > 0) {
-    // Sort cities alphabetically
-    stateCities.sort((a, b) => a.name.localeCompare(b.name));
+  if (!stateSelector || !citySelector) {
+    console.error('State or city selector not found');
     
-    // Add cities to the dropdown
-    stateCities.forEach(city => {
-      const option = document.createElement('option');
-      option.value = city.name;
-      option.textContent = city.name;
-      citySelector.appendChild(option);
-    });
+    // Check if there are any elements with similar names
+    const stateSelectorQuery = document.querySelectorAll('[id*="state"]');
+    const citySelectorQuery = document.querySelectorAll('[id*="city"]');
+    
+    console.log('Elements containing "state" in id:', stateSelectorQuery.length);
+    console.log('Elements containing "city" in id:', citySelectorQuery.length);
+    
+    stateSelectorQuery.forEach(el => console.log('State-like element:', el.id));
+    citySelectorQuery.forEach(el => console.log('City-like element:', el.id));
+    
+    return;
   }
+  
+  // Populate state dropdown with unique states
+  const uniqueStates = getUniqueStates();
+  console.log('Unique states found:', uniqueStates.length);
+  populateStateDropdown(uniqueStates);
+  
+  // Set initial city dropdown based on default selected state
+  const selectedState = stateSelector.value;
+  console.log('Initial selected state:', selectedState);
+  populateCityDropdown(selectedState);
+  
+  // Apply dark theme to both selectors
+  applyDarkThemeToSelect(stateSelector);
+  applyDarkThemeToSelect(citySelector);
+  
+  // Add event listener for state change
+  stateSelector.addEventListener('change', function() {
+    const selectedStateId = this.value;
+    populateCityDropdown(selectedStateId);
+    applyDarkThemeToSelect(citySelector); // Reapply after populating with new options
+  });
+}
+
+// ... existing code ...
+
+// Set up the compare button event handling separately
+function setupCompareButtonEvent() {
+  const compareBtn = document.getElementById('compare-btn');
+  
+  if (compareBtn) {
+    // This is intentionally empty as the event is already being set up in setupEventListeners
+    // The function exists for code organization and to prevent the reference error
+    console.log('Compare button event already configured in setupEventListeners');
+  }
+}
+
+/**
+ * Performs reverse geocoding to get location details from coordinates
+ * @param {number} latitude - The latitude coordinate
+ * @param {number} longitude - The longitude coordinate
+ * @returns {Promise<Object>} - Promise resolving to location data
+ */
+async function reverseGeocode(latitude, longitude) {
+  try {
+    // Using OpenStreetMap's Nominatim service for reverse geocoding
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+    
+    if (!response.ok) {
+      throw new Error('Reverse geocoding request failed');
+    }
+    
+    const data = await response.json();
+    return {
+      city: data.address.city || data.address.town || data.address.village || '',
+      state: data.address.state || '',
+      country: data.address.country || '',
+      locationName: data.display_name || 'Unknown Location'
+    };
+  } catch (error) {
+    console.error('Error in reverse geocoding:', error);
+    return {
+      city: '',
+      state: '',
+      country: '',
+      locationName: 'Unknown Location'
+    };
+  }
+}
+
+// Function to get tower data based on location
+function getTowerData(latitude, longitude) {
+  // ... existing code ...
 }

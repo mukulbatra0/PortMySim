@@ -74,7 +74,9 @@
                             <div class="input-group">
                                 <i class="fas fa-lock"></i>
                                 <input type="password" id="password" name="password" class="form-control" required>
-                                <i class="fas fa-eye password-toggle"></i>
+                                <button type="button" class="password-toggle">
+                                    <i class="fas fa-eye"></i>
+                                </button>
                             </div>
                             <div class="error-message"></div>
                         </div>
@@ -89,20 +91,6 @@
                         
                         <button type="submit" class="form-btn">Log In</button>
                     </form>
-                    
-                    <div class="social-login">
-                        <p>Or log in with</p>
-                        <div class="social-buttons">
-                            <button class="social-btn google">
-                                <img src="../images/google-icon.png" alt="Google">
-                                Google
-                            </button>
-                            <button class="social-btn facebook">
-                                <i class="fab fa-facebook-f"></i>
-                                Facebook
-                            </button>
-                        </div>
-                    </div>
                     
                     <div class="auth-footer">
                         <p>Don't have an account? <a href="signup.html">Sign Up</a></p>

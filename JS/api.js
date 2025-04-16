@@ -2473,3 +2473,6 @@ if (typeof window !== 'undefined') {
     console.error('Failed to detect API port:', error);
   });
 }
+
+// Export the required functions
+export { fetchPlansByOperator, comparePlans, fetchRecommendedPlans };

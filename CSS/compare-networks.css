@@ -18,7 +18,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,.07)' fill-rule='evenodd'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-3.134-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='rgba(255,255,255,.07)' fill-rule='evenodd'/%3E%3C/svg%3E");
     opacity: 0.6;
 }
 
@@ -334,6 +334,8 @@
     border-radius: 10px;
     box-shadow: var(--shadow-md);
     border: 1px solid var(--bg-dark-4);
+    position: relative;
+    z-index: 100;
 }
 
 .filter-group {
@@ -461,12 +463,14 @@
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease;
-    z-index: 10;
+    z-index: 9999;
 }
 
 .location-suggestions.show {
     max-height: 200px;
     overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
 }
 
 .location-suggestion-item {
@@ -2387,6 +2391,8 @@ input[type="range"]::-webkit-slider-thumb {
   padding: 18px;
   box-shadow: var(--shadow-md);
   border: 1px solid var(--dark-3);
+  position: relative;
+  z-index: 999;
 }
 
 .location-selection-grid {
@@ -2428,6 +2434,13 @@ input[type="range"]::-webkit-slider-thumb {
   background-size: 16px;
 }
 
+/* Dark theme for dropdown options */
+.location-select option {
+  background-color: var(--dark-3);
+  color: var(--white);
+  padding: 8px;
+}
+
 .location-select:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2);
@@ -2437,99 +2450,368 @@ input[type="range"]::-webkit-slider-thumb {
   background-color: var(--dark-4);
 }
 
-.search-alternative {
-  display: flex;
-  align-items: center;
-  margin: 15px 0;
-  position: relative;
-}
-
-.search-alternative span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Ensure contrast and dark theme in dropdown across browsers */
+select#city-selector {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   background-color: var(--dark-3);
-  color: var(--gray-300);
-  font-size: 13px;
-  font-weight: 600;
-  height: 30px;
-  width: 40px;
-  border-radius: 15px;
-  margin: 0 15px;
-  z-index: 2;
-}
-
-.search-alternative::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background-color: var(--dark-4);
-  transform: translateY(-50%);
-  z-index: 1;
-}
-
-.alternative-search {
-  display: flex;
-  flex: 1;
-  position: relative;
-}
-
-/* Update user location button to align with new design */
-.user-location-btn {
-  width: 48px;
-  height: 48px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--dark-3);
-  color: var(--accent-color);
+  color: var(--white);
   border: 1px solid var(--dark-4);
+}
+
+/* Specific styling for city-selector dropdown options */
+#city-selector option {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+  padding: 10px 15px !important;
+}
+
+/* Firefox-specific styling */
+@-moz-document url-prefix() {
+  select#city-selector option {
+    background-color: var(--dark-3) !important;
+    color: var(--white) !important;
+  }
+}
+
+/* Microsoft Edge/IE styling */
+@supports (-ms-ime-align:auto) {
+  #city-selector option {
+    background-color: var(--dark-3) !important;
+    color: var(--white) !important;
+  }
+}
+
+/* Force dark theme in dropdown even in Windows */
+#city-selector, #state-selector {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+  border-color: var(--dark-4) !important;
+}
+
+/* Specific styling for state-selector dropdown options */
+#state-selector option {
+  background-color: var(--dark-3);
+  color: var(--white);
+  padding: 10px 15px;
+}
+
+/* Firefox-specific styling for state selector */
+@-moz-document url-prefix() {
+  select#state-selector option {
+    background-color: var(--dark-3);
+    color: var(--white);
+  }
+}
+
+/* Microsoft Edge/IE styling for state selector */
+@supports (-ms-ime-align:auto) {
+  #state-selector option {
+    background-color: var(--dark-3);
+    color: var(--white);
+  }
+}
+
+/* Force dark theme for ALL select dropdowns in the comparison section */
+.comparison-filters select,
+.location-selection-grid select,
+select.location-select,
+#state-selector,
+#city-selector {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+  border: 1px solid var(--dark-4) !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+/* Ensure all dropdown options have dark background */
+.comparison-filters select option,
+.location-selection-grid select option,
+select.location-select option,
+#state-selector option,
+#city-selector option {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+  padding: 10px 15px !important;
+}
+
+/* Directly target by ID and class combination for maximum specificity */
+#state-selector.location-select {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+  border: 1px solid var(--dark-4) !important;
+}
+
+#state-selector.location-select option {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+}
+
+/* Add direct styling for the browser's internal rendering of select boxes */
+::-webkit-select-menu,
+::-webkit-select-menu-item {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+}
+
+/* Force dark theme styles to be reapplied on hover/focus */
+#state-selector:hover, 
+#state-selector:focus {
+  background-color: var(--dark-4) !important;
+  color: var(--white) !important;
+  border-color: var(--accent-color) !important;
+}
+
+/* Force theme for dropdown options in ALL browsers */
+#state-selector option {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+  padding: 10px 15px !important;
+}
+
+/* Chrome-specific rule for dropdown options */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  #state-selector option {
+    background-color: var(--dark-3) !important;
+    color: var(--white) !important;
+  }
+}
+
+/* Override browser's default dropdown background */
+html body select#state-selector option {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+}
+
+/* Webkit browsers dropdown options */
+#state-selector::-webkit-listbox {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+}
+
+/* Select dropdown styling for dark theme */
+select {
+  background-color: var(--bg-dark-3);
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
 }
 
-.user-location-btn:hover {
-  background-color: var(--dark-4);
-  color: var(--accent-light);
-  transform: translateY(-2px);
+/* This is the key part for styling the dropdown options */
+select option {
+  background-color: var(--bg-dark-3);
+  color: var(--text-light);
+  padding: 10px;
 }
 
-/* Mobile responsive styles */
-@media (max-width: 768px) {
-  .location-selection-grid {
-    grid-template-columns: 1fr 1fr;
+/* Custom focus state */
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+}
+
+/* Specifically target state and city selectors */
+#state-selector,
+#city-selector {
+  background-color: var(--bg-dark-3);
+  color: var(--text-light);
+}
+
+/* Firefox specific styling */
+@-moz-document url-prefix() {
+  select {
+    color: var(--text-light);
+    background-color: var(--bg-dark-3);
   }
   
-  .user-location-btn {
-    grid-column: 2;
-    justify-self: end;
+  select option {
+    background-color: var(--bg-dark-3);
+    color: var(--text-light);
   }
 }
 
-@media (max-width: 576px) {
-  .location-selection-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+/* Webkit specific styling */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  select {
+    color: var(--text-light);
+    background-color: var(--bg-dark-3);
   }
   
-  .location-select-group {
-    width: 100%;
-  }
-  
-  .user-location-btn {
-    grid-column: 1;
-    justify-self: start;
-    margin-top: 5px;
-  }
-  
-  .search-alternative span {
-    margin: 0 10px;
+  select option {
+    background-color: var(--bg-dark-3);
+    color: var(--text-light);
   }
 }
+
+/* Add specific styling for #city-selector.location-select */
+#city-selector.location-select {
+  background-color: var(--dark-3) !important;
+  color: var(--white) !important;
+  border: 1px solid var(--dark-4) !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%238E8E8E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 16px !important;
+}
+
+/* Add hover and focus states for city-selector */
+#city-selector.location-select:hover,
+#city-selector.location-select:focus {
+  background-color: var(--dark-4) !important;
+  color: var(--white) !important;
+  border-color: var(--accent-color) !important;
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.2) !important;
+}
+
+/* Additional styling for dropdown options */
+html body select#state-selector option,
+body select[id="state-selector"] option,
+#state-selector option[value] {
+  background-color: #212529 !important; /* Use hex value instead of var */
+  color: #fff !important;
+  padding: 10px 15px !important;
+}
+
+/* Enhanced styling for state selector */
+.location-select[id="state-selector"] {
+  background-color: #212529 !important;
+  color: #fff !important;
+}
+
+/* WebKit-specific styling (Chrome, Safari, newer Edge) */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  select#state-selector option {
+    background-color: #212529 !important;
+    color: #fff !important;
+  }
+  
+  select#state-selector {
+    -webkit-appearance: none !important;
+    background-color: #212529 !important;
+    color: #fff !important;
+  }
+}
+
+/* Firefox-specific styling */
+@-moz-document url-prefix() {
+  select#state-selector {
+    -moz-appearance: none !important;
+    background-color: #212529 !important;
+    color: #fff !important;
+  }
+  
+  select#state-selector option {
+    background-color: #212529 !important;
+    color: #fff !important;
+  }
+}
+
+/* Add this JavaScript to the end of your JS file to force dark theme on options:
+document.addEventListener('DOMContentLoaded', function() {
+  const stateSelector = document.getElementById('state-selector');
+  if (stateSelector) {
+    const options = stateSelector.querySelectorAll('option');
+    options.forEach(option => {
+      option.style.backgroundColor = '#212529';
+      option.style.color = '#fff';
+    });
+    
+    stateSelector.addEventListener('mousedown', function() {
+      setTimeout(() => {
+        const options = this.querySelectorAll('option');
+        options.forEach(option => {
+          option.style.backgroundColor = '#212529';
+          option.style.color = '#fff';
+        });
+      }, 0);
+    });
+  }
+});
+*/
+
+#city-selector {
+  background-color: #212529 !important;
+  color: white !important;
+  border: 1px solid #495057 !important;
+  border-radius: 4px !important;
+  padding: 10px 15px !important;
+  width: 100% !important;
+  appearance: auto !important;
+  -webkit-appearance: menulist !important;
+  -moz-appearance: menulist !important;
+}
+
+#city-selector option {
+  background-color: #212529 !important;
+  color: white !important;
+  padding: 10px 15px !important;
+}
+
+/* Consistent styling for both dropdowns */
+#city-selector, #state-selector {
+  background-color: #212529 !important;
+  color: white !important;
+  border: 1px solid #495057 !important;
+  border-radius: 4px !important;
+  padding: 10px 15px !important;
+  width: 100% !important;
+  appearance: auto !important;
+  -webkit-appearance: menulist !important;
+  -moz-appearance: menulist !important;
+}
+
+#city-selector option, #state-selector option {
+  background-color: #212529 !important;
+  color: white !important;
+  padding: 10px 15px !important;
+}
+
+/* Browser-specific fixes for Firefox */
+@-moz-document url-prefix() {
+  #city-selector, #state-selector {
+    background-color: #212529 !important;
+    color: white !important;
+  }
+  
+  #city-selector option, #state-selector option {
+    background-color: #212529 !important;
+    color: white !important;
+  }
+}
+
+/* Browser-specific fixes for WebKit browsers (Chrome, Safari) */
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  #city-selector, #state-selector {
+    background-color: #212529 !important;
+    color: white !important;
+  }
+  
+  #city-selector option, #state-selector option {
+    background-color: #212529 !important;
+    color: white !important;
+    padding: 10px 15px !important;
+  }
+}
+
 
 
 
