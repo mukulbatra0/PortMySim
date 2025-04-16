@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   submitPortingRequest,
+  submitPortingRequestNoAuth,
   getUserPortingRequests,
   getPortingStatus,
   getServiceProviders,
@@ -21,6 +22,11 @@ const router = express.Router();
 // @desc    Submit a new porting request
 // @access  Private
 router.post('/submit', protect, submitPortingRequest);
+
+// @route   POST /api/porting/submit-no-auth
+// @desc    Submit a new porting request without authentication
+// @access  Public
+router.post('/submit-no-auth', submitPortingRequestNoAuth);
 
 // @route   GET /api/porting/requests
 // @desc    Get all porting requests for a user

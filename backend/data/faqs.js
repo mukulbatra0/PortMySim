@@ -177,4 +177,4 @@ const faqs = [
   }
 ];
 
-module.exports = faqs; 
+export default faqs; 

@@ -44,4 +44,7 @@ const CONFIG = {
     defaultProvider: 'jio'
 };
 
-export default CONFIG; 
+// Make CONFIG available globally for non-module scripts
+if (typeof window !== 'undefined') {
+    window.CONFIG = CONFIG;
+} 

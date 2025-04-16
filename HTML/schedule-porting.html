@@ -1115,10 +1115,10 @@
     <script src="../JS/transitions.js"></script>
     <script src="../JS/main.js"></script>
     <script src="../JS/auth.js" type="module"></script>
-    <script src="../JS/config.js" type="module"></script>
-    <script src="../JS/api.js" type="module"></script>
+    <script src="../JS/config.js"></script>
+    <script src="../JS/api.js"></script>
     <script src="../JS/fix-auth.js"></script>
-    <script src="../JS/schedule.js" type="module"></script>
+    <script src="../JS/schedule.js"></script>
     <script>
       // Extra script to update displayed information in the success section
       document.addEventListener('DOMContentLoaded', function() {
@@ -1149,7 +1149,7 @@
         console.log('Checking authentication status on schedule-porting page');
         
         // Try different methods to check authentication
-        const hasLocalToken = !!localStorage.getItem('portmysim_token');
+        const hasLocalToken = !!localStorage.getItem('portmysim_auth_token');
         const hasApiAuth = window.PortMySimAPI && window.PortMySimAPI.isAuthenticated && window.PortMySimAPI.isAuthenticated();
         
         console.log('Authentication check - Local token exists:', hasLocalToken);
@@ -1170,7 +1170,7 @@
               // This doesn't prevent the normal form submission
               // It just adds extra logging before the submission
               console.log('Schedule porting button clicked');
-              console.log('Authentication check - Token exists:', !!localStorage.getItem('portmysim_token'));
+              console.log('Authentication check - Token exists:', !!localStorage.getItem('portmysim_auth_token'));
               console.log('Authentication check - API Auth available:', 
                 !!(window.PortMySimAPI && window.PortMySimAPI.isAuthenticated && window.PortMySimAPI.isAuthenticated()));
             });

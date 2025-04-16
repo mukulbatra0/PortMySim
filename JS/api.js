@@ -5,10 +5,11 @@
 
 // Define configuration directly - no imports needed
 const API_CONFIG = {
-  NUMLOOKUP_API_KEY: 'your_api_key_here',
-  GOOGLE_MAPS_API_KEY: '' // TODO: Replace with your own Google Maps API key
+  NUMLOOKUP_API_KEY: "your_api_key_here",
+  GOOGLE_MAPS_API_KEY: "", // TODO: Replace with your own Google Maps API key
+  USE_OPENSTREETMAP_GEOCODING: true, // Prefer OpenStreetMap/Nominatim for geocoding
 };
-const CONFIG = API_CONFIG;
+const API_CONFIG_SETTINGS = API_CONFIG;
 
 // Base API URL - change this to your actual backend URL in production
 const DEFAULT_PORT = 5000;
@@ -18,10 +19,10 @@ let API_PORT_DETECTED = false;
 // Config for port detection
 const PORT_DETECTION_CONFIG = {
   // Try more ports to improve chances of connecting
-  portsToTry: [5000, 3000, 8080], 
-  timeoutMs: 3000,   // Longer timeout
-  retryCount: 2,     // Try twice per port
-  retryDelayMs: 1000 // 1 second delay between retries
+  portsToTry: [5000, 3000, 8080],
+  timeoutMs: 3000, // Longer timeout
+  retryCount: 2, // Try twice per port
+  retryDelayMs: 1000, // 1 second delay between retries
 };
 
 // Detect backend API port
@@ -29,113 +30,138 @@ async function detectApiPort() {
   if (API_PORT_DETECTED) {
     return API_BASE_URL;
   }
-  
-  console.log('Detecting API port...');
-  
+
+  console.log("Detecting API port...");
+
   // Try each port in sequence
   for (const port of PORT_DETECTION_CONFIG.portsToTry) {
     const testUrl = `http://localhost:${port}/api/auth/ping`;
-    
+
     // Try multiple times for each port
-    for (let attempt = 1; attempt <= PORT_DETECTION_CONFIG.retryCount; attempt++) {
+    for (
+      let attempt = 1;
+      attempt <= PORT_DETECTION_CONFIG.retryCount;
+      attempt++
+    ) {
       try {
         console.log(`Trying API on port ${port} (attempt ${attempt})...`);
-        
+
         // Set a timeout for the fetch
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), PORT_DETECTION_CONFIG.timeoutMs);
-        
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          PORT_DETECTION_CONFIG.timeoutMs
+        );
+
         const response = await fetch(testUrl, {
           signal: controller.signal,
           // Add headers to prevent caching issues
           headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
         });
-        
+
         // Clear the timeout
         clearTimeout(timeoutId);
-        
+
         // Check response
         if (response.ok) {
           const data = await response.json();
-          console.log(`✅ Successfully detected API running on port ${port}`, data);
-          
+          console.log(
+            `✅ Successfully detected API running on port ${port}`,
+            data
+          );
+
           // Save the detected port
           API_BASE_URL = `http://localhost:${port}/api`;
           API_PORT_DETECTED = true;
-          
+
           // Save the detected port to sessionStorage for persistence
           try {
-            sessionStorage.setItem('portmysim_api_port', port.toString());
-            console.log('Saved API port to session storage:', port);
+            sessionStorage.setItem("portmysim_api_port", port.toString());
+            console.log("Saved API port to session storage:", port);
           } catch (storageError) {
-            console.warn('Could not save API port to session storage:', storageError);
+            console.warn(
+              "Could not save API port to session storage:",
+              storageError
+            );
           }
-          
+
           return API_BASE_URL;
         } else {
-          console.warn(`API responded with non-OK status on port ${port}:`, response.status);
+          console.warn(
+            `API responded with non-OK status on port ${port}:`,
+            response.status
+          );
         }
       } catch (error) {
-        if (error.name === 'AbortError') {
+        if (error.name === "AbortError") {
           console.log(`Timeout while trying port ${port} (attempt ${attempt})`);
         } else {
-          console.log(`API not detected on port ${port} (attempt ${attempt}):`, error.message);
+          console.log(
+            `API not detected on port ${port} (attempt ${attempt}):`,
+            error.message
+          );
         }
-        
+
         // Wait before retry (except last attempt)
         if (attempt < PORT_DETECTION_CONFIG.retryCount) {
-          console.log(`Waiting ${PORT_DETECTION_CONFIG.retryDelayMs}ms before retrying port ${port}...`);
-          await new Promise(resolve => setTimeout(resolve, PORT_DETECTION_CONFIG.retryDelayMs));
+          console.log(
+            `Waiting ${PORT_DETECTION_CONFIG.retryDelayMs}ms before retrying port ${port}...`
+          );
+          await new Promise((resolve) =>
+            setTimeout(resolve, PORT_DETECTION_CONFIG.retryDelayMs)
+          );
         }
       }
     }
   }
-  
+
   // Check session storage for previously detected port
   try {
-    const savedPort = sessionStorage.getItem('portmysim_api_port');
+    const savedPort = sessionStorage.getItem("portmysim_api_port");
     if (savedPort) {
       const port = parseInt(savedPort);
-      console.log(`Using previously detected port from session storage: ${port}`);
+      console.log(
+        `Using previously detected port from session storage: ${port}`
+      );
       API_BASE_URL = `http://localhost:${port}/api`;
       API_PORT_DETECTED = true;
       return API_BASE_URL;
     }
   } catch (error) {
-    console.warn('Error reading from session storage:', error);
+    console.warn("Error reading from session storage:", error);
   }
-  
+
   // If no port detected, use default
   console.log(`⚠️ No API port detected, using default: ${DEFAULT_PORT}`);
-  
+
   // Set this to true to prevent further detection attempts
   API_PORT_DETECTED = true;
-  
+
   return API_BASE_URL;
 }
 
 // Add a function to check server connectivity
 async function testServerConnection() {
   try {
-    console.log('Testing server connection to:', API_BASE_URL);
-    
+    console.log("Testing server connection to:", API_BASE_URL);
+
     const response = await fetch(`${API_BASE_URL}/auth/ping`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
     });
-    
+
     if (response.ok) {
-      console.log('Server connection successful');
+      console.log("Server connection successful");
       return true;
     }
-    
-    console.warn('Server connection failed with status:', response.status);
+
+    console.warn("Server connection failed with status:", response.status);
     return false;
   } catch (error) {
-    console.error('Server connectivity test failed:', error);
+    console.error("Server connectivity test failed:", error);
     return false;
   }
 }
@@ -144,8 +170,8 @@ async function testServerConnection() {
 testServerConnection();
 
 // Auth token management
-const TOKEN_KEY = 'portmysim_auth_token';
-const USER_KEY = 'portmysim_user';
+const TOKEN_KEY = "portmysim_auth_token";
+const USER_KEY = "portmysim_user";
 
 // Get the stored auth token
 const getToken = () => localStorage.getItem(TOKEN_KEY);
@@ -174,24 +200,24 @@ const isAuthenticated = () => !!getToken();
 // API request helper with authentication
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
-  console.log('API request to:', url);
-  
+  console.log("API request to:", url);
+
   // Default headers
   const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers
+    "Content-Type": "application/json",
+    ...options.headers,
   };
 
   // Add auth token if available
   const token = getToken();
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   try {
     const response = await fetch(url, {
       ...options,
-      headers
+      headers,
     });
 
     // Handle HTTP errors
@@ -201,13 +227,18 @@ const apiRequest = async (endpoint, options = {}) => {
         // Clear the invalid token
         clearAuth();
         // Redirect to login if needed
-        if (window.location.pathname !== '/HTML/login.html' && 
-            window.location.pathname !== '/index.html') {
-          window.location.href = '/HTML/login.html?session_expired=true';
-          return { success: false, message: 'Session expired, please log in again.' };
+        if (
+          window.location.pathname !== "/HTML/login.html" &&
+          window.location.pathname !== "/index.html"
+        ) {
+          window.location.href = "/HTML/login.html?session_expired=true";
+          return {
+            success: false,
+            message: "Session expired, please log in again.",
+          };
         }
       }
-      
+
       // For other errors, parse response JSON if possible
       const errorText = await response.text();
       let errorJson;
@@ -218,7 +249,7 @@ const apiRequest = async (endpoint, options = {}) => {
         return {
           success: false,
           message: `API error: ${response.status} ${response.statusText}`,
-          statusCode: response.status
+          statusCode: response.status,
         };
       }
       return errorJson;
@@ -226,24 +257,24 @@ const apiRequest = async (endpoint, options = {}) => {
 
     // Parse successful response
     const text = await response.text();
-    
+
     // Handle empty responses
     if (!text) {
       return { success: true };
     }
-    
+
     // Parse JSON response
     try {
       return JSON.parse(text);
     } catch (e) {
-      console.error('Error parsing response:', e);
-      throw new Error('Invalid JSON response from server');
+      console.error("Error parsing response:", e);
+      throw new Error("Invalid JSON response from server");
     }
   } catch (error) {
-    console.error('API request error:', error);
+    console.error("API request error:", error);
     return {
       success: false,
-      message: 'Network error. Please check your connection and try again.'
+      message: "Network error. Please check your connection and try again.",
     };
   }
 };
@@ -252,297 +283,312 @@ const apiRequest = async (endpoint, options = {}) => {
 const authAPI = {
   // Login user
   login: async (email, password) => {
-    const data = await apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password })
+    const data = await apiRequest("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
     });
-    
+
     if (data.success && data.token) {
       setAuth(data.token, data.user);
     }
-    
+
     return data;
   },
-  
+
   // Register user
   register: async (userData) => {
-    const data = await apiRequest('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData)
+    const data = await apiRequest("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(userData),
     });
-    
+
     if (data.success && data.token) {
       setAuth(data.token, data.user);
     }
-    
+
     return data;
   },
-  
+
   // Get current user profile
   getProfile: async () => {
-    return await apiRequest('/auth/me');
+    return await apiRequest("/auth/me");
   },
-  
+
   // Logout user
   logout: () => {
     clearAuth();
     // Redirect to home page after logout
-    window.location.href = '/HTML/index.html';
+    window.location.href = "/HTML/index.html";
   },
-  
+
   // Verify email with token
   verifyEmail: async (token) => {
     return await apiRequest(`/auth/verify-email/${token}`, {
-      method: 'GET'
+      method: "GET",
     });
   },
-  
+
   // Resend verification email
   resendVerification: async (data) => {
-    return await apiRequest('/auth/resend-verification', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    return await apiRequest("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   },
-  
+
   // Update user profile
   updateProfile: async (data) => {
-    return await apiRequest('/auth/update-profile', {
-      method: 'PUT',
-      body: JSON.stringify(data)
+    return await apiRequest("/auth/update-profile", {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   },
-  
+
   // Update user email
   updateEmail: async (data) => {
-    return await apiRequest('/auth/update-email', {
-      method: 'PUT',
-      body: JSON.stringify(data)
+    return await apiRequest("/auth/update-email", {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   },
-  
+
   // Update user password
   updatePassword: async (data) => {
-    return await apiRequest('/auth/update-password', {
-      method: 'PUT',
-      body: JSON.stringify(data)
+    return await apiRequest("/auth/update-password", {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
   },
-  
+
   // Delete user account
   deleteAccount: async (data) => {
-    return await apiRequest('/auth/delete-account', {
-      method: 'DELETE',
-      body: JSON.stringify(data)
+    return await apiRequest("/auth/delete-account", {
+      method: "DELETE",
+      body: JSON.stringify(data),
     });
   },
-  
+
   // Login or register with Google
   googleAuth: async (data) => {
-    const response = await apiRequest('/auth/google', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    const response = await apiRequest("/auth/google", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
-    
+
     if (response.success && response.token) {
       setAuth(response.token, response.user);
     }
-    
+
     return response;
   },
-  
+
   // Login or register with Facebook
   facebookAuth: async (data) => {
-    const response = await apiRequest('/auth/facebook', {
-      method: 'POST',
-      body: JSON.stringify(data)
+    const response = await apiRequest("/auth/facebook", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
-    
+
     if (response.success && response.token) {
       setAuth(response.token, response.user);
     }
-    
+
     return response;
   },
-  
+
   // Request password reset
   forgotPassword: async (email) => {
-    console.log('Forgot password request for:', email);
-    
+    console.log("Forgot password request for:", email);
+
     // Ensure we have the correct port
     await detectApiPort();
-    
+
     try {
       // Log the full request URL for debugging
       const url = `${API_BASE_URL}/auth/forgot-password`;
-      console.log('Full request URL:', url);
-      
+      console.log("Full request URL:", url);
+
       const response = await fetch(url, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
       });
-      
+
       const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
+      console.log("Raw response:", responseText);
+
       // Check if response looks like HTML
-      if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
-        console.error('Server returned HTML instead of JSON. The auth API route may not be configured correctly.');
-        
+      if (
+        responseText.trim().startsWith("<!DOCTYPE") ||
+        responseText.trim().startsWith("<html")
+      ) {
+        console.error(
+          "Server returned HTML instead of JSON. The auth API route may not be configured correctly."
+        );
+
         return {
           success: false,
-          message: 'Password reset system is currently unavailable. Please try again later or contact support.'
+          message:
+            "Password reset system is currently unavailable. Please try again later or contact support.",
         };
       }
-      
+
       // Try to parse as JSON
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (err) {
-        console.error('Error parsing response as JSON:', err);
-        throw new Error('Invalid response format from server');
+        console.error("Error parsing response as JSON:", err);
+        throw new Error("Invalid response format from server");
       }
-      
+
       if (!response.ok) {
-        console.error('Error response:', data);
+        console.error("Error response:", data);
         return {
           success: false,
-          message: data.message || 'Failed to send password reset email.'
+          message: data.message || "Failed to send password reset email.",
         };
       }
-      
+
       return data;
     } catch (error) {
-      console.error('Forgot password error:', error);
+      console.error("Forgot password error:", error);
       return {
         success: false,
-        message: 'Failed to send password reset email. Please try again later.'
+        message: "Failed to send password reset email. Please try again later.",
       };
     }
   },
-  
+
   // Reset password with token
   resetPassword: async (resetToken, password) => {
-    console.log('Attempting to reset password with token:', resetToken);
-    
+    console.log("Attempting to reset password with token:", resetToken);
+
     // Ensure we have the correct port
     await detectApiPort();
-    
+
     try {
       // Log the full request URL for debugging
       const url = `${API_BASE_URL}/auth/reset-password/${resetToken}`;
-      console.log('Full request URL:', url);
-      
+      console.log("Full request URL:", url);
+
       const response = await fetch(url, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ password }),
       });
-      
+
       const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
+      console.log("Raw response:", responseText);
+
       // Check if response looks like HTML
-      if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
-        console.error('Server returned HTML instead of JSON. The auth API route may not be configured correctly.');
-        
+      if (
+        responseText.trim().startsWith("<!DOCTYPE") ||
+        responseText.trim().startsWith("<html")
+      ) {
+        console.error(
+          "Server returned HTML instead of JSON. The auth API route may not be configured correctly."
+        );
+
         return {
           success: false,
-          message: 'Password reset system is currently unavailable. Please try again later or contact support.'
+          message:
+            "Password reset system is currently unavailable. Please try again later or contact support.",
         };
       }
-      
+
       // Try to parse as JSON
       let data;
       try {
         data = JSON.parse(responseText);
       } catch (err) {
-        console.error('Error parsing response as JSON:', err);
-        throw new Error('Invalid response format from server');
+        console.error("Error parsing response as JSON:", err);
+        throw new Error("Invalid response format from server");
       }
-      
+
       if (!response.ok) {
-        console.error('Error response:', data);
+        console.error("Error response:", data);
         return {
           success: false,
-          message: data.message || 'Failed to reset password. The link may have expired or is invalid.'
+          message:
+            data.message ||
+            "Failed to reset password. The link may have expired or is invalid.",
         };
       }
-      
+
       return data;
     } catch (error) {
-      console.error('Reset password error:', error);
+      console.error("Reset password error:", error);
       return {
         success: false,
-        message: 'Failed to reset password. The link may have expired or is invalid.'
+        message:
+          "Failed to reset password. The link may have expired or is invalid.",
       };
     }
-  }
+  },
 };
 
 // Porting API functions
 const portingAPI = {
   // Get user's porting requests
   getPortingRequests: async () => {
-    return await apiRequest('/porting/requests');
+    return await apiRequest("/porting/requests");
   },
-  
+
   // Get details of a specific porting request
   getPortingRequestDetails: async (id) => {
     return await apiRequest(`/porting/requests/${id}`);
   },
-  
+
   // Submit a new porting request
   submitPortingRequest: async (requestData) => {
-    return await apiRequest('/porting/submit', {
-      method: 'POST',
-      body: JSON.stringify(requestData)
+    return await apiRequest("/porting/submit", {
+      method: "POST",
+      body: JSON.stringify(requestData),
     });
   },
-  
+
   // Track the status of a porting request
   trackPortingRequest: async (id) => {
     return await apiRequest(`/porting/status/${id}`);
   },
-  
+
   // Cancel a porting request
   cancelPortingRequest: async (id) => {
     return await apiRequest(`/porting/requests/${id}/cancel`, {
-      method: 'PUT'
+      method: "PUT",
     });
   },
-  
+
   // Find nearby porting centers
   findNearbyPortingCenters: async (location, provider, radius = 10) => {
-    return await apiRequest('/porting/centers/nearby', {
-      method: 'POST',
+    return await apiRequest("/porting/centers/nearby", {
+      method: "POST",
       body: JSON.stringify({
         lat: location.lat,
         lng: location.lng,
         provider,
-        radius
-      })
+        radius,
+      }),
     });
   },
-  
+
   // Calculate porting dates based on plan details
   calculatePortingDates: async (planEndDate, currentCircle) => {
-    return await apiRequest('/porting/calculate-dates', {
-      method: 'POST',
+    return await apiRequest("/porting/calculate-dates", {
+      method: "POST",
       body: JSON.stringify({
         planEndDate,
-        currentCircle
-      })
+        currentCircle,
+      }),
     });
-  }
+  },
 };
 
 // Plans API functions
@@ -551,26 +597,26 @@ const plansAPI = {
   getPlans: async (filters = {}) => {
     return await fetchPlans(filters);
   },
-  
+
   // Get plans by operator
   getPlansByOperator: async (operator) => {
     return await fetchPlansByOperator(operator);
   },
-  
+
   // Get similar plans
   getSimilarPlans: async (params) => {
     return await fetchSimilarPlans(params);
   },
-  
+
   // Get recommended plans
   getRecommendedPlans: async () => {
     return await fetchRecommendedPlans();
   },
-  
+
   // Compare multiple plans
   comparePlans: async (planIds) => {
     return await comparePlans(planIds);
-  }
+  },
 };
 
 // Networks API functions
@@ -579,31 +625,31 @@ const networksAPI = {
   getNetworkCoverage: async (params = {}) => {
     return await fetchNetworkCoverage(params);
   },
-  
+
   // Compare networks in a specific location
   compareNetworks: async (location) => {
     return await compareNetworks(location);
   },
-  
+
   // Get the best network for a location
   getBestNetwork: async (params = {}) => {
     return await getBestNetwork(params);
   },
-  
+
   // Find nearby cell towers
   findTowers: async (params = {}) => {
     return await findTowers(params);
   },
-  
+
   // Get network review information
   getNetworkReviews: async (provider, params = {}) => {
     return await fetchReviewsForNetwork(provider, params);
   },
-  
+
   // Submit a network review
   submitReview: async (reviewData) => {
     return await submitReview(reviewData);
-  }
+  },
 };
 
 // Make the global API object
@@ -613,21 +659,21 @@ const PortMySimAPI = {
   plans: plansAPI,
   networks: networksAPI,
   porting: portingAPI,
-  
+
   // Utility functions
   isAuthenticated,
   getToken,
   getUser,
   clearAuth,
-  
+
   // Generic fetch method for API requests
   fetch: async (endpoint, options = {}) => {
     return await apiRequest(endpoint, options);
   },
-  
+
   // Config
   detectApiPort,
-  testServerConnection
+  testServerConnection,
 };
 
 /**
@@ -648,17 +694,19 @@ async function fetchPlans(filters = {}) {
         queryParams.append(key, value);
       }
     });
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+    const queryString = queryParams.toString()
+      ? `?${queryParams.toString()}`
+      : "";
     const response = await fetch(`${API_BASE_URL}/plans${queryString}`);
-    
+
     if (!response.ok) {
       throw new Error(`Error fetching plans: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 }
@@ -673,43 +721,47 @@ async function fetchPlansByOperator(operator) {
     console.log(`Fetching plans for operator: ${operator}`);
     const url = `${API_BASE_URL}/operators/${operator}/plans`;
     console.log(`Request URL: ${url}`);
-    
+
     // Add timeout to the fetch request
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-    
+
     const response = await fetch(url, {
-      signal: controller.signal
+      signal: controller.signal,
     });
-    
+
     clearTimeout(timeoutId);
-    
+
     if (!response.ok) {
       console.error(`Error status: ${response.status}`);
-      
+
       // For 500 or 404 errors, fall back to local processing
       if (response.status === 500 || response.status === 404) {
-        console.warn(`Server error occurred, falling back to local ${operator} plans data`);
+        console.warn(
+          `Server error occurred, falling back to local ${operator} plans data`
+        );
         return getLocalOperatorPlans(operator);
       }
-      
+
       throw new Error(`Error fetching operator plans: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
-    console.log('Plans data received:', data);
-    
+    console.log("Plans data received:", data);
+
     // Ensure we return an array
     if (Array.isArray(data)) {
       return data;
     } else if (data && data.plans && Array.isArray(data.plans)) {
       return data.plans;
     } else {
-      console.warn('API did not return an array of plans, defaulting to local data');
+      console.warn(
+        "API did not return an array of plans, defaulting to local data"
+      );
       return getLocalOperatorPlans(operator);
     }
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     console.warn(`Using local fallback data for ${operator} plans`);
     return getLocalOperatorPlans(operator);
   }
@@ -723,272 +775,283 @@ async function fetchPlansByOperator(operator) {
 function getLocalOperatorPlans(operator) {
   // Local plans data by operator
   const localPlans = {
-    'jio': [
-      { 
-        name: 'Jio Basic Plan', 
-        price: 179, 
-        data: '1GB/day',
+    jio: [
+      {
+        name: "Jio Basic Plan",
+        price: 179,
+        data: "1GB/day",
         data_value: 30,
         validity: 28,
-        validity_category: 'monthly',
+        validity_category: "monthly",
         has_5g: true,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
-        subscriptions: ['JioTV', 'JioCinema'],
+        voice_calls: "Unlimited",
+        sms: "100/day",
+        subscriptions: ["JioTV", "JioCinema"],
         network_coverage: 93,
         data_speed: 35,
-        plan_type: 'prepaid',
-        data_category: 'low',
-        price_category: 'budget',
-        operator: 'jio',
-        image: '../images/jio.jpeg'
+        plan_type: "prepaid",
+        data_category: "low",
+        price_category: "budget",
+        operator: "jio",
+        image: "../images/jio.jpeg",
       },
-      { 
-        name: 'Jio Standard Plan', 
-        price: 299, 
-        data: '2GB/day',
+      {
+        name: "Jio Standard Plan",
+        price: 299,
+        data: "2GB/day",
         data_value: 60,
         validity: 28,
-        validity_category: 'monthly',
+        validity_category: "monthly",
         has_5g: true,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
-        subscriptions: ['JioTV', 'JioCinema', 'JioCloud'],
+        voice_calls: "Unlimited",
+        sms: "100/day",
+        subscriptions: ["JioTV", "JioCinema", "JioCloud"],
         network_coverage: 96,
         data_speed: 60,
-        plan_type: 'prepaid',
-        data_category: 'medium',
-        price_category: 'mid',
-        operator: 'jio',
-        image: '../images/jio.jpeg'
+        plan_type: "prepaid",
+        data_category: "medium",
+        price_category: "mid",
+        operator: "jio",
+        image: "../images/jio.jpeg",
       },
-      { 
-        name: 'Jio Premium Plan', 
-        price: 549, 
-        data: '2GB/day',
+      {
+        name: "Jio Premium Plan",
+        price: 549,
+        data: "2GB/day",
         data_value: 60,
         validity: 84,
-        validity_category: 'quarterly',
+        validity_category: "quarterly",
         has_5g: true,
-        voice_calls: 'Unlimited',
-        sms: 'Unlimited',
-        subscriptions: ['JioTV', 'JioCinema', 'JioCloud', 'Disney+ Hotstar'],
+        voice_calls: "Unlimited",
+        sms: "Unlimited",
+        subscriptions: ["JioTV", "JioCinema", "JioCloud", "Disney+ Hotstar"],
         network_coverage: 98,
         data_speed: 80,
-        plan_type: 'prepaid',
-        data_category: 'medium',
-        price_category: 'premium',
-        operator: 'jio',
-        image: '../images/jio.jpeg'
-      }
+        plan_type: "prepaid",
+        data_category: "medium",
+        price_category: "premium",
+        operator: "jio",
+        image: "../images/jio.jpeg",
+      },
     ],
-    'airtel': [
-      { 
-        name: 'Airtel Basic Plan', 
-        price: 199, 
-        data: '1.5GB/day',
+    airtel: [
+      {
+        name: "Airtel Basic Plan",
+        price: 199,
+        data: "1.5GB/day",
         data_value: 45,
         validity: 28,
-        validity_category: 'monthly',
+        validity_category: "monthly",
         has_5g: true,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
-        subscriptions: ['Amazon Prime Subscription', 'Wynk Music'],
+        voice_calls: "Unlimited",
+        sms: "100/day",
+        subscriptions: ["Amazon Prime Subscription", "Wynk Music"],
         network_coverage: 95,
         data_speed: 40,
-        plan_type: 'prepaid',
-        data_category: 'medium',
-        price_category: 'budget',
-        operator: 'airtel',
-        image: '../images/airtel.png'
+        plan_type: "prepaid",
+        data_category: "medium",
+        price_category: "budget",
+        operator: "airtel",
+        image: "../images/airtel.png",
       },
-      { 
-        name: 'Airtel Standard Plan', 
-        price: 349, 
-        data: '2.5GB/day',
+      {
+        name: "Airtel Standard Plan",
+        price: 349,
+        data: "2.5GB/day",
         data_value: 75,
         validity: 28,
-        validity_category: 'monthly',
+        validity_category: "monthly",
         has_5g: true,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
-        subscriptions: ['Amazon Prime Subscription', 'Wynk Music', 'Airtel Xstream Premium'],
+        voice_calls: "Unlimited",
+        sms: "100/day",
+        subscriptions: [
+          "Amazon Prime Subscription",
+          "Wynk Music",
+          "Airtel Xstream Premium",
+        ],
         network_coverage: 97,
         data_speed: 70,
-        plan_type: 'prepaid',
-        data_category: 'high',
-        price_category: 'mid',
-        operator: 'airtel',
-        image: '../images/airtel.png'
+        plan_type: "prepaid",
+        data_category: "high",
+        price_category: "mid",
+        operator: "airtel",
+        image: "../images/airtel.png",
       },
-      { 
-        name: 'Airtel Premium Plan', 
-        price: 599, 
-        data: '3GB/day',
+      {
+        name: "Airtel Premium Plan",
+        price: 599,
+        data: "3GB/day",
         data_value: 90,
         validity: 84,
-        validity_category: 'quarterly',
+        validity_category: "quarterly",
         has_5g: true,
-        voice_calls: 'Unlimited',
-        sms: 'Unlimited',
-        subscriptions: ['Amazon Prime Subscription', 'Disney+ Hotstar', 'Wynk Music', 'Airtel Xstream Premium'],
+        voice_calls: "Unlimited",
+        sms: "Unlimited",
+        subscriptions: [
+          "Amazon Prime Subscription",
+          "Disney+ Hotstar",
+          "Wynk Music",
+          "Airtel Xstream Premium",
+        ],
         network_coverage: 99,
         data_speed: 100,
-        plan_type: 'prepaid',
-        data_category: 'high',
-        price_category: 'premium',
-        operator: 'airtel',
-        image: '../images/airtel.png'
-      }
+        plan_type: "prepaid",
+        data_category: "high",
+        price_category: "premium",
+        operator: "airtel",
+        image: "../images/airtel.png",
+      },
     ],
-    'vi': [
-      { 
-        name: 'Vi Basic Plan', 
-        price: 189, 
-        data: '1.5GB/day',
+    vi: [
+      {
+        name: "Vi Basic Plan",
+        price: 189,
+        data: "1.5GB/day",
         data_value: 45,
         validity: 28,
-        validity_category: 'monthly',
+        validity_category: "monthly",
         has_5g: false,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
-        subscriptions: ['Vi Movies & TV'],
+        voice_calls: "Unlimited",
+        sms: "100/day",
+        subscriptions: ["Vi Movies & TV"],
         network_coverage: 85,
         data_speed: 30,
-        plan_type: 'prepaid',
-        data_category: 'medium',
-        price_category: 'budget',
-        operator: 'vi',
-        image: '../images/vi.png'
+        plan_type: "prepaid",
+        data_category: "medium",
+        price_category: "budget",
+        operator: "vi",
+        image: "../images/vi.png",
       },
-      { 
-        name: 'Vi Standard Plan', 
-        price: 319, 
-        data: '2GB/day',
+      {
+        name: "Vi Standard Plan",
+        price: 319,
+        data: "2GB/day",
         data_value: 60,
         validity: 28,
-        validity_category: 'monthly',
+        validity_category: "monthly",
         has_5g: false,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
-        subscriptions: ['Vi Movies & TV'],
+        voice_calls: "Unlimited",
+        sms: "100/day",
+        subscriptions: ["Vi Movies & TV"],
         network_coverage: 90,
         data_speed: 45,
-        plan_type: 'prepaid',
-        data_category: 'medium',
-        price_category: 'mid',
-        operator: 'vi',
-        image: '../images/vi.png'
+        plan_type: "prepaid",
+        data_category: "medium",
+        price_category: "mid",
+        operator: "vi",
+        image: "../images/vi.png",
       },
-      { 
-        name: 'Vi Premium Plan', 
-        price: 499, 
-        data: '3GB/day',
+      {
+        name: "Vi Premium Plan",
+        price: 499,
+        data: "3GB/day",
         data_value: 90,
         validity: 70,
-        validity_category: 'quarterly',
+        validity_category: "quarterly",
         has_5g: true,
-        voice_calls: 'Unlimited',
-        sms: 'Unlimited',
-        subscriptions: ['Vi Movies & TV', 'Mobile Insurance'],
+        voice_calls: "Unlimited",
+        sms: "Unlimited",
+        subscriptions: ["Vi Movies & TV", "Mobile Insurance"],
         network_coverage: 92,
         data_speed: 60,
-        plan_type: 'prepaid',
-        data_category: 'high',
-        price_category: 'premium',
-        operator: 'vi',
-        image: '../images/vi.png'
-      }
+        plan_type: "prepaid",
+        data_category: "high",
+        price_category: "premium",
+        operator: "vi",
+        image: "../images/vi.png",
+      },
     ],
-    'bsnl': [
-      { 
-        name: 'BSNL Basic Plan', 
-        price: 149, 
-        data: '1GB/day',
+    bsnl: [
+      {
+        name: "BSNL Basic Plan",
+        price: 149,
+        data: "1GB/day",
         data_value: 30,
         validity: 28,
-        validity_category: 'monthly',
+        validity_category: "monthly",
         has_5g: false,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
+        voice_calls: "Unlimited",
+        sms: "100/day",
         subscriptions: [],
         network_coverage: 85,
         data_speed: 20,
-        plan_type: 'prepaid',
-        data_category: 'low',
-        price_category: 'budget',
-        operator: 'bsnl',
-        image: '../images/bsnl.png'
+        plan_type: "prepaid",
+        data_category: "low",
+        price_category: "budget",
+        operator: "bsnl",
+        image: "../images/bsnl.png",
       },
-      { 
-        name: 'BSNL Standard Plan', 
-        price: 279, 
-        data: '2GB/day',
+      {
+        name: "BSNL Standard Plan",
+        price: 279,
+        data: "2GB/day",
         data_value: 60,
         validity: 84,
-        validity_category: 'quarterly',
+        validity_category: "quarterly",
         has_5g: false,
-        voice_calls: 'Unlimited',
-        sms: '100/day',
+        voice_calls: "Unlimited",
+        sms: "100/day",
         subscriptions: [],
         network_coverage: 85,
         data_speed: 20,
-        plan_type: 'prepaid',
-        data_category: 'medium',
-        price_category: 'mid',
-        operator: 'bsnl',
-        image: '../images/bsnl.png'
+        plan_type: "prepaid",
+        data_category: "medium",
+        price_category: "mid",
+        operator: "bsnl",
+        image: "../images/bsnl.png",
       },
-      { 
-        name: 'BSNL Premium Plan', 
-        price: 399, 
-        data: '3GB/day',
+      {
+        name: "BSNL Premium Plan",
+        price: 399,
+        data: "3GB/day",
         data_value: 90,
         validity: 90,
-        validity_category: 'quarterly',
+        validity_category: "quarterly",
         has_5g: false,
-        voice_calls: 'Unlimited',
-        sms: 'Unlimited',
+        voice_calls: "Unlimited",
+        sms: "Unlimited",
         subscriptions: [],
         network_coverage: 85,
         data_speed: 20,
-        plan_type: 'prepaid',
-        data_category: 'high',
-        price_category: 'premium',
-        operator: 'bsnl',
-        image: '../images/bsnl.png'
-      }
-    ]
+        plan_type: "prepaid",
+        data_category: "high",
+        price_category: "premium",
+        operator: "bsnl",
+        image: "../images/bsnl.png",
+      },
+    ],
   };
-  
+
   // Return plans for the requested operator or empty array if not found
   const operatorPlans = localPlans[operator.toLowerCase()] || [];
   console.log(`Generated ${operatorPlans.length} local plans for ${operator}`);
-  
+
   return operatorPlans;
 }
 
 /**
- * Fetch similar plans 
+ * Fetch similar plans
  * @param {Object} params - Search parameters
  * @returns {Promise} - Resolves to similar plans data
  */
 async function fetchSimilarPlans({ planId, priceRange, operator }) {
   try {
     const queryParams = new URLSearchParams();
-    if (planId) queryParams.append('planId', planId);
-    if (priceRange) queryParams.append('priceRange', priceRange);
-    if (operator) queryParams.append('operator', operator);
-    
-    const response = await fetch(`${API_BASE_URL}/plans/similar?${queryParams.toString()}`);
-    
+    if (planId) queryParams.append("planId", planId);
+    if (priceRange) queryParams.append("priceRange", priceRange);
+    if (operator) queryParams.append("operator", operator);
+
+    const response = await fetch(
+      `${API_BASE_URL}/plans/similar?${queryParams.toString()}`
+    );
+
     if (!response.ok) {
       throw new Error(`Error fetching similar plans: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 }
@@ -1000,20 +1063,24 @@ async function fetchSimilarPlans({ planId, priceRange, operator }) {
 async function fetchRecommendedPlans() {
   try {
     const response = await fetch(`${API_BASE_URL}/plans/recommended`);
-    
+
     if (!response.ok) {
       // For errors, fall back to local recommendations
       if (response.status === 500 || response.status === 404) {
-        console.warn('Server error occurred, falling back to local recommendations');
+        console.warn(
+          "Server error occurred, falling back to local recommendations"
+        );
         return getLocalRecommendedPlans();
       }
-      
-      throw new Error(`Error fetching recommended plans: ${response.statusText}`);
+
+      throw new Error(
+        `Error fetching recommended plans: ${response.statusText}`
+      );
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     return getLocalRecommendedPlans();
   }
 }
@@ -1026,70 +1093,74 @@ function getLocalRecommendedPlans() {
   // Create sample recommended plans data
   const recommendedPlans = [
     {
-      name: 'Jio Standard Plan',
-      operator: 'jio',
+      name: "Jio Standard Plan",
+      operator: "jio",
       price: 299,
       validity: 28,
-      data: '2GB/day',
+      data: "2GB/day",
       data_value: 60,
-      voice_calls: 'Unlimited',
-      sms: '100/day',
+      voice_calls: "Unlimited",
+      sms: "100/day",
       has_5g: true,
-      subscriptions: ['JioTV', 'JioCinema', 'JioCloud'],
+      subscriptions: ["JioTV", "JioCinema", "JioCloud"],
       network_coverage: 96,
       data_speed: 60,
-      extra_benefits: ['Unlimited 5G Data'],
-      plan_type: 'prepaid',
-      data_category: 'medium',
-      price_category: 'mid',
-      validity_category: 'monthly',
-      image: '../images/jio.jpeg',
-      recommendation: 'Best Value'
+      extra_benefits: ["Unlimited 5G Data"],
+      plan_type: "prepaid",
+      data_category: "medium",
+      price_category: "mid",
+      validity_category: "monthly",
+      image: "../images/jio.jpeg",
+      recommendation: "Best Value",
     },
     {
-      name: 'Airtel Standard Plan',
-      operator: 'airtel',
+      name: "Airtel Standard Plan",
+      operator: "airtel",
       price: 349,
       validity: 28,
-      data: '2.5GB/day',
+      data: "2.5GB/day",
       data_value: 75,
-      voice_calls: 'Unlimited',
-      sms: '100/day',
+      voice_calls: "Unlimited",
+      sms: "100/day",
       has_5g: true,
-      subscriptions: ['Amazon Prime Subscription', 'Wynk Music', 'Airtel Xstream Premium'],
+      subscriptions: [
+        "Amazon Prime Subscription",
+        "Wynk Music",
+        "Airtel Xstream Premium",
+      ],
       network_coverage: 97,
       data_speed: 70,
-      extra_benefits: ['Free Hellotunes'],
-      plan_type: 'prepaid',
-      data_category: 'high',
-      price_category: 'mid',
-      validity_category: 'monthly',
-      image: '../images/airtel.png',
-      recommendation: 'Best Data'
+      extra_benefits: ["Free Hellotunes"],
+      plan_type: "prepaid",
+      data_category: "high",
+      price_category: "mid",
+      validity_category: "monthly",
+      image: "../images/airtel.png",
+      recommendation: "Best Data",
     },
     {
-      name: 'Jio Basic Plan',
-      operator: 'jio',
+      name: "Jio Basic Plan",
+      operator: "jio",
       price: 179,
       validity: 28,
-      data: '1GB/day',
+      data: "1GB/day",
       data_value: 30,
-      voice_calls: 'Unlimited',
-      sms: '100/day',
+      voice_calls: "Unlimited",
+      sms: "100/day",
       has_5g: true,
-      subscriptions: ['JioTV', 'JioCinema'],
+      subscriptions: ["JioTV", "JioCinema"],
       network_coverage: 93,
       data_speed: 35,
       extra_benefits: [],
-      plan_type: 'prepaid',
-      data_category: 'low',
-      price_category: 'budget',
-      validity_category: 'monthly',
-      image: '../images/jio.jpeg',
-      recommendation: 'Budget Choice'
-    }
+      plan_type: "prepaid",
+      data_category: "low",
+      price_category: "budget",
+      validity_category: "monthly",
+      image: "../images/jio.jpeg",
+      recommendation: "Budget Choice",
+    },
   ];
-  
+
   console.log(`Generated ${recommendedPlans.length} local recommended plans`);
   return recommendedPlans;
 }
@@ -1107,17 +1178,23 @@ async function fetchNetworkCoverage(params = {}) {
         queryParams.append(key, value);
       }
     });
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    const response = await fetch(`${API_BASE_URL}/network-coverage${queryString}`);
-    
+
+    const queryString = queryParams.toString()
+      ? `?${queryParams.toString()}`
+      : "";
+    const response = await fetch(
+      `${API_BASE_URL}/network-coverage${queryString}`
+    );
+
     if (!response.ok) {
-      throw new Error(`Error fetching network coverage: ${response.statusText}`);
+      throw new Error(
+        `Error fetching network coverage: ${response.statusText}`
+      );
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 }
@@ -1129,15 +1206,19 @@ async function fetchNetworkCoverage(params = {}) {
  */
 async function compareNetworks(location) {
   try {
-    const response = await fetch(`${API_BASE_URL}/compare-networks?location=${encodeURIComponent(location)}`);
-    
+    const response = await fetch(
+      `${API_BASE_URL}/compare-networks?location=${encodeURIComponent(
+        location
+      )}`
+    );
+
     if (!response.ok) {
       throw new Error(`Error comparing networks: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 }
@@ -1155,17 +1236,19 @@ async function getBestNetwork(params = {}) {
         queryParams.append(key, value);
       }
     });
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+    const queryString = queryParams.toString()
+      ? `?${queryParams.toString()}`
+      : "";
     const response = await fetch(`${API_BASE_URL}/best-network${queryString}`);
-    
+
     if (!response.ok) {
       throw new Error(`Error fetching best network: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 }
@@ -1177,14 +1260,14 @@ async function getBestNetwork(params = {}) {
 async function getLocationsWithCoverage() {
   try {
     const response = await fetch(`${API_BASE_URL}/locations-with-coverage`);
-    
+
     if (!response.ok) {
       throw new Error(`Error fetching locations: ${response.statusText}`);
     }
-    
+
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 }
@@ -1192,13 +1275,15 @@ async function getLocationsWithCoverage() {
 // Only show error message on API-dependent pages
 function showConnectionError() {
   // Only show error UI for pages that require API
-  const isAPIRequiredPage = document.querySelector('[data-requires-api="true"]') !== null;
-  
+  const isAPIRequiredPage =
+    document.querySelector('[data-requires-api="true"]') !== null;
+
   if (isAPIRequiredPage && !API_PORT_DETECTED) {
-    if (document.querySelector('.api-connection-error') === null) {
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'api-connection-error';
-      errorDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background-color: #f44336; color: white; padding: 15px; border-radius: 5px; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
+    if (document.querySelector(".api-connection-error") === null) {
+      const errorDiv = document.createElement("div");
+      errorDiv.className = "api-connection-error";
+      errorDiv.style.cssText =
+        "position: fixed; top: 20px; right: 20px; background-color: #f44336; color: white; padding: 15px; border-radius: 5px; z-index: 9999; box-shadow: 0 2px 10px rgba(0,0,0,0.2);";
       errorDiv.innerHTML = `
         <div style="font-weight: bold; margin-bottom: 5px;">API Connection Error</div>
         <div>Could not connect to the backend server. Please make sure the server is running on port ${DEFAULT_PORT}.</div>
@@ -1214,19 +1299,22 @@ function showConnectionError() {
         <button id="dismiss-error" style="margin-top: 10px; margin-left: 10px; padding: 5px 10px; background: rgba(255,255,255,0.3); color: white; border: 1px solid white; border-radius: 3px; cursor: pointer;">Dismiss</button>
       `;
       document.body.appendChild(errorDiv);
-      
+
       // Add event listeners
-      document.getElementById('retry-connection').addEventListener('click', async () => {
-        errorDiv.innerHTML = '<div style="text-align: center;">Retrying connection...</div>';
-        await detectApiPort();
-        if (API_PORT_DETECTED) {
-          errorDiv.remove();
-        } else {
-          showConnectionError(); // Recreate the error message
-        }
-      });
-      
-      document.getElementById('dismiss-error').addEventListener('click', () => {
+      document
+        .getElementById("retry-connection")
+        .addEventListener("click", async () => {
+          errorDiv.innerHTML =
+            '<div style="text-align: center;">Retrying connection...</div>';
+          await detectApiPort();
+          if (API_PORT_DETECTED) {
+            errorDiv.remove();
+          } else {
+            showConnectionError(); // Recreate the error message
+          }
+        });
+
+      document.getElementById("dismiss-error").addEventListener("click", () => {
         errorDiv.remove();
       });
     }
@@ -1235,282 +1323,396 @@ function showConnectionError() {
 
 // Numlookup API integration
 async function lookupMobileNumber(mobileNumber) {
-    try {
-        // Check if we have a valid API key - if not, skip API call
-        if (!API_CONFIG.NUMLOOKUP_API_KEY || API_CONFIG.NUMLOOKUP_API_KEY === 'your_api_key_here') {
-            console.log('No valid API key configured for Numlookup API, skipping API call');
-            return null;
-        }
-        
-        // Add +91 prefix if not already present
-        const formattedNumber = mobileNumber.startsWith('+91') ? mobileNumber : `+91${mobileNumber}`;
-        console.log('Calling Numlookup API for number:', formattedNumber);
-        const response = await fetch(`https://api.numlookupapi.com/v1/validate/${formattedNumber}?apikey=${API_CONFIG.NUMLOOKUP_API_KEY}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            console.warn(`API error: ${response.status}`);
-            return null;
-        }
-
-        const data = await response.json();
-        console.log('Numlookup API response:', JSON.stringify(data, null, 2));
-
-        // Extract relevant information from the response
-        // Assuming the API returns carrier name and location information
-        if (data && data.carrier) {
-            const operator = data.carrier.name || 'Unknown';
-            const circle = data.location || data.region || 'Unknown';
-            const confidence = data.valid === true ? 'high' : 'medium';
-
-            console.log('Extracted data:', { operator, circle, confidence });
-
-            return {
-                operator: operator,
-                circle: circle,
-                confidence: confidence,
-                valid: data.valid === true,
-                rawResponse: data
-            };
-        }
-
-        return null;
-    } catch (error) {
-        console.error('Error in lookupMobileNumber:', error);
-        return null;
+  try {
+    // Check if we have a valid API key - if not, skip API call
+    if (
+      !API_CONFIG_SETTINGS.NUMLOOKUP_API_KEY ||
+      API_CONFIG_SETTINGS.NUMLOOKUP_API_KEY === "your_api_key_here"
+    ) {
+      console.log(
+        "No valid API key configured for Numlookup API, skipping API call"
+      );
+      return null;
     }
+
+    // Add +91 prefix if not already present
+    const formattedNumber = mobileNumber.startsWith("+91")
+      ? mobileNumber
+      : `+91${mobileNumber}`;
+    console.log("Calling Numlookup API for number:", formattedNumber);
+    const response = await fetch(
+      `https://api.numlookupapi.com/v1/validate/${formattedNumber}?apikey=${API_CONFIG_SETTINGS.NUMLOOKUP_API_KEY}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      console.warn(`API error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    console.log("Numlookup API response:", JSON.stringify(data, null, 2));
+
+    // Extract relevant information from the response
+    // Assuming the API returns carrier name and location information
+    if (data && data.carrier) {
+      const operator = data.carrier.name || "Unknown";
+      const circle = data.location || data.region || "Unknown";
+      const confidence = data.valid === true ? "high" : "medium";
+
+      console.log("Extracted data:", { operator, circle, confidence });
+
+      return {
+        operator: operator,
+        circle: circle,
+        confidence: confidence,
+        valid: data.valid === true,
+        rawResponse: data,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error in lookupMobileNumber:", error);
+    return null;
+  }
 }
 
 // Google Maps API Key from configuration
-const GOOGLE_MAPS_API_KEY = CONFIG.GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = API_CONFIG_SETTINGS.GOOGLE_MAPS_API_KEY;
 
 // Function to get coordinates from location search
 async function getCoordinates(searchQuery) {
-    if (!searchQuery || searchQuery.trim() === '') {
-        console.error('Empty search query provided');
-        throw new Error('Please enter a valid location');
+  if (!searchQuery || searchQuery.trim() === "") {
+    console.error("Empty search query provided");
+    throw new Error("Please enter a valid location");
+  }
+
+  try {
+    // Use Nominatim/OpenStreetMap if preferred or if Google Maps API key is not available
+    if (API_CONFIG_SETTINGS.USE_OPENSTREETMAP_GEOCODING || !GOOGLE_MAPS_API_KEY || GOOGLE_MAPS_API_KEY.trim() === "") {
+      return await getNominatimCoordinates(searchQuery);
     }
     
-    try {
-        const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(searchQuery)}&key=${GOOGLE_MAPS_API_KEY}`
-        );
-        const data = await response.json();
-        
-        if (data.status === 'OK' && data.results.length > 0) {
-            const location = data.results[0].geometry.location;
-            return {
-                lat: location.lat,
-                lng: location.lng,
-                formattedAddress: data.results[0].formatted_address
-            };
-        }
-        
-        if (data.status === 'ZERO_RESULTS') {
-            throw new Error('Location not found. Please try a different search term.');
-        } else if (data.status === 'REQUEST_DENIED') {
-            console.error('Google Maps API request denied:', data.error_message);
-            throw new Error('Location service unavailable. Please try again later.');
-        } else {
-            console.error('Geocoding error:', data.status, data.error_message);
-            throw new Error('Error finding location. Please try again later.');
-        }
-    } catch (error) {
-        console.error('Error getting coordinates:', error);
-        throw error;
+    // Otherwise use Google Maps geocoding
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
+        searchQuery
+      )}&key=${GOOGLE_MAPS_API_KEY}`
+    );
+    const data = await response.json();
+
+    if (data.status === "OK" && data.results.length > 0) {
+      const location = data.results[0].geometry.location;
+      return {
+        lat: location.lat,
+        lng: location.lng,
+        formattedAddress: data.results[0].formatted_address,
+      };
     }
+
+    if (data.status === "ZERO_RESULTS") {
+      throw new Error(
+        "Location not found. Please try a different search term."
+      );
+    } else if (data.status === "REQUEST_DENIED") {
+      console.error("Google Maps API request denied:", data.error_message);
+      // Fall back to Nominatim
+      return await getNominatimCoordinates(searchQuery);
+    } else {
+      console.error("Geocoding error:", data.status, data.error_message);
+      // Fall back to Nominatim
+      return await getNominatimCoordinates(searchQuery);
+    }
+  } catch (error) {
+    console.error("Error getting coordinates:", error);
+    throw error;
+  }
+}
+
+// Get coordinates using Nominatim (OpenStreetMap's geocoding service)
+async function getNominatimCoordinates(searchQuery) {
+  try {
+    // Encode the search query
+    const encodedQuery = encodeURIComponent(searchQuery);
+    
+    // Try direct access first
+    const directResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`, {
+      headers: {
+        'User-Agent': 'PortMySim/1.0',
+        'Referer': window.location.origin
+      }
+    });
+    
+    if (directResponse.ok) {
+      const data = await directResponse.json();
+      if (data && data.length > 0) {
+        const result = data[0];
+        return {
+          lat: parseFloat(result.lat),
+          lng: parseFloat(result.lon),
+          formattedAddress: result.display_name
+        };
+      }
+    }
+    
+    // Define fallback locations if geocoding fails
+    const knownLocations = {
+      'bhiwani': { lat: 28.7929, lng: 76.1397, name: 'Bhiwani, Haryana, India' },
+      'haryana': { lat: 29.0588, lng: 76.0856, name: 'Haryana, India' },
+      'delhi': { lat: 28.7041, lng: 77.1025, name: 'Delhi, India' },
+      'mumbai': { lat: 19.0760, lng: 72.8777, name: 'Mumbai, Maharashtra, India' },
+      'bangalore': { lat: 12.9716, lng: 77.5946, name: 'Bangalore, Karnataka, India' },
+      'hyderabad': { lat: 17.3850, lng: 78.4867, name: 'Hyderabad, Telangana, India' },
+      'chennai': { lat: 13.0827, lng: 80.2707, name: 'Chennai, Tamil Nadu, India' },
+      'kolkata': { lat: 22.5726, lng: 88.3639, name: 'Kolkata, West Bengal, India' }
+    };
+    
+    // Try to match against known locations (case insensitive)
+    const searchLower = searchQuery.toLowerCase();
+    for (const [key, location] of Object.entries(knownLocations)) {
+      if (searchLower.includes(key)) {
+        console.log(`Using predefined location match for "${searchQuery}"`);
+        return {
+          lat: location.lat,
+          lng: location.lng,
+          formattedAddress: location.name
+        };
+      }
+    }
+    
+    // Return default coordinates if no match found
+    console.warn('No results found from geocoding, using default location');
+    return {
+      lat: 28.6139, 
+      lng: 77.2090,
+      formattedAddress: 'Default Location (New Delhi, India)'
+    };
+  } catch (error) {
+    console.error('Error using Nominatim geocoding:', error);
+    throw new Error("Location service unavailable. Please try again later.");
+  }
 }
 
 // Calculate distance between two points using Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // Radius of the Earth in km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-        Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; // Distance in km
+  const R = 6371; // Radius of the Earth in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in km
 }
 
 // Function to get nearby porting centers
-async function getNearbyPortingCenters(searchQuery, provider = 'any', radius = 10) {
-    try {
-        // Get coordinates for the searched location
-        const coordinates = await getCoordinates(searchQuery);
-        
-        // Search for telecom stores in the area using Google Places API
-        const placesResponse = await fetch(
-            `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${coordinates.lat},${coordinates.lng}&radius=${radius * 1000}&keyword=telecom%20store&key=${GOOGLE_MAPS_API_KEY}`
-        );
-        const placesData = await placesResponse.json();
-        
-        if (placesData.status !== 'OK') {
-            console.warn('Places API error:', placesData.status);
-            
-            // Fallback with static data if no results found
-            if (placesData.status === 'ZERO_RESULTS') {
-                return getFallbackPortingCenters(provider);
-            }
-            
-            throw new Error(`Error finding nearby centers: ${placesData.status}`);
-        }
+async function getNearbyPortingCenters(
+  searchQuery,
+  provider = "any",
+  radius = 10
+) {
+  try {
+    // Get coordinates for the searched location
+    const coordinates = await getCoordinates(searchQuery);
 
-        // If no places found, use fallback data
-        if (placesData.results.length === 0) {
-            return getFallbackPortingCenters(provider);
-        }
+    // Search for telecom stores in the area using Google Places API
+    const placesResponse = await fetch(
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${
+        coordinates.lat
+      },${coordinates.lng}&radius=${
+        radius * 1000
+      }&keyword=telecom%20store&key=${GOOGLE_MAPS_API_KEY}`
+    );
+    const placesData = await placesResponse.json();
 
-        // Process and filter the results
-        const centers = await Promise.all(placesData.results.slice(0, 10).map(async (place) => {
-            try {
-                // Get place details for additional information
-                const detailsResponse = await fetch(
-                    `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,opening_hours,website&key=${GOOGLE_MAPS_API_KEY}`
-                );
-                const detailsData = await detailsResponse.json();
-                const details = detailsData.result || {};
+    if (placesData.status !== "OK") {
+      console.warn("Places API error:", placesData.status);
 
-                // Determine the provider based on the place name
-                let storeProvider = 'unknown';
-                const name = place.name.toLowerCase();
-                if (name.includes('airtel')) storeProvider = 'airtel';
-                else if (name.includes('jio')) storeProvider = 'jio';
-                else if (name.includes('vi') || name.includes('vodafone') || name.includes('idea')) storeProvider = 'vi';
-                
-                // Skip if we're filtering for a specific provider and this doesn't match
-                if (provider !== 'any' && storeProvider !== provider && storeProvider !== 'unknown') {
-                    return null;
-                }
-                
-                // Calculate distance from search location
-                const distance = calculateDistance(
-                    coordinates.lat,
-                    coordinates.lng,
-                    place.geometry.location.lat,
-                    place.geometry.location.lng
-                );
-
-                return {
-                    name: place.name,
-                    provider: storeProvider,
-                    address: details.formatted_address || place.vicinity || 'Address not available',
-                    phone: details.formatted_phone_number || 'Phone not available',
-                    distance: distance.toFixed(1),
-                    openNow: place.opening_hours?.open_now,
-                    rating: place.rating || 0,
-                    totalRatings: place.user_ratings_total || 0,
-                    location: {
-                        lat: place.geometry.location.lat,
-                        lng: place.geometry.location.lng
-                    },
-                    placeId: place.place_id,
-                    website: details.website || '',
-                    openingHours: details.opening_hours?.weekday_text || []
-                };
-            } catch (error) {
-                console.error('Error processing place details:', error);
-                return null;
-            }
-        }));
-
-        // Filter out null results and sort by distance
-        const validCenters = centers.filter(center => center !== null);
-        
-        if (validCenters.length === 0) {
-            console.warn('No valid centers found after filtering, using fallback data');
-            return getFallbackPortingCenters(provider);
-        }
-        
-        return validCenters.sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-    } catch (error) {
-        console.error('Error fetching nearby centers:', error);
+      // Fallback with static data if no results found
+      if (placesData.status === "ZERO_RESULTS") {
         return getFallbackPortingCenters(provider);
+      }
+
+      throw new Error(`Error finding nearby centers: ${placesData.status}`);
     }
+
+    // If no places found, use fallback data
+    if (placesData.results.length === 0) {
+      return getFallbackPortingCenters(provider);
+    }
+
+    // Process and filter the results
+    const centers = await Promise.all(
+      placesData.results.slice(0, 10).map(async (place) => {
+        try {
+          // Get place details for additional information
+          const detailsResponse = await fetch(
+            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_address,formatted_phone_number,opening_hours,website&key=${GOOGLE_MAPS_API_KEY}`
+          );
+          const detailsData = await detailsResponse.json();
+          const details = detailsData.result || {};
+
+          // Determine the provider based on the place name
+          let storeProvider = "unknown";
+          const name = place.name.toLowerCase();
+          if (name.includes("airtel")) storeProvider = "airtel";
+          else if (name.includes("jio")) storeProvider = "jio";
+          else if (
+            name.includes("vi") ||
+            name.includes("vodafone") ||
+            name.includes("idea")
+          )
+            storeProvider = "vi";
+
+          // Skip if we're filtering for a specific provider and this doesn't match
+          if (
+            provider !== "any" &&
+            storeProvider !== provider &&
+            storeProvider !== "unknown"
+          ) {
+            return null;
+          }
+
+          // Calculate distance from search location
+          const distance = calculateDistance(
+            coordinates.lat,
+            coordinates.lng,
+            place.geometry.location.lat,
+            place.geometry.location.lng
+          );
+
+          return {
+            name: place.name,
+            provider: storeProvider,
+            address:
+              details.formatted_address ||
+              place.vicinity ||
+              "Address not available",
+            phone: details.formatted_phone_number || "Phone not available",
+            distance: distance.toFixed(1),
+            openNow: place.opening_hours?.open_now,
+            rating: place.rating || 0,
+            totalRatings: place.user_ratings_total || 0,
+            location: {
+              lat: place.geometry.location.lat,
+              lng: place.geometry.location.lng,
+            },
+            placeId: place.place_id,
+            website: details.website || "",
+            openingHours: details.opening_hours?.weekday_text || [],
+          };
+        } catch (error) {
+          console.error("Error processing place details:", error);
+          return null;
+        }
+      })
+    );
+
+    // Filter out null results and sort by distance
+    const validCenters = centers.filter((center) => center !== null);
+
+    if (validCenters.length === 0) {
+      console.warn(
+        "No valid centers found after filtering, using fallback data"
+      );
+      return getFallbackPortingCenters(provider);
+    }
+
+    return validCenters.sort(
+      (a, b) => parseFloat(a.distance) - parseFloat(b.distance)
+    );
+  } catch (error) {
+    console.error("Error fetching nearby centers:", error);
+    return getFallbackPortingCenters(provider);
+  }
 }
 
 // Fallback function to return static data when API fails
-function getFallbackPortingCenters(provider = 'any') {
-    const fallbackCenters = [
-        {
-            name: "Airtel Store",
-            provider: "airtel",
-            address: "123 Main Street, New Delhi, 110001",
-            phone: "+91 98765 43210",
-            distance: "2.5",
-            openNow: true,
-            rating: 4.3,
-            totalRatings: 124,
-            location: { lat: 28.6139, lng: 77.2090 },
-            placeId: "fallback_airtel_1",
-            website: "https://www.airtel.in",
-            openingHours: [
-                "Monday: 9:00 AM – 8:00 PM",
-                "Tuesday: 9:00 AM – 8:00 PM",
-                "Wednesday: 9:00 AM – 8:00 PM",
-                "Thursday: 9:00 AM – 8:00 PM",
-                "Friday: 9:00 AM – 8:00 PM",
-                "Saturday: 9:00 AM – 8:00 PM",
-                "Sunday: 10:00 AM – 6:00 PM"
-            ]
-        },
-        {
-            name: "Jio Store",
-            provider: "jio",
-            address: "456 Market Road, New Delhi, 110002",
-            phone: "+91 98765 12345",
-            distance: "3.8",
-            openNow: true,
-            rating: 4.5,
-            totalRatings: 156,
-            location: { lat: 28.6219, lng: 77.2100 },
-            placeId: "fallback_jio_1",
-            website: "https://www.jio.com",
-            openingHours: [
-                "Monday: 9:00 AM – 8:00 PM",
-                "Tuesday: 9:00 AM – 8:00 PM",
-                "Wednesday: 9:00 AM – 8:00 PM",
-                "Thursday: 9:00 AM – 8:00 PM",
-                "Friday: 9:00 AM – 8:00 PM",
-                "Saturday: 9:00 AM – 8:00 PM",
-                "Sunday: 10:00 AM – 6:00 PM"
-            ]
-        },
-        {
-            name: "Vi Store",
-            provider: "vi",
-            address: "789 Tower Lane, New Delhi, 110003",
-            phone: "+91 98765 98765",
-            distance: "4.2",
-            openNow: true,
-            rating: 4.1,
-            totalRatings: 98,
-            location: { lat: 28.6129, lng: 77.2270 },
-            placeId: "fallback_vi_1",
-            website: "https://www.myvi.in",
-            openingHours: [
-                "Monday: 9:30 AM – 7:30 PM",
-                "Tuesday: 9:30 AM – 7:30 PM",
-                "Wednesday: 9:30 AM – 7:30 PM",
-                "Thursday: 9:30 AM – 7:30 PM",
-                "Friday: 9:30 AM – 7:30 PM",
-                "Saturday: 9:30 AM – 7:30 PM",
-                "Sunday: 11:00 AM – 5:00 PM"
-            ]
-        }
-    ];
+function getFallbackPortingCenters(provider = "any") {
+  const fallbackCenters = [
+    {
+      name: "Airtel Store",
+      provider: "airtel",
+      address: "123 Main Street, New Delhi, 110001",
+      phone: "+91 98765 43210",
+      distance: "2.5",
+      openNow: true,
+      rating: 4.3,
+      totalRatings: 124,
+      location: { lat: 28.6139, lng: 77.209 },
+      placeId: "fallback_airtel_1",
+      website: "https://www.airtel.in",
+      openingHours: [
+        "Monday: 9:00 AM – 8:00 PM",
+        "Tuesday: 9:00 AM – 8:00 PM",
+        "Wednesday: 9:00 AM – 8:00 PM",
+        "Thursday: 9:00 AM – 8:00 PM",
+        "Friday: 9:00 AM – 8:00 PM",
+        "Saturday: 9:00 AM – 8:00 PM",
+        "Sunday: 10:00 AM – 6:00 PM",
+      ],
+    },
+    {
+      name: "Jio Store",
+      provider: "jio",
+      address: "456 Market Road, New Delhi, 110002",
+      phone: "+91 98765 12345",
+      distance: "3.8",
+      openNow: true,
+      rating: 4.5,
+      totalRatings: 156,
+      location: { lat: 28.6219, lng: 77.21 },
+      placeId: "fallback_jio_1",
+      website: "https://www.jio.com",
+      openingHours: [
+        "Monday: 9:00 AM – 8:00 PM",
+        "Tuesday: 9:00 AM – 8:00 PM",
+        "Wednesday: 9:00 AM – 8:00 PM",
+        "Thursday: 9:00 AM – 8:00 PM",
+        "Friday: 9:00 AM – 8:00 PM",
+        "Saturday: 9:00 AM – 8:00 PM",
+        "Sunday: 10:00 AM – 6:00 PM",
+      ],
+    },
+    {
+      name: "Vi Store",
+      provider: "vi",
+      address: "789 Tower Lane, New Delhi, 110003",
+      phone: "+91 98765 98765",
+      distance: "4.2",
+      openNow: true,
+      rating: 4.1,
+      totalRatings: 98,
+      location: { lat: 28.6129, lng: 77.227 },
+      placeId: "fallback_vi_1",
+      website: "https://www.myvi.in",
+      openingHours: [
+        "Monday: 9:30 AM – 7:30 PM",
+        "Tuesday: 9:30 AM – 7:30 PM",
+        "Wednesday: 9:30 AM – 7:30 PM",
+        "Thursday: 9:30 AM – 7:30 PM",
+        "Friday: 9:30 AM – 7:30 PM",
+        "Saturday: 9:30 AM – 7:30 PM",
+        "Sunday: 11:00 AM – 5:00 PM",
+      ],
+    },
+  ];
 
-    // Filter by provider if specified
-    if (provider !== 'any') {
-        return fallbackCenters.filter(center => center.provider === provider);
-    }
-    
-    return fallbackCenters;
+  // Filter by provider if specified
+  if (provider !== "any") {
+    return fallbackCenters.filter((center) => center.provider === provider);
+  }
+
+  return fallbackCenters;
 }
 
 /**
@@ -1519,26 +1721,33 @@ function getFallbackPortingCenters(provider = 'any') {
  * @param {string} provider - Provider name (jio, airtel, vi, bsnl)
  * @returns {Promise} - Resolves to coverage data
  */
-async function checkCoverage(location, provider = 'all') {
-    try {
-        const queryParams = new URLSearchParams();
-        if (location) queryParams.append('location', location);
-        if (provider && provider !== 'all') queryParams.append('provider', provider);
-        
-        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-        const response = await fetch(`${API_BASE_URL}/network-coverage/check${queryString}`);
-        
-        if (!response.ok) {
-            // Fallback to local coverage data
-            console.warn(`Server error (${response.status}), falling back to local coverage data`);
-            return getLocalCoverageData(location, provider);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error checking coverage:', error);
-        return getLocalCoverageData(location, provider);
+async function checkCoverage(location, provider = "all") {
+  try {
+    const queryParams = new URLSearchParams();
+    if (location) queryParams.append("location", location);
+    if (provider && provider !== "all")
+      queryParams.append("provider", provider);
+
+    const queryString = queryParams.toString()
+      ? `?${queryParams.toString()}`
+      : "";
+    const response = await fetch(
+      `${API_BASE_URL}/network-coverage/check${queryString}`
+    );
+
+    if (!response.ok) {
+      // Fallback to local coverage data
+      console.warn(
+        `Server error (${response.status}), falling back to local coverage data`
+      );
+      return getLocalCoverageData(location, provider);
     }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error checking coverage:", error);
+    return getLocalCoverageData(location, provider);
+  }
 }
 
 /**
@@ -1547,57 +1756,57 @@ async function checkCoverage(location, provider = 'all') {
  * @param {string} provider - Provider name
  * @returns {Object} - Coverage data
  */
-function getLocalCoverageData(location, provider = 'all') {
-    // Default coverage scores (out of 100)
-    const coverageScores = {
-        'jio': {
-            'voice': 90,
-            'data': 95,
-            '5g': 80,
-            'indoor': 85,
-            'overall': 90
-        },
-        'airtel': {
-            'voice': 95,
-            'data': 90,
-            '5g': 85,
-            'indoor': 90,
-            'overall': 92
-        },
-        'vi': {
-            'voice': 85,
-            'data': 80,
-            '5g': 70,
-            'indoor': 75,
-            'overall': 78
-        },
-        'bsnl': {
-            'voice': 80,
-            'data': 70,
-            '5g': 0,
-            'indoor': 65,
-            'overall': 68
-        }
-    };
-    
-    if (provider !== 'all' && coverageScores[provider]) {
-        return {
-            location: location || 'Unknown location',
-            provider: provider,
-            coverage: coverageScores[provider],
-            source: 'local_data'
-        };
-    }
-    
-    // Return all providers
+function getLocalCoverageData(location, provider = "all") {
+  // Default coverage scores (out of 100)
+  const coverageScores = {
+    jio: {
+      voice: 90,
+      data: 95,
+      "5g": 80,
+      indoor: 85,
+      overall: 90,
+    },
+    airtel: {
+      voice: 95,
+      data: 90,
+      "5g": 85,
+      indoor: 90,
+      overall: 92,
+    },
+    vi: {
+      voice: 85,
+      data: 80,
+      "5g": 70,
+      indoor: 75,
+      overall: 78,
+    },
+    bsnl: {
+      voice: 80,
+      data: 70,
+      "5g": 0,
+      indoor: 65,
+      overall: 68,
+    },
+  };
+
+  if (provider !== "all" && coverageScores[provider]) {
     return {
-        location: location || 'Unknown location',
-        providers: Object.keys(coverageScores).map(key => ({
-            name: key,
-            coverage: coverageScores[key]
-        })),
-        source: 'local_data'
+      location: location || "Unknown location",
+      provider: provider,
+      coverage: coverageScores[provider],
+      source: "local_data",
     };
+  }
+
+  // Return all providers
+  return {
+    location: location || "Unknown location",
+    providers: Object.keys(coverageScores).map((key) => ({
+      name: key,
+      coverage: coverageScores[key],
+    })),
+    source: "local_data",
+  };
 }
 
 /**
@@ -1610,32 +1819,41 @@ function getLocalCoverageData(location, provider = 'all') {
  * @returns {Promise} - Resolves to tower data
  */
 async function findTowers(params = {}) {
-    try {
-        const { lat, lng, radius = 5, provider } = params;
-        
-        if (!lat || !lng) {
-            throw new Error('Latitude and longitude are required');
-        }
-        
-        const queryParams = new URLSearchParams();
-        queryParams.append('lat', lat);
-        queryParams.append('lng', lng);
-        queryParams.append('radius', radius);
-        if (provider) queryParams.append('provider', provider);
-        
-        const response = await fetch(`${API_BASE_URL}/network-towers?${queryParams.toString()}`);
-        
-        if (!response.ok) {
-            // Fallback to generated tower data
-            console.warn(`Server error (${response.status}), falling back to generated tower data`);
-            return generateTowerData(lat, lng, radius, provider);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error finding towers:', error);
-        return generateTowerData(params.lat, params.lng, params.radius, params.provider);
+  try {
+    const { lat, lng, radius = 5, provider } = params;
+
+    if (!lat || !lng) {
+      throw new Error("Latitude and longitude are required");
     }
+
+    const queryParams = new URLSearchParams();
+    queryParams.append("lat", lat);
+    queryParams.append("lng", lng);
+    queryParams.append("radius", radius);
+    if (provider) queryParams.append("provider", provider);
+
+    const response = await fetch(
+      `${API_BASE_URL}/network-towers?${queryParams.toString()}`
+    );
+
+    if (!response.ok) {
+      // Fallback to generated tower data
+      console.warn(
+        `Server error (${response.status}), falling back to generated tower data`
+      );
+      return generateTowerData(lat, lng, radius, provider);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error finding towers:", error);
+    return generateTowerData(
+      params.lat,
+      params.lng,
+      params.radius,
+      params.provider
+    );
+  }
 }
 
 /**
@@ -1647,58 +1865,59 @@ async function findTowers(params = {}) {
  * @returns {Object} - Tower data
  */
 function generateTowerData(lat, lng, radius = 5, providerFilter) {
-    if (!lat || !lng) {
-        return { towers: [] };
+  if (!lat || !lng) {
+    return { towers: [] };
+  }
+
+  // Generate random points within the radius
+  const towers = [];
+  const providers = ["jio", "airtel", "vi", "bsnl"];
+  const types = ["4G", "5G", "3G"];
+
+  // Generate between 5-15 towers
+  const towerCount = Math.floor(Math.random() * 10) + 5;
+
+  for (let i = 0; i < towerCount; i++) {
+    // Random distance within radius (with preference for closer)
+    const distance = Math.random() * Math.random() * radius;
+
+    // Random angle
+    const angle = Math.random() * 2 * Math.PI;
+
+    // Convert to lat/lng
+    // Earth radius is ~6371 km
+    const latChange = (distance / 6371) * (180 / Math.PI);
+    const lngChange =
+      ((distance / 6371) * (180 / Math.PI)) / Math.cos((lat * Math.PI) / 180);
+
+    const provider = providers[Math.floor(Math.random() * providers.length)];
+    const type = types[Math.floor(Math.random() * types.length)];
+
+    // Skip if filtering by provider
+    if (providerFilter && provider !== providerFilter) {
+      continue;
     }
-    
-    // Generate random points within the radius
-    const towers = [];
-    const providers = ['jio', 'airtel', 'vi', 'bsnl'];
-    const types = ['4G', '5G', '3G'];
-    
-    // Generate between 5-15 towers
-    const towerCount = Math.floor(Math.random() * 10) + 5;
-    
-    for (let i = 0; i < towerCount; i++) {
-        // Random distance within radius (with preference for closer)
-        const distance = Math.random() * Math.random() * radius;
-        
-        // Random angle
-        const angle = Math.random() * 2 * Math.PI;
-        
-        // Convert to lat/lng
-        // Earth radius is ~6371 km
-        const latChange = (distance / 6371) * (180 / Math.PI);
-        const lngChange = (distance / 6371) * (180 / Math.PI) / Math.cos(lat * Math.PI / 180);
-        
-        const provider = providers[Math.floor(Math.random() * providers.length)];
-        const type = types[Math.floor(Math.random() * types.length)];
-        
-        // Skip if filtering by provider
-        if (providerFilter && provider !== providerFilter) {
-            continue;
-        }
-        
-        towers.push({
-            id: `tower_${i}`,
-            provider: provider,
-            type: type,
-            location: {
-                lat: lat + latChange * Math.sin(angle),
-                lng: lng + lngChange * Math.cos(angle)
-            },
-            distance: distance.toFixed(1),
-            strength: Math.floor(Math.random() * 30) + 70, // 70-100
-            active: Math.random() > 0.1 // 90% are active
-        });
-    }
-    
-    return {
-        center: { lat, lng },
-        radius,
-        towers: towers,
-        source: 'generated_data'
-    };
+
+    towers.push({
+      id: `tower_${i}`,
+      provider: provider,
+      type: type,
+      location: {
+        lat: lat + latChange * Math.sin(angle),
+        lng: lng + lngChange * Math.cos(angle),
+      },
+      distance: distance.toFixed(1),
+      strength: Math.floor(Math.random() * 30) + 70, // 70-100
+      active: Math.random() > 0.1, // 90% are active
+    });
+  }
+
+  return {
+    center: { lat, lng },
+    radius,
+    towers: towers,
+    source: "generated_data",
+  };
 }
 
 /**
@@ -1708,31 +1927,37 @@ function generateTowerData(lat, lng, radius = 5, providerFilter) {
  * @returns {Promise} - Resolves to reviews data
  */
 async function fetchReviewsForNetwork(provider, params = {}) {
-    try {
-        if (!provider) {
-            throw new Error('Provider is required');
-        }
-        
-        const queryParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-            if (value) {
-                queryParams.append(key, value);
-            }
-        });
-        
-        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-        const response = await fetch(`${API_BASE_URL}/reviews/${provider}${queryString}`);
-        
-        if (!response.ok) {
-            console.warn(`Server error (${response.status}), falling back to sample reviews`);
-            return getSampleReviews(provider);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching reviews:', error);
-        return getSampleReviews(provider);
+  try {
+    if (!provider) {
+      throw new Error("Provider is required");
     }
+
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString()
+      ? `?${queryParams.toString()}`
+      : "";
+    const response = await fetch(
+      `${API_BASE_URL}/reviews/${provider}${queryString}`
+    );
+
+    if (!response.ok) {
+      console.warn(
+        `Server error (${response.status}), falling back to sample reviews`
+      );
+      return getSampleReviews(provider);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching reviews:", error);
+    return getSampleReviews(provider);
+  }
 }
 
 /**
@@ -1741,34 +1966,42 @@ async function fetchReviewsForNetwork(provider, params = {}) {
  * @returns {Promise} - Resolves to submission result
  */
 async function submitReview(reviewData) {
-    try {
-        if (!isAuthenticated()) {
-            throw new Error('You must be logged in to submit a review');
-        }
-        
-        if (!reviewData.provider || !reviewData.rating) {
-            throw new Error('Provider and rating are required');
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/reviews`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getToken()}`
-            },
-            body: JSON.stringify(reviewData)
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to submit review');
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error submitting review:', error);
-        throw error;
+  try {
+    // if (!isAuthenticated()) {
+    //     throw new Error('You must be logged in to submit a review');
+    // }
+
+    //NEW CODE STARTS
+    if (!getToken()) {
+      console.log('isAuthenticated:', isAuthenticated());
+      console.log('Token:', getToken());
+      throw new Error("You must be logged in to submit a review");
     }
+    //NEW CODE ENDS
+
+    if (!reviewData.provider || !reviewData.rating) {
+      throw new Error("Provider and rating are required");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/reviews`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${getToken()}`,
+      },
+      body: JSON.stringify(reviewData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to submit review");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error submitting review:", error);
+    throw error;
+  }
 }
 
 /**
@@ -1776,26 +2009,26 @@ async function submitReview(reviewData) {
  * @returns {Promise} - Resolves to user activity data
  */
 async function fetchUserActivity() {
-    try {
-        if (!isAuthenticated()) {
-            throw new Error('You must be logged in to view your activity');
-        }
-        
-        const response = await fetch(`${API_BASE_URL}/user/activity`, {
-            headers: {
-                'Authorization': `Bearer ${getToken()}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch user activity');
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching user activity:', error);
-        return { reviews: [], comments: [], comparisons: [] };
+  try {
+    if (!isAuthenticated()) {
+      throw new Error("You must be logged in to view your activity");
     }
+
+    const response = await fetch(`${API_BASE_URL}/user/activity`, {
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch user activity");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching user activity:", error);
+    return { reviews: [], comments: [], comparisons: [] };
+  }
 }
 
 /**
@@ -1804,27 +2037,31 @@ async function fetchUserActivity() {
  * @returns {Promise} - Resolves to popular plans data
  */
 async function getPopularPlans(params = {}) {
-    try {
-        const queryParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-            if (value) {
-                queryParams.append(key, value);
-            }
-        });
-        
-        const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-        const response = await fetch(`${API_BASE_URL}/plans/popular${queryString}`);
-        
-        if (!response.ok) {
-            console.warn(`Server error (${response.status}), falling back to local popular plans`);
-            return getLocalPopularPlans();
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching popular plans:', error);
-        return getLocalPopularPlans();
+  try {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        queryParams.append(key, value);
+      }
+    });
+
+    const queryString = queryParams.toString()
+      ? `?${queryParams.toString()}`
+      : "";
+    const response = await fetch(`${API_BASE_URL}/plans/popular${queryString}`);
+
+    if (!response.ok) {
+      console.warn(
+        `Server error (${response.status}), falling back to local popular plans`
+      );
+      return getLocalPopularPlans();
     }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching popular plans:", error);
+    return getLocalPopularPlans();
+  }
 }
 
 /**
@@ -1833,80 +2070,84 @@ async function getPopularPlans(params = {}) {
  * @returns {Array} - Array of sample reviews
  */
 function getSampleReviews(provider) {
-    const reviews = [
-        {
-            id: 'sample_review_1',
-            provider: 'jio',
-            rating: 4,
-            title: 'Great speed and coverage',
-            review: 'I\'ve been using Jio for over a year now, and I\'m impressed with the speed and coverage.',
-            user: {
-                name: 'Rahul S.',
-                location: 'Mumbai'
-            },
-            date: '2023-03-15T12:30:00Z',
-            likes: 12,
-            helpful: 8
-        },
-        {
-            id: 'sample_review_2',
-            provider: 'airtel',
-            rating: 5,
-            title: 'Best network in my area',
-            review: 'Airtel has the best coverage in my area. Never had any call drops or data issues.',
-            user: {
-                name: 'Priya K.',
-                location: 'Delhi'
-            },
-            date: '2023-04-10T09:45:00Z',
-            likes: 18,
-            helpful: 15
-        },
-        {
-            id: 'sample_review_3',
-            provider: 'vi',
-            rating: 3,
-            title: 'Good value, but inconsistent coverage',
-            review: 'Vi offers good value plans, but the coverage can be inconsistent in some areas.',
-            user: {
-                name: 'Aditya M.',
-                location: 'Bangalore'
-            },
-            date: '2023-02-28T16:20:00Z',
-            likes: 5,
-            helpful: 3
-        },
-        {
-            id: 'sample_review_4',
-            provider: 'bsnl',
-            rating: 3,
-            title: 'Good in rural areas',
-            review: 'BSNL works surprisingly well in rural areas where other networks struggle.',
-            user: {
-                name: 'Sanjay P.',
-                location: 'Kerala'
-            },
-            date: '2023-01-20T10:15:00Z',
-            likes: 9,
-            helpful: 7
-        }
-    ];
-    
-    // If provider specified, filter reviews
-    if (provider) {
-        return {
-            provider,
-            reviews: reviews.filter(review => review.provider === provider),
-            total: reviews.filter(review => review.provider === provider).length,
-            average_rating: 4.0
-        };
-    }
-    
+  const reviews = [
+    {
+      id: "sample_review_1",
+      provider: "jio",
+      rating: 4,
+      title: "Great speed and coverage",
+      review:
+        "I've been using Jio for over a year now, and I'm impressed with the speed and coverage.",
+      user: {
+        name: "Rahul S.",
+        location: "Mumbai",
+      },
+      date: "2023-03-15T12:30:00Z",
+      likes: 12,
+      helpful: 8,
+    },
+    {
+      id: "sample_review_2",
+      provider: "airtel",
+      rating: 5,
+      title: "Best network in my area",
+      review:
+        "Airtel has the best coverage in my area. Never had any call drops or data issues.",
+      user: {
+        name: "Priya K.",
+        location: "Delhi",
+      },
+      date: "2023-04-10T09:45:00Z",
+      likes: 18,
+      helpful: 15,
+    },
+    {
+      id: "sample_review_3",
+      provider: "vi",
+      rating: 3,
+      title: "Good value, but inconsistent coverage",
+      review:
+        "Vi offers good value plans, but the coverage can be inconsistent in some areas.",
+      user: {
+        name: "Aditya M.",
+        location: "Bangalore",
+      },
+      date: "2023-02-28T16:20:00Z",
+      likes: 5,
+      helpful: 3,
+    },
+    {
+      id: "sample_review_4",
+      provider: "bsnl",
+      rating: 3,
+      title: "Good in rural areas",
+      review:
+        "BSNL works surprisingly well in rural areas where other networks struggle.",
+      user: {
+        name: "Sanjay P.",
+        location: "Kerala",
+      },
+      date: "2023-01-20T10:15:00Z",
+      likes: 9,
+      helpful: 7,
+    },
+  ];
+
+  // If provider specified, filter reviews
+  if (provider) {
     return {
-        reviews,
-        total: reviews.length,
-        average_rating: 3.8
+      provider,
+      reviews: reviews.filter((review) => review.provider === provider),
+      total: reviews.filter((review) => review.provider === provider).length,
+      average_rating: 4.0,
     };
+  }
+
+  return {
+    reviews,
+    total: reviews.length,
+    average_rating: 3.8,
+  };
 }
 
 /**
@@ -1914,52 +2155,52 @@ function getSampleReviews(provider) {
  * @returns {Array} - Array of popular plans
  */
 function getLocalPopularPlans() {
-    return [
-        {
-            name: 'Jio Premium Plan',
-            operator: 'jio',
-            price: 549,
-            validity: 84,
-            data: '2GB/day',
-            has_5g: true,
-            popularity_score: 95,
-            plan_type: 'prepaid',
-            image: '../images/jio.jpeg'
-        },
-        {
-            name: 'Airtel Standard Plan',
-            operator: 'airtel',
-            price: 349,
-            validity: 28,
-            data: '2.5GB/day',
-            has_5g: true,
-            popularity_score: 92,
-            plan_type: 'prepaid',
-            image: '../images/airtel.png'
-        },
-        {
-            name: 'Vi Standard Plan',
-            operator: 'vi',
-            price: 319,
-            validity: 28,
-            data: '2GB/day',
-            has_5g: false,
-            popularity_score: 88,
-            plan_type: 'prepaid',
-            image: '../images/vi.png'
-        },
-        {
-            name: 'BSNL Value Plan',
-            operator: 'bsnl',
-            price: 279,
-            validity: 84,
-            data: '2GB/day',
-            has_5g: false,
-            popularity_score: 75,
-            plan_type: 'prepaid',
-            image: '../images/bsnl.png'
-        }
-    ];
+  return [
+    {
+      name: "Jio Premium Plan",
+      operator: "jio",
+      price: 549,
+      validity: 84,
+      data: "2GB/day",
+      has_5g: true,
+      popularity_score: 95,
+      plan_type: "prepaid",
+      image: "../images/jio.jpeg",
+    },
+    {
+      name: "Airtel Standard Plan",
+      operator: "airtel",
+      price: 349,
+      validity: 28,
+      data: "2.5GB/day",
+      has_5g: true,
+      popularity_score: 92,
+      plan_type: "prepaid",
+      image: "../images/airtel.png",
+    },
+    {
+      name: "Vi Standard Plan",
+      operator: "vi",
+      price: 319,
+      validity: 28,
+      data: "2GB/day",
+      has_5g: false,
+      popularity_score: 88,
+      plan_type: "prepaid",
+      image: "../images/vi.png",
+    },
+    {
+      name: "BSNL Value Plan",
+      operator: "bsnl",
+      price: 279,
+      validity: 84,
+      data: "2GB/day",
+      has_5g: false,
+      popularity_score: 75,
+      plan_type: "prepaid",
+      image: "../images/bsnl.png",
+    },
+  ];
 }
 
 /**
@@ -1968,56 +2209,60 @@ function getLocalPopularPlans() {
  * @returns {Promise} - Resolves to operator and circle data
  */
 async function detectOperatorAndCircle(mobileNumber) {
-    if (!verifyMobileNumber(mobileNumber)) {
-        throw new Error('Invalid mobile number format');
+  if (!verifyMobileNumber(mobileNumber)) {
+    throw new Error("Invalid mobile number format");
+  }
+
+  try {
+    // First try Numlookup API for accurate results
+    const numlookupResult = await lookupMobileNumber(mobileNumber);
+    console.log("Numlookup API result:", numlookupResult);
+
+    if (
+      numlookupResult &&
+      numlookupResult.operator &&
+      numlookupResult.operator !== "Unknown"
+    ) {
+      return {
+        operator: numlookupResult.operator.toLowerCase(),
+        circle: numlookupResult.circle,
+        confidence: numlookupResult.confidence || "medium",
+        source: "api",
+      };
     }
-    
+
+    // Fallback to local database if API fails or returns unknown
+    console.log("Falling back to local database for", mobileNumber);
+    const localResult = findNetworkByNumber(mobileNumber);
+
+    return {
+      operator: localResult.operator,
+      circle: localResult.circle,
+      confidence: "low",
+      source: "local",
+    };
+  } catch (error) {
+    console.error("Error in operator detection:", error);
+
+    // Last resort: try local lookup on error
     try {
-        // First try Numlookup API for accurate results
-        const numlookupResult = await lookupMobileNumber(mobileNumber);
-        console.log('Numlookup API result:', numlookupResult);
-        
-        if (numlookupResult && numlookupResult.operator && numlookupResult.operator !== 'Unknown') {
-            return {
-                operator: numlookupResult.operator.toLowerCase(),
-                circle: numlookupResult.circle,
-                confidence: numlookupResult.confidence || 'medium',
-                source: 'api'
-            };
-        }
-        
-        // Fallback to local database if API fails or returns unknown
-        console.log("Falling back to local database for", mobileNumber);
-        const localResult = findNetworkByNumber(mobileNumber);
-        
-        return {
-            operator: localResult.operator,
-            circle: localResult.circle,
-            confidence: 'low',
-            source: 'local'
-        };
-    } catch (error) {
-        console.error('Error in operator detection:', error);
-        
-        // Last resort: try local lookup on error
-        try {
-            const localResult = findNetworkByNumber(mobileNumber);
-            return {
-                operator: localResult.operator,
-                circle: localResult.circle,
-                confidence: 'low',
-                source: 'local_fallback'
-            };
-        } catch (e) {
-            return {
-                operator: 'unknown',
-                circle: 'unknown',
-                confidence: 'none',
-                source: 'error',
-                error: error.message
-            };
-        }
+      const localResult = findNetworkByNumber(mobileNumber);
+      return {
+        operator: localResult.operator,
+        circle: localResult.circle,
+        confidence: "low",
+        source: "local_fallback",
+      };
+    } catch (e) {
+      return {
+        operator: "unknown",
+        circle: "unknown",
+        confidence: "none",
+        source: "error",
+        error: error.message,
+      };
     }
+  }
 }
 
 /**
@@ -2026,27 +2271,27 @@ async function detectOperatorAndCircle(mobileNumber) {
  * @returns {boolean} - True if valid, false otherwise
  */
 function verifyMobileNumber(mobileNumber) {
-    if (!mobileNumber) return false;
-    
-    // Remove all non-digit characters
-    const cleanedNumber = mobileNumber.replace(/\D/g, '');
-    
-    // Check if it's exactly 10 digits or starts with country code
-    if (cleanedNumber.length === 10) {
-        // Check if it starts with a valid first digit (6-9)
-        return /^[6-9]\d{9}$/.test(cleanedNumber);
-    } else if (cleanedNumber.length === 12 && cleanedNumber.startsWith('91')) {
-        // Has country code, check the 10 digits after that
-        return /^91[6-9]\d{9}$/.test(cleanedNumber);
-    } else if (cleanedNumber.length === 13 && cleanedNumber.startsWith('091')) {
-        // Has country code with leading zero
-        return /^091[6-9]\d{9}$/.test(cleanedNumber);
-    } else if (cleanedNumber.length === 11 && cleanedNumber.startsWith('0')) {
-        // Has leading zero
-        return /^0[6-9]\d{9}$/.test(cleanedNumber);
-    }
-    
-    return false;
+  if (!mobileNumber) return false;
+
+  // Remove all non-digit characters
+  const cleanedNumber = mobileNumber.replace(/\D/g, "");
+
+  // Check if it's exactly 10 digits or starts with country code
+  if (cleanedNumber.length === 10) {
+    // Check if it starts with a valid first digit (6-9)
+    return /^[6-9]\d{9}$/.test(cleanedNumber);
+  } else if (cleanedNumber.length === 12 && cleanedNumber.startsWith("91")) {
+    // Has country code, check the 10 digits after that
+    return /^91[6-9]\d{9}$/.test(cleanedNumber);
+  } else if (cleanedNumber.length === 13 && cleanedNumber.startsWith("091")) {
+    // Has country code with leading zero
+    return /^091[6-9]\d{9}$/.test(cleanedNumber);
+  } else if (cleanedNumber.length === 11 && cleanedNumber.startsWith("0")) {
+    // Has leading zero
+    return /^0[6-9]\d{9}$/.test(cleanedNumber);
+  }
+
+  return false;
 }
 
 /**
@@ -2055,100 +2300,100 @@ function verifyMobileNumber(mobileNumber) {
  * @returns {Object} - Operator and circle details
  */
 function findNetworkByNumber(mobileNumber) {
-    if (!verifyMobileNumber(mobileNumber)) {
-        throw new Error('Invalid mobile number format');
-    }
-    
-    // Clean the number to get just the 10 digits
-    const cleanedNumber = mobileNumber.replace(/\D/g, '').slice(-10);
-    
-    // Extract the first few digits for lookup
-    const prefix4 = cleanedNumber.substring(0, 4);
-    const prefix3 = cleanedNumber.substring(0, 3);
-    const prefix2 = cleanedNumber.substring(0, 2);
-    const firstDigit = cleanedNumber.substring(0, 1);
-    
-    // Sample local database of number prefixes (would be more comprehensive in real implementation)
-    const prefixDatabase = {
-        '9000': { operator: 'airtel', circle: 'andhra-pradesh' },
-        '9001': { operator: 'airtel', circle: 'andhra-pradesh' },
-        '9002': { operator: 'airtel', circle: 'kolkata' },
-        '9003': { operator: 'airtel', circle: 'tamil-nadu' },
-        '9004': { operator: 'airtel', circle: 'mumbai' },
-        '9005': { operator: 'airtel', circle: 'delhi' },
-        '9006': { operator: 'airtel', circle: 'bihar' },
-        '9007': { operator: 'airtel', circle: 'west-bengal' },
-        '9008': { operator: 'airtel', circle: 'karnataka' },
-        '9009': { operator: 'airtel', circle: 'up-east' },
-        
-        '7000': { operator: 'jio', circle: 'delhi' },
-        '7001': { operator: 'jio', circle: 'mumbai' },
-        '7002': { operator: 'jio', circle: 'kolkata' },
-        '7003': { operator: 'jio', circle: 'karnataka' },
-        '7004': { operator: 'jio', circle: 'tamil-nadu' },
-        '7005': { operator: 'jio', circle: 'andhra-pradesh' },
-        '7006': { operator: 'jio', circle: 'maharashtra' },
-        '7007': { operator: 'jio', circle: 'up-east' },
-        '7008': { operator: 'jio', circle: 'gujarat' },
-        '7009': { operator: 'jio', circle: 'punjab' },
-        
-        '8000': { operator: 'vi', circle: 'delhi' },
-        '8001': { operator: 'vi', circle: 'mumbai' },
-        '8002': { operator: 'vi', circle: 'kolkata' },
-        '8003': { operator: 'vi', circle: 'karnataka' },
-        '8004': { operator: 'vi', circle: 'tamil-nadu' },
-        '8005': { operator: 'vi', circle: 'andhra-pradesh' },
-        '8006': { operator: 'vi', circle: 'maharashtra' },
-        '8007': { operator: 'vi', circle: 'up-east' },
-        '8008': { operator: 'vi', circle: 'gujarat' },
-        '8009': { operator: 'vi', circle: 'punjab' },
-        
-        '6000': { operator: 'bsnl', circle: 'delhi' },
-        '6001': { operator: 'bsnl', circle: 'mumbai' },
-        '6002': { operator: 'bsnl', circle: 'kolkata' },
-        '6003': { operator: 'bsnl', circle: 'karnataka' },
-        '6004': { operator: 'bsnl', circle: 'tamil-nadu' },
-        '6005': { operator: 'bsnl', circle: 'andhra-pradesh' },
-        '6006': { operator: 'bsnl', circle: 'maharashtra' },
-        '6007': { operator: 'bsnl', circle: 'up-east' },
-        '6008': { operator: 'bsnl', circle: 'gujarat' },
-        '6009': { operator: 'bsnl', circle: 'punjab' }
-    };
-    
-    // First digit to operator mapping (as a fallback)
-    const firstDigitMap = {
-        '9': 'airtel',
-        '8': 'vi',
-        '7': 'jio',
-        '6': 'bsnl'
-    };
-    
-    // Try to match with prefix, starting with the most specific
-    if (prefixDatabase[prefix4]) {
-        return prefixDatabase[prefix4];
-    }
-    
-    if (prefixDatabase[prefix3]) {
-        return prefixDatabase[prefix3];
-    }
-    
-    if (prefixDatabase[prefix2]) {
-        return prefixDatabase[prefix2];
-    }
-    
-    // Fallback to first digit only for operator
-    if (firstDigitMap[firstDigit]) {
-        return {
-            operator: firstDigitMap[firstDigit],
-            circle: 'unknown'
-        };
-    }
-    
-    // Default fallback if nothing matches
+  if (!verifyMobileNumber(mobileNumber)) {
+    throw new Error("Invalid mobile number format");
+  }
+
+  // Clean the number to get just the 10 digits
+  const cleanedNumber = mobileNumber.replace(/\D/g, "").slice(-10);
+
+  // Extract the first few digits for lookup
+  const prefix4 = cleanedNumber.substring(0, 4);
+  const prefix3 = cleanedNumber.substring(0, 3);
+  const prefix2 = cleanedNumber.substring(0, 2);
+  const firstDigit = cleanedNumber.substring(0, 1);
+
+  // Sample local database of number prefixes (would be more comprehensive in real implementation)
+  const prefixDatabase = {
+    9000: { operator: "airtel", circle: "andhra-pradesh" },
+    9001: { operator: "airtel", circle: "andhra-pradesh" },
+    9002: { operator: "airtel", circle: "kolkata" },
+    9003: { operator: "airtel", circle: "tamil-nadu" },
+    9004: { operator: "airtel", circle: "mumbai" },
+    9005: { operator: "airtel", circle: "delhi" },
+    9006: { operator: "airtel", circle: "bihar" },
+    9007: { operator: "airtel", circle: "west-bengal" },
+    9008: { operator: "airtel", circle: "karnataka" },
+    9009: { operator: "airtel", circle: "up-east" },
+
+    7000: { operator: "jio", circle: "delhi" },
+    7001: { operator: "jio", circle: "mumbai" },
+    7002: { operator: "jio", circle: "kolkata" },
+    7003: { operator: "jio", circle: "karnataka" },
+    7004: { operator: "jio", circle: "tamil-nadu" },
+    7005: { operator: "jio", circle: "andhra-pradesh" },
+    7006: { operator: "jio", circle: "maharashtra" },
+    7007: { operator: "jio", circle: "up-east" },
+    7008: { operator: "jio", circle: "gujarat" },
+    7009: { operator: "jio", circle: "punjab" },
+
+    8000: { operator: "vi", circle: "delhi" },
+    8001: { operator: "vi", circle: "mumbai" },
+    8002: { operator: "vi", circle: "kolkata" },
+    8003: { operator: "vi", circle: "karnataka" },
+    8004: { operator: "vi", circle: "tamil-nadu" },
+    8005: { operator: "vi", circle: "andhra-pradesh" },
+    8006: { operator: "vi", circle: "maharashtra" },
+    8007: { operator: "vi", circle: "up-east" },
+    8008: { operator: "vi", circle: "gujarat" },
+    8009: { operator: "vi", circle: "punjab" },
+
+    6000: { operator: "bsnl", circle: "delhi" },
+    6001: { operator: "bsnl", circle: "mumbai" },
+    6002: { operator: "bsnl", circle: "kolkata" },
+    6003: { operator: "bsnl", circle: "karnataka" },
+    6004: { operator: "bsnl", circle: "tamil-nadu" },
+    6005: { operator: "bsnl", circle: "andhra-pradesh" },
+    6006: { operator: "bsnl", circle: "maharashtra" },
+    6007: { operator: "bsnl", circle: "up-east" },
+    6008: { operator: "bsnl", circle: "gujarat" },
+    6009: { operator: "bsnl", circle: "punjab" },
+  };
+
+  // First digit to operator mapping (as a fallback)
+  const firstDigitMap = {
+    9: "airtel",
+    8: "vi",
+    7: "jio",
+    6: "bsnl",
+  };
+
+  // Try to match with prefix, starting with the most specific
+  if (prefixDatabase[prefix4]) {
+    return prefixDatabase[prefix4];
+  }
+
+  if (prefixDatabase[prefix3]) {
+    return prefixDatabase[prefix3];
+  }
+
+  if (prefixDatabase[prefix2]) {
+    return prefixDatabase[prefix2];
+  }
+
+  // Fallback to first digit only for operator
+  if (firstDigitMap[firstDigit]) {
     return {
-        operator: 'unknown',
-        circle: 'unknown'
+      operator: firstDigitMap[firstDigit],
+      circle: "unknown",
     };
+  }
+
+  // Default fallback if nothing matches
+  return {
+    operator: "unknown",
+    circle: "unknown",
+  };
 }
 
 /**
@@ -2157,23 +2402,25 @@ function findNetworkByNumber(mobileNumber) {
  * @returns {Promise} - Portability status
  */
 async function getPortabilityStatus(mobileNumber) {
-    if (!verifyMobileNumber(mobileNumber)) {
-        throw new Error('Invalid mobile number format');
+  if (!verifyMobileNumber(mobileNumber)) {
+    throw new Error("Invalid mobile number format");
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/portability/status?number=${mobileNumber}`
+    );
+
+    if (!response.ok) {
+      // Fallback to simulated status
+      return getSimulatedPortabilityStatus(mobileNumber);
     }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/portability/status?number=${mobileNumber}`);
-        
-        if (!response.ok) {
-            // Fallback to simulated status
-            return getSimulatedPortabilityStatus(mobileNumber);
-        }
-        
-        return await response.json();
-    } catch (error) {
-        console.error('Error checking portability status:', error);
-        return getSimulatedPortabilityStatus(mobileNumber);
-    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error checking portability status:", error);
+    return getSimulatedPortabilityStatus(mobileNumber);
+  }
 }
 
 /**
@@ -2182,42 +2429,42 @@ async function getPortabilityStatus(mobileNumber) {
  * @returns {Object} - Simulated status
  */
 function getSimulatedPortabilityStatus(mobileNumber) {
-    // Use the last digit to determine if number is portable
-    const lastDigit = mobileNumber.slice(-1);
-    const isPortable = parseInt(lastDigit) % 3 !== 0; // 2/3 of numbers will be portable
-    
-    if (isPortable) {
-        return {
-            number: mobileNumber,
-            portable: true,
-            reason: null,
-            eligibility: {
-                days_since_last_port: Math.floor(Math.random() * 180) + 90,
-                active_status: true,
-                bill_cleared: true
-            },
-            source: 'simulated'
-        };
-    } else {
-        const reasons = [
-            'Number ported within last 90 days',
-            'Outstanding bills not cleared',
-            'Ongoing contractual obligations',
-            'Account not active for minimum required period'
-        ];
-        
-        return {
-            number: mobileNumber,
-            portable: false,
-            reason: reasons[parseInt(lastDigit) % reasons.length],
-            eligibility: {
-                days_since_last_port: Math.floor(Math.random() * 90),
-                active_status: Math.random() > 0.5,
-                bill_cleared: Math.random() > 0.5
-            },
-            source: 'simulated'
-        };
-    }
+  // Use the last digit to determine if number is portable
+  const lastDigit = mobileNumber.slice(-1);
+  const isPortable = parseInt(lastDigit) % 3 !== 0; // 2/3 of numbers will be portable
+
+  if (isPortable) {
+    return {
+      number: mobileNumber,
+      portable: true,
+      reason: null,
+      eligibility: {
+        days_since_last_port: Math.floor(Math.random() * 180) + 90,
+        active_status: true,
+        bill_cleared: true,
+      },
+      source: "simulated",
+    };
+  } else {
+    const reasons = [
+      "Number ported within last 90 days",
+      "Outstanding bills not cleared",
+      "Ongoing contractual obligations",
+      "Account not active for minimum required period",
+    ];
+
+    return {
+      number: mobileNumber,
+      portable: false,
+      reason: reasons[parseInt(lastDigit) % reasons.length],
+      eligibility: {
+        days_since_last_port: Math.floor(Math.random() * 90),
+        active_status: Math.random() > 0.5,
+        bill_cleared: Math.random() > 0.5,
+      },
+      source: "simulated",
+    };
+  }
 }
 
 /**
@@ -2227,38 +2474,38 @@ function getSimulatedPortabilityStatus(mobileNumber) {
  */
 async function comparePlans(planIds) {
   if (!planIds || !Array.isArray(planIds) || planIds.length < 2) {
-    throw new Error('At least 2 plan IDs are required for comparison');
+    throw new Error("At least 2 plan IDs are required for comparison");
   }
 
   if (planIds.length > 3) {
-    throw new Error('Maximum 3 plans can be compared at once');
+    throw new Error("Maximum 3 plans can be compared at once");
   }
 
   try {
     const response = await fetch(`${API_BASE_URL}/plans/compare`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: JSON.stringify({ planIds }),
-      signal: AbortSignal.timeout(10000) // 10 second timeout
+      signal: AbortSignal.timeout(10000), // 10 second timeout
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to compare plans');
+      throw new Error(errorData.message || "Failed to compare plans");
     }
 
     return await response.json();
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.error('Plan comparison request timed out');
-      throw new Error('Request timed out. Please try again.');
+    if (error.name === "AbortError") {
+      console.error("Plan comparison request timed out");
+      throw new Error("Request timed out. Please try again.");
     }
 
-    console.error('Error comparing plans:', error);
-    
+    console.error("Error comparing plans:", error);
+
     // Fallback to local comparison if server request fails
     try {
       // Get plans by IDs (this is a simplified fallback)
@@ -2268,27 +2515,29 @@ async function comparePlans(planIds) {
         const plan = await getPlanById(id);
         if (plan) plans.push(plan);
       }
-      
+
       return {
         plans,
-        valueScores: plans.map(plan => ({
+        valueScores: plans.map((plan) => ({
           id: plan._id,
-          score: calculateValueScore(plan)
+          score: calculateValueScore(plan),
         })),
         features: {
-          daily_data: determineBestFeature(plans, 'data_value', 'highest'),
-          validity: determineBestFeature(plans, 'validity', 'highest'),
-          price: determineBestFeature(plans, 'price', 'lowest'),
-          coverage: determineBestFeature(plans, 'network_coverage', 'highest'),
-          speed: determineBestFeature(plans, 'data_speed', 'highest'),
-          has_5g: plans.map(plan => plan.has_5g),
-          subscriptions: plans.map(plan => plan.subscriptions ? plan.subscriptions.length : 0)
+          daily_data: determineBestFeature(plans, "data_value", "highest"),
+          validity: determineBestFeature(plans, "validity", "highest"),
+          price: determineBestFeature(plans, "price", "lowest"),
+          coverage: determineBestFeature(plans, "network_coverage", "highest"),
+          speed: determineBestFeature(plans, "data_speed", "highest"),
+          has_5g: plans.map((plan) => plan.has_5g),
+          subscriptions: plans.map((plan) =>
+            plan.subscriptions ? plan.subscriptions.length : 0
+          ),
         },
-        summary: generateComparisonSummary(plans)
+        summary: generateComparisonSummary(plans),
       };
     } catch (fallbackError) {
-      console.error('Local comparison fallback failed:', fallbackError);
-      throw new Error('Failed to compare plans. Please try again later.');
+      console.error("Local comparison fallback failed:", fallbackError);
+      throw new Error("Failed to compare plans. Please try again later.");
     }
   }
 }
@@ -2300,7 +2549,7 @@ function calculateValueScore(plan) {
   if (!plan) return 0;
   // Simple calculation: data value / (price / validity)
   const pricePerDay = plan.price / (plan.validity || 1);
-  return Math.round((plan.data_value || 0) / pricePerDay * 10);
+  return Math.round(((plan.data_value || 0) / pricePerDay) * 10);
 }
 
 /**
@@ -2308,8 +2557,8 @@ function calculateValueScore(plan) {
  */
 function determineBestFeature(plans, feature, criterion) {
   if (!plans || !plans.length) return null;
-  
-  return plans.map(plan => {
+
+  return plans.map((plan) => {
     const value = plan[feature] || 0;
     return { id: plan._id, value };
   });
@@ -2319,25 +2568,25 @@ function determineBestFeature(plans, feature, criterion) {
  * Helper function to generate a summary of plan comparison
  */
 function generateComparisonSummary(plans) {
-  if (!plans || !plans.length) return '';
-  
+  if (!plans || !plans.length) return "";
+
   // Generate a simple comparison summary
   let bestValue = plans[0];
   let lowestPrice = plans[0];
-  
-  plans.forEach(plan => {
+
+  plans.forEach((plan) => {
     const valueScore = calculateValueScore(plan);
     const currentBestValue = calculateValueScore(bestValue);
-    
+
     if (valueScore > currentBestValue) {
       bestValue = plan;
     }
-    
+
     if (plan.price < lowestPrice.price) {
       lowestPrice = plan;
     }
   });
-  
+
   return `Based on our analysis, ${bestValue.name} by ${bestValue.operator} offers the best overall value, while ${lowestPrice.name} has the lowest price.`;
 }
 
@@ -2354,73 +2603,30 @@ async function getPlanById(id) {
   } catch (error) {
     console.error(`Error fetching plan ${id}:`, error);
   }
-  
+
   // Fallback to dummy plan if API fails
   return {
     _id: id,
     name: `Plan ${id.slice(-4)}`,
-    operator: ['jio', 'airtel', 'vi', 'bsnl'][Math.floor(Math.random() * 4)],
+    operator: ["jio", "airtel", "vi", "bsnl"][Math.floor(Math.random() * 4)],
     price: Math.floor(Math.random() * 400) + 199,
     validity: Math.floor(Math.random() * 60) + 28,
     data_value: Math.floor(Math.random() * 60) + 30,
     network_coverage: Math.floor(Math.random() * 20) + 80,
     data_speed: Math.floor(Math.random() * 40) + 30,
     has_5g: Math.random() > 0.5,
-    subscriptions: Array(Math.floor(Math.random() * 4))
+    subscriptions: Array(Math.floor(Math.random() * 4)),
   };
 }
 
-// Export functions for use in other modules
-export {
-    authAPI,
-    getToken,
-    getUser,
-    setAuth,
-    clearAuth,
-    isAuthenticated,
-    apiRequest,
-    comparePlans,
-    fetchPlans,
-    fetchPlansByOperator,
-    getLocalOperatorPlans,
-    fetchSimilarPlans,
-    fetchRecommendedPlans,
-    getLocalRecommendedPlans,
-    fetchNetworkCoverage,
-    compareNetworks,
-    getBestNetwork,
-    getLocationsWithCoverage,
-    showConnectionError,
-    lookupMobileNumber,
-    getCoordinates,
-    calculateDistance,
-    getNearbyPortingCenters,
-    getFallbackPortingCenters, 
-    checkCoverage,
-    getLocalCoverageData,
-    findTowers,
-    generateTowerData,
-    fetchReviewsForNetwork,
-    submitReview,
-    fetchUserActivity,
-    getPopularPlans,
-    getSampleReviews,
-    getLocalPopularPlans,
-    detectOperatorAndCircle,
-    verifyMobileNumber,
-    findNetworkByNumber,
-    getPortabilityStatus,
-    getSimulatedPortabilityStatus
-};
-
 // Create global API object for use in the app
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   // Initialize API
   window.PortMySimAPI = {
     // Exposed detection and test functions
     detectApiPort,
     testServerConnection,
-    
+
     // Auth methods
     auth: {
       login: authAPI.login,
@@ -2431,27 +2637,28 @@ if (typeof window !== 'undefined') {
       resendVerification: authAPI.resendVerification,
       forgotPassword: authAPI.forgotPassword,
       resetPassword: authAPI.resetPassword,
-      updateProfile: authAPI.updateProfile
+      updateProfile: authAPI.updateProfile,
     },
-    
+
     // User info methods
     getUser,
     isAuthenticated,
-    
+
     // Generic fetch method for API requests
     fetch: async (endpoint, options = {}) => {
       return await apiRequest(endpoint, options);
     },
-    
+
     // API Functions
     // Plans
     plans: {
       fetchPlans,
       fetchPlansByOperator,
       fetchRecommendedPlans,
-      fetchSimilarPlans
+      fetchSimilarPlans,
+      comparePlans, // Add comparePlans to the plans object
     },
-    
+
     // Add porting API functions
     porting: {
       getPortingRequests: portingAPI.getPortingRequests,
@@ -2460,16 +2667,48 @@ if (typeof window !== 'undefined') {
       trackPortingRequest: portingAPI.trackPortingRequest,
       cancelPortingRequest: portingAPI.cancelPortingRequest,
       findNearbyPortingCenters: portingAPI.findNearbyPortingCenters,
-      calculatePortingDates: portingAPI.calculatePortingDates
+      calculatePortingDates: portingAPI.calculatePortingDates,
     },
-    
+
     // ... existing API functions ...
   };
 
   // Detect API port on load, but don't block rendering
-  detectApiPort().then(apiUrl => {
-    console.log(`API client initialized with base URL: ${apiUrl}`);
-  }).catch(error => {
-    console.error('Failed to detect API port:', error);
-  });
+  detectApiPort()
+    .then((apiUrl) => {
+      console.log(`API client initialized with base URL: ${apiUrl}`);
+    })
+    .catch((error) => {
+      console.error("Failed to detect API port:", error);
+    });
 }
+
+// Make API functions available globally
+if (typeof window !== 'undefined') {
+  // Create global api object if it doesn't exist
+  window.api = window.api || {};
+  
+  // Expose key functions globally
+  window.api.apiRequest = apiRequest;
+  window.api.getCoordinates = getCoordinates;
+  window.api.getNearbyPortingCenters = getNearbyPortingCenters;
+  window.api.getFallbackPortingCenters = getFallbackPortingCenters;
+  window.api.checkCoverage = checkCoverage;
+  window.api.lookupMobileNumber = lookupMobileNumber;
+  window.api.detectOperatorAndCircle = detectOperatorAndCircle;
+  window.api.verifyMobileNumber = verifyMobileNumber;
+  window.api.getPortabilityStatus = getPortabilityStatus;
+  window.api.getPlanById = getPlanById;
+  window.api.testServerConnection = testServerConnection;
+  window.api.detectApiPort = detectApiPort;
+  
+  // Set API base URL for other scripts to access
+  window.api.API_BASE_URL = API_BASE_URL;
+
+  // Add direct references to specific functions
+  window.api.fetchPlansByOperator = fetchPlansByOperator;
+  window.api.fetchRecommendedPlans = fetchRecommendedPlans;
+  window.api.comparePlans = comparePlans;
+}
+
+// No export statement needed - functions are already exposed via window.api

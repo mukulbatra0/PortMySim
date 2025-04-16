@@ -3,10 +3,17 @@
  * This server provides basic API functionality without database dependency
  */
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
+import dotenv from 'dotenv';
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
+
+// Get the directory name using ES modules approach
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
