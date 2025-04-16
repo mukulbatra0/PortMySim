@@ -99,76 +99,6 @@ app.get('/api/health/check', (req, res) => {
   });
 });
 
-// Mock API endpoint for telecom providers
-app.get('/api/porting/providers', (req, res) => {
-  console.log('[API] Serving providers data');
-  
-  // Return sample provider data
-  res.json({
-    success: true,
-    data: [
-      {
-        id: 'jio',
-        name: 'Jio',
-        description: 'Affordable plans & digital benefits',
-        logo: '../images/jio.jpeg'
-      },
-      {
-        id: 'airtel',
-        name: 'Airtel',
-        description: 'Wide coverage & great speeds',
-        logo: '../images/airtel.png'
-      },
-      {
-        id: 'vi',
-        name: 'Vi',
-        description: 'Weekend data & entertainment',
-        logo: '../images/vi.png'
-      },
-      {
-        id: 'bsnl',
-        name: 'BSNL',
-        description: 'Extensive rural coverage',
-        logo: '../images/bsnl.png'
-      }
-    ]
-  });
-});
-
-// Mock API endpoint for telecom circles
-app.get('/api/porting/circles', (req, res) => {
-  console.log('[API] Serving circles data');
-  
-  // Return sample circle data
-  res.json({
-    success: true,
-    data: [
-      { id: 'delhi', name: 'Delhi NCR' },
-      { id: 'mumbai', name: 'Mumbai' },
-      { id: 'maharashtra', name: 'Maharashtra & Goa' },
-      { id: 'karnataka', name: 'Karnataka' },
-      { id: 'tamil-nadu', name: 'Tamil Nadu' },
-      { id: 'andhra-pradesh', name: 'Andhra Pradesh' },
-      { id: 'west-bengal', name: 'West Bengal' },
-      { id: 'gujarat', name: 'Gujarat' },
-      { id: 'kolkata', name: 'Kolkata' },
-      { id: 'up-east', name: 'UP East' },
-      { id: 'up-west', name: 'UP West' },
-      { id: 'kerala', name: 'Kerala' },
-      { id: 'punjab', name: 'Punjab' },
-      { id: 'haryana', name: 'Haryana' },
-      { id: 'rajasthan', name: 'Rajasthan' },
-      { id: 'madhya-pradesh', name: 'Madhya Pradesh & Chhattisgarh' },
-      { id: 'bihar', name: 'Bihar & Jharkhand' },
-      { id: 'orissa', name: 'Orissa' },
-      { id: 'assam', name: 'Assam' },
-      { id: 'northeast', name: 'North East' },
-      { id: 'himachal', name: 'Himachal Pradesh' },
-      { id: 'jammu', name: 'Jammu & Kashmir' }
-    ]
-  });
-});
-
 // Development-only route to reset and reinitialize porting rules
 // This is useful for troubleshooting when we've changed the format of circle IDs
 app.get('/api/admin/reset-porting-rules', async (req, res) => {
@@ -233,21 +163,38 @@ app.use((err, req, res, next) => {
 // Initialize database with seed data for porting rules
 async function initializePortingRules() {
   try {
-    // Check if porting rules exist
-    const rulesCount = await PortingRules.countDocuments();
+    // Make sure database connection is established
+    if (mongoose.connection.readyState !== 1) {
+      console.log('Waiting for database connection before initializing porting rules...');
+      try {
+        await mongoose.connection.asPromise(); // Wait for connection to be fully established
+      } catch (err) {
+        console.warn('Could not establish database connection, skipping porting rules initialization');
+        return; // Skip initialization if database connection fails
+      }
+    }
     
-    if (rulesCount === 0) {
-      console.log('No porting rules found, initializing with seed data...');
+    // Check if porting rules exist
+    try {
+      const rulesCount = await PortingRules.countDocuments();
       
-      // Insert seed data
-      await PortingRules.insertMany(portingRulesData);
-      
-      console.log(`Initialized database with ${portingRulesData.length} porting rules`);
-    } else {
-      console.log(`Database already contains ${rulesCount} porting rules`);
+      if (rulesCount === 0) {
+        console.log('No porting rules found, initializing with seed data...');
+        
+        // Insert seed data
+        await PortingRules.insertMany(portingRulesData);
+        
+        console.log(`Initialized database with ${portingRulesData.length} porting rules`);
+      } else {
+        console.log(`Database already contains ${rulesCount} porting rules`);
+      }
+    } catch (error) {
+      console.error('Error checking or inserting porting rules:', error);
+      console.warn('Server will continue with limited porting rule functionality');
     }
   } catch (error) {
     console.error('Error initializing porting rules:', error);
+    console.warn('Server will continue with limited porting rule functionality');
   }
 }
 
@@ -263,15 +210,23 @@ async function startServer() {
     // Start the server
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
+      console.log(`Access the API at http://localhost:${PORT}/api`);
+      if (mongoose.connection.readyState !== 1) {
+        console.warn('Note: Server is running with in-memory database fallback');
+        console.warn('Some features will be limited. Test user: demo@example.com / Password123');
+      }
     });
   } catch (err) {
     console.error('Failed to start server properly:', err);
     // Still start the server even if there are database issues
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT} (with limited functionality)`);
+      console.log(`Access the API at http://localhost:${PORT}/api`);
+      console.warn('Note: Server is running with limited functionality due to startup errors');
+      console.warn('Some features will be limited. Test user: demo@example.com / Password123');
     });
   }
 }
 
 // Start the server
-startServer(); 
+startServer();

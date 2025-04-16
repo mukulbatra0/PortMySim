@@ -93,4 +93,4 @@ const serviceProviders = [
   }
 ];
 
-module.exports = serviceProviders; 
+export default serviceProviders; 

@@ -270,4 +270,4 @@ const telecomCircles = [
   }
 ];
 
-module.exports = telecomCircles; 
+export default telecomCircles; 

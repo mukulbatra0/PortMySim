@@ -1,15 +1,14 @@
 @echo off
-echo Setting environment variables and starting PortMySim backend server...
+echo Starting PortMySim backend server with environment variables...
+
+REM Note: Most environment variables are now configured in backend/.env
+REM Only setting critical ones here for immediate use
 
 REM Set environment variables
-set JWT_SECRET=portmysim_secure_jwt_secret_key_2023
-set JWT_EXPIRE=30d
 set NODE_ENV=development
-set DISABLE_EMAIL_SENDING=true
 
-echo Using JWT_SECRET: %JWT_SECRET%
-echo Using JWT_EXPIRE: %JWT_EXPIRE%
 echo NODE_ENV: %NODE_ENV%
+echo Note: Other environment variables loaded from backend/.env file
 
 cd backend
 node --trace-warnings server.js 

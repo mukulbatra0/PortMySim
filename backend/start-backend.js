@@ -2,9 +2,10 @@
  * Helper script to run the backend API server
  */
 
-const { spawn } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 console.log('Starting PortMySim backend server...');
 

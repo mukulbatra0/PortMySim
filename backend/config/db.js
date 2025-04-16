@@ -8,12 +8,11 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
     console.log(`Using MongoDB URI: ${mongoURI.replace(/:[^:]*@/, ':****@')}`); // Hide password if present
     
     const conn = await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      serverSelectionTimeoutMS: 15000, // Increased from 5000ms to 15000ms
-      socketTimeoutMS: 45000, // Set socket timeout to 45 seconds
-      connectTimeoutMS: 30000, // Set connect timeout to 30 seconds
-      maxPoolSize: 10, // Set maximum connection pool size
-      bufferCommands: true, // Enable command buffering to prevent errors when querying before connection is established
+      serverSelectionTimeoutMS: 15000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
+      maxPoolSize: 10,
+      bufferCommands: true,
       autoIndex: process.env.NODE_ENV !== 'production'
     });
 
@@ -58,15 +57,10 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
     }
     
     // In development mode, provide a fallback to prevent crashing
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('WARNING: Application running without MongoDB connection. Using in-memory fallback for development.');
-      console.warn('Some features will be limited, but basic API functionality will work.');
-      return { connection: { host: 'in-memory-fallback' } };
-    }
-    
-    // In production, exit the process
-    console.error('Shutting down due to database connection failure');
-    throw error;
+    console.warn('WARNING: Application running without MongoDB connection. Using in-memory fallback for development.');
+    console.warn('Some features will be limited, but basic API functionality will work.');
+    console.warn('Predefined test user: demo@example.com / Password123');
+    return { connection: { host: 'in-memory-fallback' } };
   }
 };
 

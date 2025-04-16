@@ -1,5 +1,6 @@
 import Plan from '../models/Plan.js';
 import * as planHelper from '../utils/planHelper.js';
+import fallbackPlansData from '../data/plans.js';
 
 /**
  * Get all plans with optional filtering
@@ -419,13 +420,12 @@ const getRecommendedPlans = async (req, res) => {
     } catch (dbError) {
       console.warn('Database error in getRecommendedPlans:', dbError.message);
       // Use fallback static data if database is not available
-      const fallbackPlans = require('../data/plans');
       // Find plans with recommendations in the fallback data
-      const plansWithRecommendations = fallbackPlans.filter(p => p.recommendation && p.recommendation !== '');
+      const plansWithRecommendations = fallbackPlansData.filter(p => p.recommendation && p.recommendation !== '');
       // Ensure we have at least 3 plans, use any plan if not enough recommended ones exist
       recommendedPlans = plansWithRecommendations.length >= 3 
         ? plansWithRecommendations.slice(0, 3) 
-        : [...plansWithRecommendations, ...fallbackPlans.filter(p => !p.recommendation || p.recommendation === '').slice(0, 3 - plansWithRecommendations.length)];
+        : [...plansWithRecommendations, ...fallbackPlansData.filter(p => !p.recommendation || p.recommendation === '').slice(0, 3 - plansWithRecommendations.length)];
       
       // Convert plain objects to Plan models
       recommendedPlans = recommendedPlans.map(plan => new Plan(plan));
