@@ -1,5 +1,5 @@
-// Import the API utilities
-import { fetchPlansByOperator, comparePlans, fetchRecommendedPlans } from './api.js';
+// Access API functions from the global PortMySimAPI object
+// Instead of importing from api.js
 
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -194,7 +194,7 @@ function initPlanComparison() {
         console.log('Selected plans for comparison:', selectedPlans);
         
         // Compare plans via API
-        comparePlans(selectedPlans)
+        window.PortMySimAPI.plans.comparePlans(selectedPlans)
             .then(comparisonData => {
                 console.log('Received comparison data:', comparisonData);
                 
@@ -286,7 +286,7 @@ function loadPlansForComparison() {
     }
     
     // Fetch recommended plans from API
-    fetchRecommendedPlans()
+    getRecommendedPlans()
         .then(plans => {
             console.log('Received recommended plans:', plans);
             
@@ -295,7 +295,7 @@ function loadPlansForComparison() {
                 // Limit to 3 plans maximum for comparison
                 const planIds = plans.slice(0, Math.min(plans.length, 3)).map(plan => plan._id || plan.name);
                 console.log('Using plan IDs for comparison:', planIds);
-                return comparePlans(planIds);
+                return comparePlansById(planIds);
             } else {
                 console.warn('Not enough recommended plans available, using sample data');
                 // Use sample data instead of throwing an error
@@ -412,7 +412,7 @@ function handleOperatorSelection(dropdown, index) {
         console.log(`Selected operator: ${operator}`);
         
         // Fetch plans for selected operator from API
-        fetchPlansByOperator(operator)
+        fetchPlansByOperatorName(operator)
             .then(plans => {
                 console.log(`Received ${plans.length} plans for ${operator}`);
                 
@@ -1601,4 +1601,36 @@ function getBadgeClass(recommendation) {
         case 'Widest Coverage': return 'coverage';
         default: return '';
     }
+}
+
+// Get recommended plans from API
+function getRecommendedPlans() {
+    // Use promise wrapper for consistency
+    return window.PortMySimAPI.plans.fetchRecommendedPlans()
+        .then(data => {
+            return data;
+        })
+        .catch(error => {
+            console.error('Error fetching recommended plans:', error);
+            return [];
+        });
+}
+
+// Compare plans by IDs
+function comparePlansById(planIds) {
+    console.log('Comparing plans by IDs:', planIds);
+    return window.PortMySimAPI.plans.comparePlans(planIds);
+}
+
+// Fetch plans by operator
+function fetchPlansByOperatorName(operator) {
+    return window.PortMySimAPI.plans.fetchPlansByOperator(operator)
+        .then(plans => {
+            console.log(`Got ${plans.length} plans for ${operator}:`, plans);
+            return plans;
+        })
+        .catch(error => {
+            console.error(`Error getting plans for ${operator}:`, error);
+            return [];
+        });
 } 

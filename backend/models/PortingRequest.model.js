@@ -16,6 +16,11 @@ const portingRequestSchema = new mongoose.Schema(
         'Please add a valid 10-digit mobile number'
       ]
     },
+    trackingId: {
+      type: String,
+      unique: true,
+      default: () => `TRK-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    },
     currentProvider: {
       type: String,
       required: [true, 'Please add current service provider']
@@ -129,6 +134,10 @@ const portingRequestSchema = new mongoose.Schema(
     paymentId: {
       type: String
     },
+    uniquePortingCode: {
+      type: String,
+      unique: true
+    },
     metadata: {
       timeSlot: {
         type: String,
@@ -163,6 +172,16 @@ const portingRequestSchema = new mongoose.Schema(
 
 // Index location for geospatial queries
 portingRequestSchema.index({ "portingCenterDetails.location": "2dsphere" });
+
+// Pre-save hook to generate a unique porting code if not provided
+portingRequestSchema.pre('save', function(next) {
+  // Only generate a code if one isn't already set
+  if (!this.uniquePortingCode) {
+    // Generate a unique code based on timestamp and random value
+    this.uniquePortingCode = `PORT-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`;
+  }
+  next();
+});
 
 // Add status change method (will be fully implemented in Step 5)
 portingRequestSchema.methods.updateStatus = function (newStatus, notes) {

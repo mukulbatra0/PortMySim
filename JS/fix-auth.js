@@ -111,6 +111,130 @@ async function login(email, password) {
 const fixedToken = fixAuthToken();
 console.log('Token fix result:', fixedToken ? 'Token fixed' : 'No valid token');
 
+// Check if token is valid and attempt to automatically login if a login form exists
+(async function() {
+  try {
+    // Test the current token if it exists
+    if (localStorage.getItem('portmysim_token')) {
+      const isValid = await testAuthentication();
+      if (isValid) {
+        console.log('Authentication token is valid');
+        return;
+      }
+      console.log('Authentication token is invalid or expired');
+    } else {
+      console.log('No authentication token found');
+    }
+    
+    // Implement a simple login dialog if token is missing or invalid
+    window.promptForLogin = async function() {
+      return new Promise((resolve) => {
+        // Create a simple login dialog
+        const loginDialog = document.createElement('div');
+        loginDialog.style.position = 'fixed';
+        loginDialog.style.top = '0';
+        loginDialog.style.left = '0';
+        loginDialog.style.width = '100%';
+        loginDialog.style.height = '100%';
+        loginDialog.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        loginDialog.style.display = 'flex';
+        loginDialog.style.justifyContent = 'center';
+        loginDialog.style.alignItems = 'center';
+        loginDialog.style.zIndex = '9999';
+        
+        // Create the login form
+        loginDialog.innerHTML = `
+          <div style="background: white; padding: 20px; border-radius: 5px; width: 300px;">
+            <h3 style="margin-top: 0;">Login Required</h3>
+            <p>Please login to continue</p>
+            <form id="auth-fix-login-form">
+              <div style="margin-bottom: 10px;">
+                <label for="auth-fix-email" style="display: block; margin-bottom: 5px;">Email:</label>
+                <input type="email" id="auth-fix-email" style="width: 100%; padding: 8px;" required>
+              </div>
+              <div style="margin-bottom: 15px;">
+                <label for="auth-fix-password" style="display: block; margin-bottom: 5px;">Password:</label>
+                <input type="password" id="auth-fix-password" style="width: 100%; padding: 8px;" required>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <button type="submit" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; cursor: pointer;">Login</button>
+                <button type="button" id="auth-fix-cancel" style="padding: 8px 15px; background: #f44336; color: white; border: none; cursor: pointer;">Cancel</button>
+              </div>
+            </form>
+          </div>
+        `;
+        
+        document.body.appendChild(loginDialog);
+        
+        // Handle login submission
+        document.getElementById('auth-fix-login-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('auth-fix-email').value;
+          const password = document.getElementById('auth-fix-password').value;
+          
+          // Remove the dialog while attempting login
+          loginDialog.innerHTML = `
+            <div style="background: white; padding: 20px; border-radius: 5px;">
+              <p>Logging in...</p>
+            </div>
+          `;
+          
+          const success = await login(email, password);
+          
+          if (success) {
+            document.body.removeChild(loginDialog);
+            resolve(true);
+          } else {
+            // Show error and allow retry
+            loginDialog.innerHTML = `
+              <div style="background: white; padding: 20px; border-radius: 5px; width: 300px;">
+                <h3 style="margin-top: 0;">Login Failed</h3>
+                <p>Invalid credentials. Please try again.</p>
+                <form id="auth-fix-login-form">
+                  <div style="margin-bottom: 10px;">
+                    <label for="auth-fix-email" style="display: block; margin-bottom: 5px;">Email:</label>
+                    <input type="email" id="auth-fix-email" style="width: 100%; padding: 8px;" required value="${email}">
+                  </div>
+                  <div style="margin-bottom: 15px;">
+                    <label for="auth-fix-password" style="display: block; margin-bottom: 5px;">Password:</label>
+                    <input type="password" id="auth-fix-password" style="width: 100%; padding: 8px;" required>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <button type="submit" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; cursor: pointer;">Retry</button>
+                    <button type="button" id="auth-fix-cancel" style="padding: 8px 15px; background: #f44336; color: white; border: none; cursor: pointer;">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            `;
+            
+            // Re-attach event listeners
+            document.getElementById('auth-fix-login-form').addEventListener('submit', arguments.callee);
+            document.getElementById('auth-fix-cancel').addEventListener('click', () => {
+              document.body.removeChild(loginDialog);
+              resolve(false);
+            });
+          }
+        });
+        
+        // Handle cancel button
+        document.getElementById('auth-fix-cancel').addEventListener('click', () => {
+          document.body.removeChild(loginDialog);
+          resolve(false);
+        });
+      });
+    };
+    
+    // Try to automatically prompt for login when document is ready
+    if (document.readyState === 'complete') {
+      window.promptForLogin();
+    } else {
+      window.addEventListener('load', window.promptForLogin);
+    }
+  } catch (error) {
+    console.error('Auto-authentication error:', error);
+  }
+})();
+
 // Add the functions to window for access from console for debugging
 window.authFix = {
   fixToken: fixAuthToken,
@@ -208,7 +332,26 @@ window.submitPortingWithFixedAuth = async function(formData) {
         console.log('Adding authentication token to request');
         headers['Authorization'] = `Bearer ${token}`;
       } else {
-        console.warn('No authentication token available - request may fail if authentication is required');
+        console.log('No authentication token available - attempting to obtain one');
+        
+        // Try to prompt for login if the function exists
+        if (window.promptForLogin) {
+          console.log('Prompting user for login credentials');
+          const loginSuccess = await window.promptForLogin();
+          
+          if (loginSuccess) {
+            console.log('Login successful, adding new token to request');
+            const newToken = localStorage.getItem('portmysim_token');
+            if (newToken) {
+              headers['Authorization'] = `Bearer ${newToken}`;
+            }
+          } else {
+            console.warn('Login failed or was cancelled - request may fail if authentication is required');
+          }
+        } else {
+          console.warn('No login prompt function available - request may fail if authentication is required');
+          console.info('You can login via console with: authFix.login("your_email", "your_password")');
+        }
       }
       
       const response = await fetch(`${baseUrl}${endpoint}`, {

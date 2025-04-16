@@ -8,7 +8,8 @@ const API_CONFIG = {
   NUMLOOKUP_API_KEY: 'your_api_key_here',
   GOOGLE_MAPS_API_KEY: '' // TODO: Replace with your own Google Maps API key
 };
-const CONFIG = API_CONFIG;
+// Use existing CONFIG if available, or create from API_CONFIG
+const API_SETTINGS = window.CONFIG || API_CONFIG;
 
 // Base API URL - change this to your actual backend URL in production
 const DEFAULT_PORT = 5000;
@@ -1237,7 +1238,7 @@ function showConnectionError() {
 async function lookupMobileNumber(mobileNumber) {
     try {
         // Check if we have a valid API key - if not, skip API call
-        if (!API_CONFIG.NUMLOOKUP_API_KEY || API_CONFIG.NUMLOOKUP_API_KEY === 'your_api_key_here') {
+        if (!API_SETTINGS.NUMLOOKUP_API_KEY || API_SETTINGS.NUMLOOKUP_API_KEY === 'your_api_key_here') {
             console.log('No valid API key configured for Numlookup API, skipping API call');
             return null;
         }
@@ -1245,7 +1246,7 @@ async function lookupMobileNumber(mobileNumber) {
         // Add +91 prefix if not already present
         const formattedNumber = mobileNumber.startsWith('+91') ? mobileNumber : `+91${mobileNumber}`;
         console.log('Calling Numlookup API for number:', formattedNumber);
-        const response = await fetch(`https://api.numlookupapi.com/v1/validate/${formattedNumber}?apikey=${API_CONFIG.NUMLOOKUP_API_KEY}`, {
+        const response = await fetch(`https://api.numlookupapi.com/v1/validate/${formattedNumber}?apikey=${API_SETTINGS.NUMLOOKUP_API_KEY}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -1286,7 +1287,7 @@ async function lookupMobileNumber(mobileNumber) {
 }
 
 // Google Maps API Key from configuration
-const GOOGLE_MAPS_API_KEY = CONFIG.GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = API_SETTINGS.GOOGLE_MAPS_API_KEY;
 
 // Function to get coordinates from location search
 async function getCoordinates(searchQuery) {
@@ -2370,49 +2371,7 @@ async function getPlanById(id) {
   };
 }
 
-// Export functions for use in other modules
-export {
-    authAPI,
-    getToken,
-    getUser,
-    setAuth,
-    clearAuth,
-    isAuthenticated,
-    apiRequest,
-    comparePlans,
-    fetchPlans,
-    fetchPlansByOperator,
-    getLocalOperatorPlans,
-    fetchSimilarPlans,
-    fetchRecommendedPlans,
-    getLocalRecommendedPlans,
-    fetchNetworkCoverage,
-    compareNetworks,
-    getBestNetwork,
-    getLocationsWithCoverage,
-    showConnectionError,
-    lookupMobileNumber,
-    getCoordinates,
-    calculateDistance,
-    getNearbyPortingCenters,
-    getFallbackPortingCenters, 
-    checkCoverage,
-    getLocalCoverageData,
-    findTowers,
-    generateTowerData,
-    fetchReviewsForNetwork,
-    submitReview,
-    fetchUserActivity,
-    getPopularPlans,
-    getSampleReviews,
-    getLocalPopularPlans,
-    detectOperatorAndCircle,
-    verifyMobileNumber,
-    findNetworkByNumber,
-    getPortabilityStatus,
-    getSimulatedPortabilityStatus
-};
-
+// Replace the ES export with assignments to the global PortMySimAPI object
 // Create global API object for use in the app
 if (typeof window !== 'undefined') {
   // Initialize API
@@ -2422,20 +2381,13 @@ if (typeof window !== 'undefined') {
     testServerConnection,
     
     // Auth methods
-    auth: {
-      login: authAPI.login,
-      register: authAPI.register,
-      logout: authAPI.logout,
-      getProfile: authAPI.getProfile,
-      verifyEmail: authAPI.verifyEmail,
-      resendVerification: authAPI.resendVerification,
-      forgotPassword: authAPI.forgotPassword,
-      resetPassword: authAPI.resetPassword,
-      updateProfile: authAPI.updateProfile
-    },
+    auth: authAPI,
     
     // User info methods
     getUser,
+    getToken,
+    setAuth,
+    clearAuth,
     isAuthenticated,
     
     // Generic fetch method for API requests
@@ -2449,10 +2401,22 @@ if (typeof window !== 'undefined') {
       fetchPlans,
       fetchPlansByOperator,
       fetchRecommendedPlans,
-      fetchSimilarPlans
+      fetchSimilarPlans,
+      comparePlans
     },
     
-    // Add porting API functions
+    // Network functions
+    networks: {
+      fetchNetworkCoverage,
+      compareNetworks,
+      getBestNetwork,
+      getLocationsWithCoverage,
+      findTowers,
+      fetchReviewsForNetwork,
+      submitReview
+    },
+    
+    // Porting functions
     porting: {
       getPortingRequests: portingAPI.getPortingRequests,
       getPortingRequestDetails: portingAPI.getPortingRequestDetails,
@@ -2460,10 +2424,32 @@ if (typeof window !== 'undefined') {
       trackPortingRequest: portingAPI.trackPortingRequest,
       cancelPortingRequest: portingAPI.cancelPortingRequest,
       findNearbyPortingCenters: portingAPI.findNearbyPortingCenters,
-      calculatePortingDates: portingAPI.calculatePortingDates
+      calculatePortingDates: portingAPI.calculatePortingDates,
+      getPortabilityStatus,
+      getNearbyPortingCenters,
+      getFallbackPortingCenters
     },
     
-    // ... existing API functions ...
+    // Utility functions
+    utils: {
+      showConnectionError,
+      lookupMobileNumber,
+      getCoordinates,
+      calculateDistance,
+      checkCoverage,
+      getLocalCoverageData,
+      generateTowerData,
+      fetchUserActivity,
+      getPopularPlans,
+      getSampleReviews,
+      getLocalPopularPlans,
+      detectOperatorAndCircle,
+      verifyMobileNumber,
+      findNetworkByNumber,
+      getSimulatedPortabilityStatus,
+      getLocalOperatorPlans,
+      getLocalRecommendedPlans
+    }
   };
 
   // Detect API port on load, but don't block rendering
@@ -2474,5 +2460,5 @@ if (typeof window !== 'undefined') {
   });
 }
 
-// Export the required functions
-export { fetchPlansByOperator, comparePlans, fetchRecommendedPlans };
+// All exports are available through the global PortMySimAPI object
+// Use window.PortMySimAPI in other scripts to access these functions

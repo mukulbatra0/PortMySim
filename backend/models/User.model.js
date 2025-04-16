@@ -24,10 +24,19 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a phone number'],
       unique: true,
-      match: [
-        /^[0-9]{10}$/,
-        'Please add a valid 10-digit phone number'
-      ]
+      validate: {
+        validator: function(v) {
+          // Remove all non-digit characters (spaces, dashes, etc.)
+          const digitsOnly = v.replace(/\D/g, '');
+          // Check if the result is exactly 10 digits
+          return digitsOnly.length === 10;
+        },
+        message: 'Please add a valid 10-digit phone number'
+      },
+      set: function(v) {
+        // Remove all non-digit characters when saving to database
+        return v ? v.replace(/\D/g, '') : v;
+      }
     },
     password: {
       type: String,
