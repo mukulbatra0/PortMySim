@@ -45,14 +45,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to MongoDB but don't crash if it fails
-connectDB().catch(err => {
-    console.error('Failed to connect to MongoDB:', err);
-    console.warn('Server will continue running with limited functionality using in-memory database');
-    console.warn('Predefined test user: demo@example.com / Password123');
-    // Don't exit the process on connection failure
-});
-
 // Enable CORS for all routes
 app.use(cors());
 
@@ -206,20 +198,35 @@ async function initializePortingRules() {
   }
 }
 
-// Call the function to initialize porting rules
-try {
-  await initializePortingRules();
-} catch (error) {
-  console.error('Failed to initialize porting rules:', error);
-  console.warn('Server will continue with limited porting rule functionality');
+// Main async function to handle startup sequence
+async function startServer() {
+  try {
+    // Connect to MongoDB first
+    await connectDB();
+    
+    // Initialize porting rules after successful connection
+    await initializePortingRules();
+    
+    // Start the server
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+      console.log(`Access the API at http://localhost:${PORT}/api`);
+      if (mongoose.connection.readyState !== 1) {
+        console.warn('Note: Server is running with in-memory database fallback');
+        console.warn('Some features will be limited. Test user: demo@example.com / Password123');
+      }
+    });
+  } catch (err) {
+    console.error('Failed to start server properly:', err);
+    // Still start the server even if there are database issues
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT} (with limited functionality)`);
+      console.log(`Access the API at http://localhost:${PORT}/api`);
+      console.warn('Note: Server is running with limited functionality due to startup errors');
+      console.warn('Some features will be limited. Test user: demo@example.com / Password123');
+    });
+  }
 }
 
 // Start the server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-  console.log(`Access the API at http://localhost:${PORT}/api`);
-  if (mongoose.connection.readyState !== 1) {
-    console.warn('Note: Server is running with in-memory database fallback');
-    console.warn('Some features will be limited. Test user: demo@example.com / Password123');
-  }
-}); 
+startServer();

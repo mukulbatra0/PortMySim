@@ -12,7 +12,7 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
       socketTimeoutMS: 45000,
       connectTimeoutMS: 30000,
       maxPoolSize: 10,
-      bufferCommands: false,
+      bufferCommands: true,
       autoIndex: process.env.NODE_ENV !== 'production'
     });
 
