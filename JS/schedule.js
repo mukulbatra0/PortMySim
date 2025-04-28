@@ -581,6 +581,9 @@ function initScheduleForm() {
         }
     });
 
+    // Initialize provider selection
+    setupProviderSelection();
+
     // Initialize dates and calculations
     calculateSmsSendDate();
     calculatePortingDates();
@@ -603,68 +606,142 @@ function displayLocationError() {
 
 // Find nearby porting centers based on user location
 async function findNearbyPortingCenters() {
-  const searchInput = document.getElementById('location-search');
+  const locationInput = document.getElementById('location');
   const centersList = document.getElementById('porting-centers-list');
-  const providerSelect = document.getElementById('provider-select');
   
-  if (!searchInput || !centersList) return;
+  if (!locationInput || !centersList) {
+    console.error('Location input or centers list element not found');
+    return;
+  }
   
-  const searchQuery = searchInput.value.trim();
-  const selectedProvider = providerSelect ? providerSelect.value : 'any';
-  
-  if (!searchQuery) {
+  // Get the selected provider
+  const selectedProvider = document.getElementById('newProvider').value;
+  if (!selectedProvider) {
     centersList.innerHTML = `
       <div class="centers-empty">
-      <i class="fas fa-search"></i>
-      <p>Enter a location to find porting centers</p>
+        <i class="fas fa-exclamation-circle"></i>
+        <p>Please select a provider before searching for porting centers.</p>
       </div>
     `;
     return;
   }
   
+  const searchQuery = locationInput.value.trim();
+  if (!searchQuery) {
+    centersList.innerHTML = `
+      <div class="centers-empty">
+        <i class="fas fa-map-marker-alt"></i>
+        <p>Please enter your location to find nearby centers.</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Show loading state
   centersList.innerHTML = `
     <div class="centers-loading">
-    <div class="spinner"></div>
-    <p>Finding porting centers near ${searchQuery}...</p>
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Searching for nearby porting centers...</p>
     </div>
   `;
   
   try {
-    // Get coordinates from the location - prioritize API version if available
-    let coordinates;
-    if (window.api && typeof window.api.getCoordinates === 'function') {
-      try {
-        coordinates = await window.api.getCoordinates(searchQuery);
-      } catch (apiError) {
-        console.warn('Error using API getCoordinates, falling back to local:', apiError);
-        coordinates = await getCoordinates(searchQuery);
-      }
-    } else {
-      coordinates = await getCoordinates(searchQuery);
-    }
+    // Mock coordinates for testing - you would replace this with actual geocoding
+    const coordinates = {
+      lat: 28.6139, // Default to New Delhi coordinates
+      lng: 77.2090
+    };
     
-    if (!coordinates) {
-      displayLocationError();
-      return;
-    }
+    // Generate mock centers for the selected provider
+    const mockCenters = generateMockCenters(selectedProvider, coordinates);
     
-    // Use the api function from window if available, otherwise use local function
-    const getFallbackCentersFunc = window.api?.getFallbackPortingCenters || getLocalFallbackCenters;
-    const centers = await getFallbackCentersFunc(selectedProvider, coordinates);
-    
-    // Display the porting centers
-    displayPortingCenters(centers, coordinates);
+    // Display the centers
+    displayPortingCenters(mockCenters, coordinates);
     
   } catch (error) {
     console.error('Error finding porting centers:', error);
     centersList.innerHTML = `
-        <div class="centers-empty">
+      <div class="centers-empty">
         <i class="fas fa-exclamation-triangle"></i>
         <p>Error finding porting centers. Please try again.</p>
-        </div>
-      `;
+      </div>
+    `;
   }
 }
+
+// Generate mock centers for testing
+function generateMockCenters(provider, userCoordinates) {
+  // Generate 4-6 random centers around the user coordinates
+  const centerCount = Math.floor(Math.random() * 3) + 3; // 3-5 centers
+  const centers = [];
+  
+  const providerNames = {
+    'airtel': 'Airtel Experience Center',
+    'jio': 'Jio Digital Store',
+    'vi': 'Vi Store',
+    'bsnl': 'BSNL Customer Service'
+  };
+  
+  const addressPrefixes = ['Main', 'Park', 'Lake', 'Market', 'Metro', 'City', 'Central'];
+  const addressTypes = ['Road', 'Street', 'Avenue', 'Complex', 'Plaza', 'Mall', 'Tower'];
+  
+  for (let i = 0; i < centerCount; i++) {
+    // Generate random offset from user coordinates (between -0.05 and 0.05 degrees)
+    const latOffset = (Math.random() - 0.5) * 0.1;
+    const lngOffset = (Math.random() - 0.5) * 0.1;
+    
+    const latitude = userCoordinates.lat + latOffset;
+    const longitude = userCoordinates.lng + lngOffset;
+    
+    // Generate a realistic-looking address
+    const addressPrefix = addressPrefixes[Math.floor(Math.random() * addressPrefixes.length)];
+    const addressType = addressTypes[Math.floor(Math.random() * addressTypes.length)];
+    const addressNumber = Math.floor(Math.random() * 200) + 1;
+    
+    centers.push({
+      id: `${provider}_${i}`,
+      name: `${providerNames[provider] || provider.toUpperCase()} ${i + 1}`,
+      provider: provider,
+      address: `${addressNumber} ${addressPrefix} ${addressType}, Near City Center`,
+      latitude: latitude,
+      longitude: longitude,
+      isOpen: Math.random() > 0.2, // 80% chance of being open
+      hours: ["Mon-Sat: 9:00 AM - 8:00 PM", "Sun: 10:00 AM - 6:00 PM"],
+      rating: (Math.random() * 2 + 3).toFixed(1), // Random rating between 3 and 5
+      ratingCount: Math.floor(Math.random() * 200) + 20,
+      distance: calculateDistance(userCoordinates.lat, userCoordinates.lng, latitude, longitude)
+    });
+  }
+  
+  return centers;
+}
+
+// Set up event listeners for the location search
+function setupLocationSearch() {
+  const locationInput = document.getElementById('location');
+  
+  if (!locationInput) return;
+  
+  // Add event listener for the input change
+  locationInput.addEventListener('change', function() {
+    // Call findNearbyPortingCenters when the user enters a location
+    findNearbyPortingCenters();
+  });
+  
+  // Also search when user presses Enter
+  locationInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      findNearbyPortingCenters();
+    }
+  });
+}
+
+// Initialize location search on form load
+document.addEventListener('DOMContentLoaded', function() {
+  // Set up the location search functionality
+  setupLocationSearch();
+});
 
 // Display porting centers on the page
 function displayPortingCenters(centers, userCoordinates) {
@@ -988,15 +1065,19 @@ function loadOpenStreetMap() {
       return;
     }
     
-    // Load CSS
+    // Load CSS first
     const linkCSS = document.createElement('link');
     linkCSS.rel = 'stylesheet';
-    linkCSS.href = 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css';
+    linkCSS.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    linkCSS.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    linkCSS.crossOrigin = '';
     document.head.appendChild(linkCSS);
     
-    // Load JavaScript
+    // Then load JavaScript
     const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.js';
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+    script.crossOrigin = '';
     script.async = true;
     
     script.onload = function() {
@@ -1004,8 +1085,8 @@ function loadOpenStreetMap() {
       resolve();
     };
     
-    script.onerror = function() {
-      console.error('Failed to load Leaflet');
+    script.onerror = function(error) {
+      console.error('Failed to load Leaflet:', error);
       reject(new Error('Failed to load Leaflet'));
     };
     
@@ -1016,22 +1097,47 @@ function loadOpenStreetMap() {
 // Initialize map with OpenStreetMap when using Leaflet
 function initializeMapWithLeaflet(centers, userCoordinates) {
     const mapContainer = document.getElementById('centersMap');
-    if (!mapContainer || !window.L || !centers || centers.length === 0) return;
+    if (!mapContainer) {
+        console.error('Map container element not found');
+        return;
+    }
+    
+    if (!window.L) {
+        console.error('Leaflet library not loaded');
+        return;
+    }
+    
+    if (!centers || centers.length === 0) {
+        console.warn('No centers provided for map');
+        return;
+    }
+    
+    console.log('Initializing map with Leaflet', { mapContainer, centers, userCoordinates });
     
     // Initialize the map if not already created
     if (!window.leafletMap) {
+        // Set a default zoom level if not specified in config
+        const defaultZoom = window.configSettings?.mapDefaultZoom || window.CONFIG?.mapDefaultZoom || 12;
+        
         window.leafletMap = L.map(mapContainer).setView(
             [userCoordinates.lat, userCoordinates.lng], 
-            configSettings.mapDefaultZoom
+            defaultZoom
         );
         
         // Add the OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(window.leafletMap);
+        
+        // Force a resize to ensure map renders correctly
+        setTimeout(() => {
+            window.leafletMap.invalidateSize();
+        }, 100);
     } else {
         // Just update the view if map already exists
-        window.leafletMap.setView([userCoordinates.lat, userCoordinates.lng], configSettings.mapDefaultZoom);
+        window.leafletMap.setView([userCoordinates.lat, userCoordinates.lng], 
+            window.configSettings?.mapDefaultZoom || window.CONFIG?.mapDefaultZoom || 12);
+        window.leafletMap.invalidateSize();
     }
     
     // Clear existing markers
@@ -1056,14 +1162,16 @@ function initializeMapWithLeaflet(centers, userCoordinates) {
     window.leafletMarkers.push(userMarker);
     
     // Add markers for centers
-    centers.forEach(center => {
-        if (!center.coordinates) return;
+    centers.forEach((center) => {
+        // Make sure we have latitude and longitude
+        const lat = center.latitude || (center.coordinates && center.coordinates.lat);
+        const lng = center.longitude || (center.coordinates && center.coordinates.lng);
+        
+        if (!lat || !lng) return;
         
         const providerColor = getProviderColor(center.provider);
         
-        const marker = L.marker(
-            [center.coordinates.lat, center.coordinates.lng]
-        ).addTo(window.leafletMap);
+        const marker = L.marker([lat, lng]).addTo(window.leafletMap);
         
         const popupContent = `
             <div class="map-info-window">
@@ -1079,13 +1187,18 @@ function initializeMapWithLeaflet(centers, userCoordinates) {
     });
     
     // Create a bounds object and include all markers
-    const bounds = L.latLngBounds([
-        [userCoordinates.lat, userCoordinates.lng],
-        ...centers.filter(c => c.coordinates).map(c => [c.coordinates.lat, c.coordinates.lng])
-    ]);
+    const bounds = L.latLngBounds(
+        [[userCoordinates.lat, userCoordinates.lng]].concat(
+            centers
+                .filter(c => c.latitude && c.longitude)
+                .map(c => [c.latitude, c.longitude])
+        )
+    );
     
     // Fit the map to show all markers
-    window.leafletMap.fitBounds(bounds, { padding: [50, 50] });
+    if (bounds && bounds.isValid()) {
+        window.leafletMap.fitBounds(bounds, { padding: [50, 50] });
+    }
 }
 
 // Get color based on provider name
@@ -1197,32 +1310,53 @@ async function getCoordinatesWithNominatim(searchQuery) {
       console.warn('Direct Nominatim access failed, trying alternatives', directError);
     }
     
-    // Option 2: Try alternative geocoding service - LocationIQ (requires free API key)
-    // Uncomment and add your API key if you want to use this service
-    // const locationIqApiKey = 'your-locationiq-api-key'; // Register at locationiq.com
-    // if (locationIqApiKey) {
-    //   try {
-    //     const locationIqResponse = await fetch(`https://eu1.locationiq.com/v1/search.php?key=${locationIqApiKey}&q=${encodedQuery}&format=json&limit=1`);
-    //     
-    //     if (locationIqResponse.ok) {
-    //       const data = await locationIqResponse.json();
-    //       if (data && data.length > 0) {
-    //         const result = data[0];
-    //         return {
-    //           lat: parseFloat(result.lat),
-    //           lng: parseFloat(result.lon),
-    //           formattedAddress: result.display_name
-    //         };
-    //       }
-    //     }
-    //   } catch (locationIqError) {
-    //     console.warn('LocationIQ geocoding failed', locationIqError);
-    //   }
-    // }
+    // Option 2: Try LocationIQ geocoding service (production implementation)
+    // Register for a free API key at locationiq.com
+    const locationIqApiKey = configSettings?.locationIqApiKey || process.env.LOCATION_IQ_API_KEY; 
+    if (locationIqApiKey) {
+      try {
+        const locationIqResponse = await fetch(`https://eu1.locationiq.com/v1/search.php?key=${locationIqApiKey}&q=${encodedQuery}&format=json&limit=1`);
+        
+        if (locationIqResponse.ok) {
+          const data = await locationIqResponse.json();
+          if (data && data.length > 0) {
+            const result = data[0];
+            return {
+              lat: parseFloat(result.lat),
+              lng: parseFloat(result.lon),
+              formattedAddress: result.display_name
+            };
+          }
+        }
+      } catch (locationIqError) {
+        console.warn('LocationIQ geocoding failed', locationIqError);
+      }
+    }
     
-    // Option 3: Try with CORS proxy
+    // Option 3: Try with Google Maps Geocoding API
+    const googleMapsApiKey = configSettings?.googleMapsApiKey || process.env.GOOGLE_MAPS_API_KEY;
+    if (googleMapsApiKey) {
+      try {
+        const googleResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodedQuery}&key=${googleMapsApiKey}`);
+        
+        if (googleResponse.ok) {
+          const data = await googleResponse.json();
+          if (data && data.status === 'OK' && data.results && data.results.length > 0) {
+            const result = data.results[0];
+            return {
+              lat: result.geometry.location.lat,
+              lng: result.geometry.location.lng,
+              formattedAddress: result.formatted_address
+            };
+          }
+        }
+      } catch (googleError) {
+        console.warn('Google Maps geocoding failed', googleError);
+      }
+    }
+    
+    // Option 4: Try with CORS proxy
     // Note: cors-anywhere requires users to enable it by visiting https://cors-anywhere.herokuapp.com/ first
-    // This is why we're getting 403 errors
     try {
       const corsProxy = 'https://cors-anywhere.herokuapp.com/';
       const apiUrl = `${corsProxy}https://nominatim.openstreetmap.org/search?format=json&q=${encodedQuery}&limit=1`;
@@ -1280,7 +1414,7 @@ async function getCoordinatesWithNominatim(searchQuery) {
       formattedAddress: 'Default Location'
     };
   } catch (error) {
-    console.error('Error using Nominatim geocoding:', error);
+    console.error('Error using geocoding services:', error);
     return {
       lat: configSettings.mapDefaultLocation.lat,
       lng: configSettings.mapDefaultLocation.lng,
@@ -1437,12 +1571,8 @@ function goToStep(stepNumber) {
       
       // Special handling for step 2 (Provider Selection)
       if (stepNumber === 2) {
-        // Make sure provider cards are created
-        const providerContainer = step.querySelector('.provider-selection');
-        if (providerContainer && providerContainer.children.length === 0) {
-          console.log('Provider container is empty, re-initializing provider selection');
-          setupProviderSelection();
-        }
+        // Setup provider selection functionality
+        setupProviderSelection();
       }
       
       // Special handling for step 3 (Schedule)
@@ -1450,34 +1580,6 @@ function goToStep(stepNumber) {
         calculateSmsSendDate();
         calculatePortingDates();
         generatePortingGuid(); // Generate GUID for display
-        
-        // Try to find nearby centers either from location or default
-        const locationInput = document.getElementById('location');
-        if (locationInput && locationInput.value.trim()) {
-          // If location is already entered, find centers
-        findNearbyPortingCenters();
-        } else {
-          // If no location set, use default centers with default location
-          const defaultCoords = { 
-            lat: configSettings.mapDefaultLocation?.lat || 28.6139, 
-            lng: configSettings.mapDefaultLocation?.lng || 77.2090 
-          };
-          
-          // Get selected provider if any
-          const selectedProvider = document.getElementById('newProvider')?.value || '';
-          
-          // Show default centers
-          getLocalFallbackCenters(selectedProvider, defaultCoords)
-            .then(centers => {
-              // Only display if we're still on step 3
-              if (document.querySelector('.form-step[data-step="3"].active')) {
-                displayPortingCenters(centers, defaultCoords);
-              }
-            })
-            .catch(err => {
-              console.error('Error loading default centers:', err);
-            });
-        }
       }
     } else {
       step.classList.remove('active');
@@ -1708,6 +1810,30 @@ function submitForm(e) {
               document.getElementById('upcStepDescription').textContent = 'PortMySim will retrieve and store your UPC code for the next step';
             }
             
+            // Store data in localStorage for the confirmation page
+            const portingUPC = document.getElementById('guidDisplay').textContent;
+            localStorage.setItem('portingUPC', portingUPC);
+            
+            // Store form data for the confirmation page
+            const portingFormData = {
+              ...formData,
+              currentProvider: document.getElementById('currentProviderDisplay').textContent,
+              centerName: document.getElementById('portingCenter').textContent,
+              centerAddress: responseData.portingCenterDetails?.address || ''
+            };
+            localStorage.setItem('portingFormData', JSON.stringify(portingFormData));
+            
+            // Store process timeline data
+            const portingProcess = {
+              eligibility: { status: 'complete', updatedAt: new Date().toISOString() },
+              details: { status: 'complete', updatedAt: new Date().toISOString() },
+              submission: { status: 'complete', updatedAt: new Date().toISOString() },
+              upc: { status: 'complete', updatedAt: new Date().toISOString() },
+              provider: { status: 'pending' },
+              completion: { status: 'pending' }
+            };
+            localStorage.setItem('portingProcess', JSON.stringify(portingProcess));
+            
             // Scroll to top of success view
             window.scrollTo({
               top: 0,
@@ -1881,182 +2007,157 @@ function setMinDate() {
 
 // Setup provider selection
 function setupProviderSelection() {
-    const providerContainer = document.querySelector('.provider-options');
-    const newProviderInput = document.getElementById('newProvider');
-    
-    if (!providerContainer || !newProviderInput) {
-        console.warn('Provider container or input not found');
-        return;
-    }
-    
-    // Check if provider cards exist, if not, create them
-    let providerCards = document.querySelectorAll('.provider-card');
-    
-    if (!providerCards.length && configSettings.providers && configSettings.providers.length) {
-        // Create provider cards dynamically
-        let cardsHTML = '';
-        
-        configSettings.providers.forEach(provider => {
-            cardsHTML += `
-                <div class="provider-card" data-provider="${provider.id}" tabindex="0" role="button" aria-pressed="false">
-                    <div class="provider-logo" style="background-color: rgba(${getProviderColor(provider.id)}, 0.1)">
-                        <i class="${getProviderIcon(provider.id)}" style="color: rgb(${getProviderColor(provider.id)})"></i>
-                    </div>
-                    <h3>${provider.name}</h3>
-                    <p>${provider.description || ''}</p>
-                </div>
-            `;
-        });
-        
-        // Add cards to container
-        providerContainer.innerHTML = cardsHTML;
-        
-        // Re-query for the newly created cards
-        providerCards = document.querySelectorAll('.provider-card');
-    }
-    
-    // Remove any existing event listeners (to prevent duplicates)
-    providerCards.forEach(card => {
-        const newCard = card.cloneNode(true);
-        card.parentNode.replaceChild(newCard, card);
-    });
-    
-    // Re-query for the newly cloned cards
-    providerCards = document.querySelectorAll('.provider-card');
-    
-    // Function to select a provider card
-    function selectProviderCard(card) {
-        // Remove selected class from all cards
-        const providerCards = document.querySelectorAll('.provider-card');
-        providerCards.forEach(c => {
-            c.classList.remove('selected');
-            c.setAttribute('aria-pressed', 'false');
-        });
-        
-        // Add selected class to this card
-        card.classList.add('selected');
-        card.setAttribute('aria-pressed', 'true');
-        
-        // Set hidden input value
-        const provider = card.getAttribute('data-provider');
-        const newProviderInput = document.getElementById('newProvider');
-        if (newProviderInput) {
-            newProviderInput.value = provider;
-        }
-        
-        // Update the selected provider name display
-        const selectedProviderName = document.getElementById('selectedProviderName');
-        if (selectedProviderName) {
-            const providerName = card.querySelector('h3').textContent;
-            selectedProviderName.textContent = providerName;
-            selectedProviderName.style.color = 'var(--accent-color)';
-            selectedProviderName.style.fontWeight = 'bold';
-        }
+  const providerCards = document.querySelectorAll('.provider-card');
+  const selectedProviderElement = document.getElementById('selectedProviderName');
+  const hiddenProviderInput = document.getElementById('newProvider');
   
-        // Clear error message
-        const errorMessage = document.querySelector('.selected-provider .error-message');
-        if (errorMessage) {
-            errorMessage.textContent = '';
-            errorMessage.style.display = 'none';
+  if (!providerCards.length || !selectedProviderElement || !hiddenProviderInput) {
+    console.warn('Provider selection elements not found');
+    return;
+  }
+  
+  providerCards.forEach(card => {
+    card.addEventListener('click', function() {
+      // Remove selected class from all cards
+      providerCards.forEach(c => c.classList.remove('selected'));
+      
+      // Add selected class to clicked card
+      this.classList.add('selected');
+      
+      // Update selected provider text and hidden input
+      const provider = this.getAttribute('data-provider');
+      selectedProviderElement.textContent = this.querySelector('h3').textContent;
+      hiddenProviderInput.value = provider;
+      
+      // Trigger validation
+      validateProviderSelection();
+      
+      // When we move to step 3, try initializing the location search
+      // This will help make the map appear when user selects a provider
+      document.querySelectorAll('.btn-next').forEach(button => {
+        if (button.getAttribute('data-next') === '3') {
+          button.addEventListener('click', function() {
+            // On a short delay, try triggering the location search if input has a value
+            setTimeout(() => {
+              const locationInput = document.getElementById('location');
+              if (locationInput && locationInput.value.trim()) {
+                findNearbyPortingCenters();
+              }
+            }, 500);
+          });
         }
-        
-        // Find nearby centers if location is already entered
-        const locationInput = document.getElementById('location');
-        if (locationInput && locationInput.value) {
-            findNearbyPortingCenters();
-        }
-        
-        console.log(`Selected provider: ${provider}`);
+      });
+    });
+    
+    // Handle keyboard navigation for accessibility
+    card.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.click();
+      }
+    });
+  });
+  
+  // Validate provider selection
+  function validateProviderSelection() {
+    const errorMessage = document.querySelector('.selected-provider .error-message');
+    
+    if (!hiddenProviderInput.value) {
+      if (errorMessage) {
+        errorMessage.textContent = 'Please select a provider';
+        errorMessage.classList.add('show');
+      }
+      return false;
     }
     
-    // Setup click handlers for provider cards
-    providerCards.forEach(card => {
-        // Mouse click event
-        card.addEventListener('click', function(e) {
-            // Prevent any child elements from triggering multiple events
-            e.stopPropagation();
-            selectProviderCard(this);
-        });
-        
-        // Keyboard event - handle Enter and Space keys
-        card.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                selectProviderCard(this);
-            }
-        });
-    });
+    if (errorMessage) {
+      errorMessage.textContent = '';
+      errorMessage.classList.remove('show');
+    }
+    return true;
+  }
 }
 
 // Set up form event listeners
 function setupFormListeners() {
-  // Location field listener for finding porting centers
-  const locationInput = document.getElementById('location');
-  if (locationInput) {
-    const debouncedSearch = debounce(findNearbyPortingCenters, 500);
-    locationInput.addEventListener('input', debouncedSearch);
-    locationInput.addEventListener('change', findNearbyPortingCenters);
-  }
+  // Add form listeners
+  const form = document.getElementById('portingForm');
+  const submitBtn = document.querySelector('.btn-submit');
   
-  // Current plan date input to calculate dates
-  const planEndDateInput = document.getElementById('currentPlan');
-  if (planEndDateInput) {
-    planEndDateInput.addEventListener('change', calculatePortingDates);
-  }
-  
-  // Automation option toggle
-  const automatePortingInput = document.getElementById('automatePorting');
-  if (automatePortingInput) {
-    automatePortingInput.addEventListener('change', function() {
-      const smsInfoElements = document.querySelectorAll('.sms-info');
-      if (this.checked) {
-        smsInfoElements.forEach(el => el.classList.add('automated'));
-      } else {
-        smsInfoElements.forEach(el => el.classList.remove('automated'));
-      }
-    });
-  }
-  
-  // Add delegate event listener for "View on Map" buttons that may be added dynamically
-  document.addEventListener('click', function(e) {
-    if (e.target && (e.target.classList.contains('btn-view-on-map') || 
-        e.target.closest('.btn-view-on-map'))) {
-      
-      const button = e.target.classList.contains('btn-view-on-map') ? 
-                    e.target : e.target.closest('.btn-view-on-map');
-      
-      // Find the parent center item
-      const centerItem = button.closest('.center-item');
-      if (centerItem) {
-        const lat = parseFloat(centerItem.getAttribute('data-lat'));
-        const lng = parseFloat(centerItem.getAttribute('data-lng'));
-        const name = centerItem.getAttribute('data-name');
-        
-        // Remove selected class from all center items
-        document.querySelectorAll('.center-item').forEach(item => {
-          item.classList.remove('selected');
-        });
-        
-        // Add selected class to this item
-        centerItem.classList.add('selected');
-        
-        // Show on map
-        showOnMap(lat, lng, name);
-      }
-    }
-  });
-  
-  // Provider selection in Step 2
-  setupProviderSelection();
-  
-  // Form submission
-  const form = document.querySelector('.schedule-form');
   if (form) {
     form.addEventListener('submit', submitForm);
   }
   
-  // Set minimum date for date inputs
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      submitForm(e);
+    });
+  }
+  
+  // Set up step navigation
+  const nextButtons = document.querySelectorAll('.btn-next');
+  const prevButtons = document.querySelectorAll('.btn-prev');
+  
+  nextButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const currentStep = parseInt(this.getAttribute('data-step'));
+      if (validateStep(currentStep)) {
+        goToStep(currentStep + 1);
+        updateProgressSteps(currentStep + 1);
+      }
+    });
+  });
+  
+  prevButtons.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const currentStep = parseInt(this.getAttribute('data-step'));
+      goToStep(currentStep - 1);
+      updateProgressSteps(currentStep - 1);
+    });
+  });
+  
+  // Setup date inputs with min dates
   setMinDate();
+  
+  // Current number input - No longer doing auto-detection
+  const currentNumberInput = document.getElementById('currentNumber');
+  if (currentNumberInput) {
+    // Only do basic validation
+    currentNumberInput.addEventListener('input', function() {
+      // Restrict to 10 digits
+      this.value = this.value.replace(/\D/g, '').substring(0, 10);
+      validateInput(this);
+    });
+  }
+  
+  // Setup alternateNumber input with validation
+  const alternateNumberInput = document.getElementById('alternateNumber');
+  if (alternateNumberInput) {
+    alternateNumberInput.addEventListener('input', function() {
+      // Restrict to 10 digits
+      this.value = this.value.replace(/\D/g, '').substring(0, 10);
+      validateInput(this);
+    });
+  }
+  
+  // Email input with validation
+  const emailInput = document.getElementById('email');
+  if (emailInput) {
+    emailInput.addEventListener('input', function() {
+      validateInput(this);
+    });
+  }
+  
+  // Any other input validation
+  const allInputs = document.querySelectorAll('.schedule-form input, .schedule-form select');
+  allInputs.forEach(input => {
+    if (input !== currentNumberInput && input !== alternateNumberInput && input !== emailInput) {
+      input.addEventListener('change', function() {
+        validateInput(this);
+      });
+    }
+  });
 }
 
 // Helper function for debouncing

@@ -25,11 +25,11 @@ The Plans Comparison API provides functionality to:
 ### Prerequisites
 
 - Node.js (v14 or later)
-- MongoDB (local or Atlas)
+- MongoDB (local or Atlas) - Required for all functionality
 
 ### Installation
 
-1. Make sure MongoDB is running
+1. Make sure MongoDB is running (required - the application no longer supports in-memory fallbacks)
 2. Install dependencies:
    ```bash
    npm install
@@ -41,6 +41,8 @@ The Plans Comparison API provides functionality to:
    MONGODB_URI=mongodb://localhost:27017/portmysim
    PORT=5000
    NODE_ENV=development
+   JWT_SECRET=your_jwt_secret_key
+   JWT_EXPIRE=30d
    ```
 
 4. Run the setup script:
@@ -56,6 +58,18 @@ The Plans Comparison API provides functionality to:
    ```bash
    npm run dev
    ```
+
+### Database Configuration
+
+The application requires a MongoDB connection to function. The database connection has been improved with:
+
+- Connection pooling optimization (50 max pool size, 5 min pool size)
+- Extended timeouts for better stability
+- Exponential backoff for connection retries
+- Proper error handling and reporting
+- Automatic reconnection handling
+
+If the MongoDB connection fails after multiple retry attempts, the application will exit with an error code instead of falling back to in-memory storage.
 
 ## API Endpoints
 
@@ -128,6 +142,43 @@ To reset the database with fresh plan data:
 npm run seed
 ```
 
+### SMS and Notification System
+
+The backend includes a robust SMS and notification system that supports multiple delivery channels:
+
+#### SMS Providers
+
+1. **Twilio** - Used for international numbers
+   - Fully integrated with scheduling and templating support
+   - Requires valid Twilio credentials in the `.env` file
+   
+2. **Fast2SMS** - Used for Indian numbers
+   - Supports DLT-registered templates for regulatory compliance
+   - Fallback to direct messaging when templates are unavailable
+   
+3. **Automated Fallback** - System automatically selects the appropriate provider based on phone number
+
+#### Notification Channels
+
+- **SMS** - Text messages sent to mobile phones
+- **Email** - Email notifications with HTML formatting
+- **App** - In-app notifications for mobile app users
+
+#### Features
+
+- **Templating** - Uses dynamic templates with variable substitution
+- **Scheduling** - Notifications can be scheduled for future delivery
+- **Automatic Processing** - Background scheduler processes notifications at regular intervals
+- **Error Handling** - Failed notifications are logged and can be retried
+- **Queuing** - Notifications are stored in MongoDB until successfully sent
+- **Fallback** - If one provider fails, system can use alternative methods
+
+#### Configuration
+
+SMS provider settings must be configured in your `.env` file. See `.env.example` for required fields.
+
+To change the notification processing interval, set the `NOTIFICATION_INTERVAL_MINUTES` environment variable.
+
 ### Adding New Plan Features
 
 To add new plan features:
@@ -198,6 +249,4 @@ The `NetworkCoverage` model stores the following data:
 - `downloadSpeed`: Download speed in Mbps
 - `uploadSpeed`: Upload speed in Mbps
 - `callQuality`: Voice call quality rating (1-5)
-- `indoorReception`: Indoor signal reception rating (1-5)
-- `congestionHandling`: Network congestion handling rating (1-5)
-- `customerSatisfaction`: Overall customer satisfaction rating (1-5) 
+- `indoorReception`: Indoor signal reception rating (1-5) 

@@ -220,8 +220,12 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Debug localStorage contents
+            console.log('All localStorage:', Object.keys(localStorage));
+            
             // Load UPC code
             const upcCode = localStorage.getItem('portingUPC');
+            console.log('UPC code from localStorage:', upcCode);
             if (upcCode) {
                 document.getElementById('upcCode').textContent = upcCode;
             } else {
@@ -230,6 +234,7 @@
             
             // Load request details
             const requestDetails = JSON.parse(localStorage.getItem('portingFormData') || '{}');
+            console.log('Request details from localStorage:', requestDetails);
             const detailsContainer = document.querySelector('#requestDetails .info-content');
             
             if (detailsContainer) {
@@ -303,6 +308,7 @@
             
             // Load status timeline
             const portingProcess = JSON.parse(localStorage.getItem('portingProcess') || '{}');
+            console.log('Porting process from localStorage:', portingProcess);
             const timelineContainer = document.getElementById('statusTimeline');
             
             if (timelineContainer) {

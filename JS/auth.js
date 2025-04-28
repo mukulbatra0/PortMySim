@@ -68,8 +68,16 @@ if (!window.PortMySimAPI) {
                         // Ensure token is clean before storing
                         const cleanToken = String(data.token).trim().replace(/^["'](.*)["']$/, '$1');
                         console.log('Storing clean token after login');
+                        
+                        // Store in both key locations for compatibility
                         localStorage.setItem(AUTH_TOKEN_KEY, cleanToken);
+                        localStorage.setItem('portmysim_token', cleanToken);
                         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+                        
+                        // Debug token storage
+                        console.log('Token stored with key:', AUTH_TOKEN_KEY);
+                        console.log('Token stored with legacy key: portmysim_token');
+                        console.log('Token length:', cleanToken.length);
                     }
                     
                     return data;
@@ -109,6 +117,22 @@ if (!window.PortMySimAPI) {
                     console.error('Error refreshing token:', error);
                     return false;
                 }
+            },
+            resendVerification: async (email) => {
+                try {
+                    const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email })
+                    });
+                    
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error resending verification:', error);
+                    return { success: false, message: 'Network error. Please try again.' };
+                }
             }
         },
         isAuthenticated: () => {
@@ -126,8 +150,45 @@ if (!window.PortMySimAPI) {
             return token;
         },
         getUser: () => {
-            const userData = localStorage.getItem(AUTH_USER_KEY);
-            return userData ? JSON.parse(userData) : null;
+            try {
+                const userData = localStorage.getItem('portmysim_user');
+                if (!userData || userData === 'null' || userData === 'undefined') {
+                    return null;
+                }
+                
+                const parsedUser = JSON.parse(userData);
+                
+                // Ensure we have a valid user object with at least a name
+                if (!parsedUser || typeof parsedUser !== 'object') {
+                    return null;
+                }
+                
+                // Make sure name exists and is a string
+                if (!parsedUser.name || typeof parsedUser.name !== 'string') {
+                    // Add a default name if missing
+                    parsedUser.name = 'User';
+                }
+                
+                return parsedUser;
+            } catch (e) {
+                console.error('Error parsing user data:', e);
+                // Return a default user object rather than null
+                return { name: 'User', email: '' };
+            }
+        },
+        testServerConnection: async () => {
+            try {
+                const response = await fetch('http://localhost:5000/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                return response.ok;
+            } catch (error) {
+                console.error('Server connection test failed:', error);
+                return false;
+            }
         }
     };
 }
@@ -267,6 +328,22 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error('Error refreshing token:', error);
                         return false;
                     }
+                },
+                resendVerification: async (email) => {
+                    try {
+                        const response = await fetch('http://localhost:5000/api/auth/resend-verification', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ email })
+                        });
+                        
+                        return await response.json();
+                    } catch (error) {
+                        console.error('Error resending verification:', error);
+                        return { success: false, message: 'Network error. Please try again.' };
+                    }
                 }
             },
             isAuthenticated: () => {
@@ -284,48 +361,99 @@ document.addEventListener('DOMContentLoaded', () => {
                 return token;
             },
             getUser: () => {
-                const userData = localStorage.getItem('portmysim_user');
-                return userData ? JSON.parse(userData) : null;
+                try {
+                    const userData = localStorage.getItem('portmysim_user');
+                    if (!userData || userData === 'null' || userData === 'undefined') {
+                        return null;
+                    }
+                    
+                    const parsedUser = JSON.parse(userData);
+                    
+                    // Ensure we have a valid user object with at least a name
+                    if (!parsedUser || typeof parsedUser !== 'object') {
+                        return null;
+                    }
+                    
+                    // Make sure name exists and is a string
+                    if (!parsedUser.name || typeof parsedUser.name !== 'string') {
+                        // Add a default name if missing
+                        parsedUser.name = 'User';
+                    }
+                    
+                    return parsedUser;
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                    // Return a default user object rather than null
+                    return { name: 'User', email: '' };
+                }
+            },
+            testServerConnection: async () => {
+                try {
+                    const response = await fetch('http://localhost:5000/api/health', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    return response.ok;
+                } catch (error) {
+                    console.error('Server connection test failed:', error);
+                    return false;
+                }
             }
         };
     }
 
     // Check if user is authenticated
-    if (window.PortMySimAPI.isAuthenticated()) {
-        const user = window.PortMySimAPI.getUser();
-        
-        // Update auth buttons in nav if they exist
-        const authBtns = document.querySelector('.auth-btns');
-        if (authBtns) {
-            const firstLetter = user.name.charAt(0).toUpperCase();
-            authBtns.innerHTML = `
-                <div class="user-profile-dropdown">
-                    <div class="user-profile-circle" title="${user.name}">
-                        ${firstLetter}
-                    </div>
-                    <div class="dropdown-menu">
-                        <span class="user-greeting">Hello, ${user.name.split(' ')[0]}</span>
-                        <a href="/HTML/dashboard.html" class="dropdown-item">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                        <a href="/HTML/schedule-porting.html" class="dropdown-item">
-                            <i class="fas fa-calendar-alt"></i> Schedule Porting
-                        </a>
-                        <button id="logoutBtn" class="dropdown-item">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
-                    </div>
-                </div>
-            `;
+    if (window.PortMySimAPI && window.PortMySimAPI.isAuthenticated && window.PortMySimAPI.isAuthenticated()) {
+        try {
+            const user = window.PortMySimAPI.getUser ? window.PortMySimAPI.getUser() : null;
             
-            // Setup dropdown functionality after DOM update
-            setupProfileDropdown();
-        }
-        
-        // Redirect if on login/signup pages
-        if (window.location.pathname.includes('login.html') || 
-            window.location.pathname.includes('signup.html')) {
-            window.location.href = '/HTML/schedule-porting.html';
+            // Ensure user has a valid name property, otherwise create a default user
+            const validUser = (user && typeof user === 'object' && user.name && typeof user.name === 'string') 
+                ? user 
+                : { name: 'User', email: '' };
+            
+            // Update auth buttons in nav if they exist
+            const authBtns = document.querySelector('.auth-btns');
+            if (authBtns) {
+                const firstLetter = validUser.name.charAt(0).toUpperCase();
+                authBtns.innerHTML = `
+                    <div class="user-profile-dropdown">
+                        <div class="user-profile-circle" title="${validUser.name}">
+                            ${firstLetter}
+                        </div>
+                        <div class="dropdown-menu">
+                            <span class="user-greeting">Hello, ${validUser.name.includes(' ') ? validUser.name.split(' ')[0] : validUser.name}</span>
+                            <a href="/HTML/dashboard.html" class="dropdown-item">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                            <a href="/HTML/schedule-porting.html" class="dropdown-item">
+                                <i class="fas fa-calendar-alt"></i> Schedule Porting
+                            </a>
+                            <button id="logoutBtn" class="dropdown-item">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Setup dropdown functionality after DOM update
+                setupProfileDropdown();
+            } else if (authBtns) {
+                // This else-if block is no longer needed since we're already handling all cases
+                // with the validUser variable, but keeping it here to maintain structure
+                setupProfileDropdown();
+            }
+            
+            // Redirect if on login/signup pages
+            if (window.location.pathname.includes('login.html') || 
+                window.location.pathname.includes('signup.html')) {
+                window.location.href = '/HTML/schedule-porting.html';
+            }
+        } catch (error) {
+            console.error('Error handling authenticated user:', error);
+            // Do not break the page if there's an error
         }
     }
 });
@@ -452,16 +580,80 @@ if (loginForm) {
                     // Show success message
                     showFormMessage(loginForm, 'Login successful! Redirecting...', true);
                     
-                    // Redirect to schedule-porting page
+                    // Check for redirect parameter or stored redirect
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirectParam = urlParams.get('redirect');
+                    const storedRedirect = localStorage.getItem('auth_redirect');
+                    
+                    // Clear the stored redirect if it exists
+                    if (storedRedirect) {
+                        localStorage.removeItem('auth_redirect');
+                    }
+                    
+                    // Determine redirect destination
+                    const redirectDestination = redirectParam 
+                        ? `/HTML/${redirectParam}` 
+                        : storedRedirect || '/HTML/dashboard.html';
+                    
+                    console.log('Redirecting to:', redirectDestination);
+                    
+                    // Redirect after a short delay
                     setTimeout(() => {
-                        window.location.href = '/HTML/schedule-porting.html';
+                        window.location.href = redirectDestination;
                     }, 1000);
                 } else {
                     // Show detailed error
                     const errorMessage = response.message || 'Login failed. Please try again.';
                     console.error('Login error:', errorMessage);
                     
-                    if (response.statusCode === 401) {
+                    if (response.unverified) {
+                        // Special handling for unverified accounts
+                        const messageContainer = document.createElement('div');
+                        messageContainer.className = 'form-message error';
+                        messageContainer.innerHTML = `
+                            <p>${errorMessage}</p>
+                            <button id="resendVerificationBtn" class="btn btn-outline-primary mt-2">Resend Verification Email</button>
+                        `;
+                        
+                        // Remove any existing message
+                        const existingMessage = loginForm.querySelector('.form-message');
+                        if (existingMessage) {
+                            existingMessage.remove();
+                        }
+                        
+                        // Add message to the form
+                        const submitButton = loginForm.querySelector('button[type="submit"]');
+                        submitButton.parentElement.insertBefore(messageContainer, submitButton);
+                        
+                        // Add click handler for resend button
+                        const resendBtn = document.getElementById('resendVerificationBtn');
+                        if (resendBtn) {
+                            resendBtn.addEventListener('click', async () => {
+                                try {
+                                    resendBtn.textContent = 'Sending...';
+                                    resendBtn.disabled = true;
+                                    
+                                    // Call resend verification API - ensure email is passed correctly
+                                    const userEmail = email.value.trim();
+                                    console.log('Sending verification email to:', userEmail);
+                                    
+                                    const resendResponse = await window.PortMySimAPI.auth.resendVerification(userEmail);
+                                    
+                                    if (resendResponse.success) {
+                                        showFormMessage(loginForm, 'Verification email sent! Please check your inbox.', true);
+                                    } else {
+                                        showFormMessage(loginForm, resendResponse.message || 'Failed to resend verification email.');
+                                    }
+                                } catch (error) {
+                                    console.error('Error resending verification:', error);
+                                    showFormMessage(loginForm, 'Failed to resend verification email.');
+                                } finally {
+                                    resendBtn.textContent = 'Resend Verification Email';
+                                    resendBtn.disabled = false;
+                                }
+                            });
+                        }
+                    } else if (response.statusCode === 401) {
                         showFormMessage(loginForm, 'Invalid email or password. Please try again.');
                     } else {
                         showFormMessage(loginForm, `Login error: ${errorMessage}`);

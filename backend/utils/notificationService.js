@@ -1,13 +1,31 @@
 import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
 import axios from 'axios';
+import twilio from 'twilio';
 import fast2sms from 'fast-two-sms';
 import PortingRequest from '../models/PortingRequest.model.js';
 import User from '../models/User.model.js';
 import AutomatedSmsQueue from '../models/AutomatedSmsQueue.model.js';
 import SmsFailureLog from '../models/SmsFailureLog.model.js';
 
-// Fast2SMS configuration
+// Twilio configuration
+const twilioConfig = {
+  accountSid: process.env.TWILIO_ACCOUNT_SID,
+  authToken: process.env.TWILIO_AUTH_TOKEN,
+  phoneNumber: process.env.TWILIO_PHONE_NUMBER,
+  maxRetries: 3,
+  retryDelay: 2000 // 2 seconds
+};
+
+// Initialize Twilio client if credentials are available
+let twilioClient = null;
+if (twilioConfig.accountSid && twilioConfig.authToken) {
+  twilioClient = twilio(twilioConfig.accountSid, twilioConfig.authToken);
+} else {
+  console.warn('Twilio credentials not found in environment variables. SMS functionality will be limited.');
+}
+
+// Fallback to Fast2SMS for Indian numbers
 const fast2smsConfig = {
   baseUrl: 'https://www.fast2sms.com/dev/bulkV2',
   authorization: process.env.FAST2SMS_API_KEY,
@@ -54,37 +72,56 @@ const emailTransporter = nodemailer.createTransport({
   }
 });
 
+// Verify email configuration is working
+if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+  emailTransporter.verify((error) => {
+    if (error) {
+      console.error('Email configuration error:', error);
+    } else {
+      console.log('Email server is ready to send messages');
+    }
+  });
+} else {
+  console.warn('Email credentials not found in environment variables. Email functionality will be limited.');
+}
+
 // Porting notification templates
 const portingTemplates = {
-  // Template IDs from Fast2SMS DLT
+  // Template IDs from Fast2SMS DLT or full message templates
   PORTING_CONFIRMATION: {
     id: process.env.FAST2SMS_TEMPLATE_PORT_CONF,
-    variables: ['#mobile#', '#ref#', '#date#', '#center#']
+    variables: ['#mobile#', '#ref#', '#date#', '#center#'],
+    template: 'Your porting request for mobile #{mobile} (Ref: #{ref}) has been received. Your scheduled date is #{date}. Visit #{center} to complete the process.'
   },
   SMS_REMINDER: {
     id: process.env.FAST2SMS_TEMPLATE_PORT_SMS,
-    variables: ['#mobile#', '#date#']
+    variables: ['#mobile#', '#date#'],
+    template: 'IMPORTANT: Send SMS with text "PORT" to 1900 from your mobile #{mobile} on #{date} to start the porting process.'
   },
   CENTER_VISIT: {
     id: process.env.FAST2SMS_TEMPLATE_PORT_CENTER,
-    variables: ['#mobile#', '#center#', '#address#', '#time#']
+    variables: ['#mobile#', '#center#', '#address#', '#time#'],
+    template: 'Visit #{center} at #{address} on #{time} with your mobile #{mobile} and ID proof to complete your porting process.'
   },
   DOCUMENTS_REMINDER: {
     id: process.env.FAST2SMS_TEMPLATE_PORT_DOCS,
-    variables: ['#mobile#', '#date#']
+    variables: ['#mobile#', '#date#'],
+    template: 'Reminder: For porting mobile #{mobile}, bring your ID proof, address proof, and UPC code on #{date}.'
   },
   SIM_ACTIVATION: {
     id: process.env.FAST2SMS_TEMPLATE_PORT_ACTIVE,
-    variables: ['#mobile#', '#provider#']
+    variables: ['#mobile#', '#provider#'],
+    template: 'Congratulations! Your mobile #{mobile} has been successfully ported to #{provider}. Enjoy your new connection!'
   },
   UPC_RECEIVED: {
     id: process.env.FAST2SMS_TEMPLATE_PORT_UPC,
-    variables: ['#mobile#', '#upc#']
+    variables: ['#mobile#', '#upc#'],
+    template: 'Your UPC code for mobile #{mobile} is #{upc}. Please keep this confidential and use it to complete your porting process.'
   }
 };
 
 /**
- * Send an SMS notification using Fast2SMS bulkV2 API with retry
+ * Send an SMS notification using available providers with smart fallback
  * @param {string} phoneNumber - Recipient's phone number
  * @param {string} message - Message content
  * @param {string} scheduleTime - Optional schedule time (YYYY-MM-DD HH:mm:ss)
@@ -96,8 +133,120 @@ const sendSMS = async (phoneNumber, message, scheduleTime = null, retryCount = 0
     // Clean phone number (remove any non-numeric characters)
     const cleanNumber = phoneNumber.replace(/\D/g, '');
     
-    // Validate phone number format for Indian numbers
-    if (cleanNumber.length !== 10 && !(cleanNumber.length === 12 && cleanNumber.startsWith('91'))) {
+    // Validate phone number format
+    if (cleanNumber.length < 10) {
+      console.error('Invalid phone number format');
+      return { success: false, error: 'Invalid phone number format' };
+    }
+    
+    // Determine if this is an Indian number (starts with 91 or is 10 digits)
+    const isIndianNumber = cleanNumber.length === 10 || 
+                          (cleanNumber.length === 12 && cleanNumber.startsWith('91'));
+    
+    let result;
+    
+    // Try sending with Twilio first if available and not an Indian number
+    if (twilioClient && !isIndianNumber) {
+      try {
+        // Format the number in international format for Twilio
+        const formattedNumber = cleanNumber.length === 10 ? 
+                               `+1${cleanNumber}` : 
+                               `+${cleanNumber}`;
+        
+        // Send message via Twilio
+        const twilioMessage = await twilioClient.messages.create({
+          body: message,
+          from: twilioConfig.phoneNumber,
+          to: formattedNumber,
+          scheduleType: scheduleTime ? 'fixed' : undefined,
+          sendAt: scheduleTime ? new Date(scheduleTime).toISOString() : undefined
+        });
+        
+        console.log('SMS sent successfully via Twilio:', twilioMessage.sid);
+        return { 
+          success: true, 
+          result: {
+            messageId: twilioMessage.sid,
+            status: twilioMessage.status,
+            provider: 'twilio'
+          }
+        };
+      } catch (twilioError) {
+        console.error('Failed to send SMS via Twilio:', twilioError);
+        // If this is the last retry, log the failure
+        if (retryCount >= twilioConfig.maxRetries - 1) {
+          await logSmsFailure(phoneNumber, message, {
+            code: twilioError.code,
+            message: twilioError.message,
+            provider: 'twilio'
+          }, null, null, null, null, scheduleTime);
+        }
+        
+        // If it's an Indian number or a specific Twilio error, fall back to Fast2SMS
+        if (isIndianNumber) {
+          console.log('Falling back to Fast2SMS for Indian number');
+          result = await sendSMSViaFast2SMS(phoneNumber, message, scheduleTime, retryCount);
+          return result;
+        }
+      }
+    } else if (isIndianNumber && process.env.FAST2SMS_API_KEY) {
+      // For Indian numbers, directly use Fast2SMS
+      result = await sendSMSViaFast2SMS(phoneNumber, message, scheduleTime, retryCount);
+      return result;
+    } else {
+      // No valid SMS provider available, use the queue for manual sending
+      console.warn('No SMS provider available, adding to queue for manual sending');
+      
+      // Create a log entry for monitoring
+      await logSmsFailure(phoneNumber, message, {
+        message: 'No SMS provider configured',
+        isConfigError: true
+      }, null, null, null, null, scheduleTime);
+      
+      // Return failure result
+      return { 
+        success: false, 
+        error: 'SMS provider not configured',
+        queued: true
+      };
+    }
+    
+  } catch (error) {
+    console.error('Unexpected error in sendSMS:', error);
+    
+    // Log any unexpected errors
+    await logSmsFailure(phoneNumber, message, {
+      message: error.message,
+      stack: error.stack,
+      isUnexpectedError: true
+    }, null, null, null, null, scheduleTime);
+    
+    return { 
+      success: false, 
+      error: 'Unexpected error while sending SMS'
+    };
+  }
+};
+
+/**
+ * Send SMS via Fast2SMS
+ * @param {string} phoneNumber - Recipient's phone number
+ * @param {string} message - Message content
+ * @param {string} scheduleTime - Optional schedule time
+ * @param {number} retryCount - Current retry attempt
+ * @returns {Promise} - Result of SMS sending
+ */
+const sendSMSViaFast2SMS = async (phoneNumber, message, scheduleTime = null, retryCount = 0) => {
+  try {
+    // Clean phone number (remove any non-numeric characters)
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    
+    // Make sure it's a 10-digit number for Fast2SMS
+    const formattedNumber = cleanNumber.length === 12 && cleanNumber.startsWith('91') 
+      ? cleanNumber.substring(2) 
+      : cleanNumber;
+    
+    if (formattedNumber.length !== 10) {
       console.error('Invalid phone number format for Fast2SMS');
       return { success: false, error: 'Invalid phone number format' };
     }
@@ -106,7 +255,7 @@ const sendSMS = async (phoneNumber, message, scheduleTime = null, retryCount = 0
       authorization: fast2smsConfig.authorization,
       route: fast2smsConfig.route,
       message: message,
-      numbers: cleanNumber,
+      numbers: formattedNumber,
       flash: fast2smsConfig.flash
     });
 
@@ -123,7 +272,8 @@ const sendSMS = async (phoneNumber, message, scheduleTime = null, retryCount = 0
         success: true, 
         result: {
           messageId: response.data.request_id,
-          status: response.data.message[0]
+          status: response.data.message[0],
+          provider: 'fast2sms'
         }
       };
     } else {
@@ -139,17 +289,15 @@ const sendSMS = async (phoneNumber, message, scheduleTime = null, retryCount = 0
         console.log(`Retrying SMS (attempt ${retryCount + 1} of ${fast2smsConfig.maxRetries})...`);
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, fast2smsConfig.retryDelay));
-        return sendSMS(phoneNumber, message, scheduleTime, retryCount + 1);
+        return sendSMSViaFast2SMS(phoneNumber, message, scheduleTime, retryCount + 1);
       }
       
       // If all retries failed or error is not retryable, log the failure
-      if (!isRetryableError || retryCount >= fast2smsConfig.maxRetries) {
-        const error = { 
-          code: errorCode, 
-          error: errorMessage
-        };
-        await logSmsFailure(phoneNumber, message, error, null, null, null, null, scheduleTime);
-      }
+      await logSmsFailure(phoneNumber, message, { 
+        code: errorCode, 
+        message: errorMessage,
+        provider: 'fast2sms'
+      }, null, null, null, null, scheduleTime);
       
       return { 
         success: false, 
@@ -158,7 +306,7 @@ const sendSMS = async (phoneNumber, message, scheduleTime = null, retryCount = 0
       };
     }
   } catch (error) {
-    console.error('Failed to send SMS:', error);
+    console.error('Failed to send SMS via Fast2SMS:', error);
     
     // Retry if network errors
     if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
@@ -167,17 +315,16 @@ const sendSMS = async (phoneNumber, message, scheduleTime = null, retryCount = 0
         // Exponential backoff for network errors
         const backoffDelay = fast2smsConfig.retryDelay * Math.pow(2, retryCount);
         await new Promise(resolve => setTimeout(resolve, backoffDelay));
-        return sendSMS(phoneNumber, message, scheduleTime, retryCount + 1);
+        return sendSMSViaFast2SMS(phoneNumber, message, scheduleTime, retryCount + 1);
       }
     }
     
     // Log network errors after all retries
-    if (retryCount >= fast2smsConfig.maxRetries) {
-      await logSmsFailure(phoneNumber, message, {
-        message: error.message,
-        isNetworkError: true
-      }, null, null, null, null, scheduleTime);
-    }
+    await logSmsFailure(phoneNumber, message, {
+      message: error.message,
+      isNetworkError: true,
+      provider: 'fast2sms'
+    }, null, null, null, null, scheduleTime);
     
     return { 
       success: false, 
@@ -227,97 +374,185 @@ const sendAppNotification = async (userId, title, body, data = {}) => {
 };
 
 /**
- * Process pending notifications from the database
- * @returns {Promise} - Number of notifications processed
+ * Process all pending notifications that are due
+ * This should be called by a scheduler at regular intervals
  */
 const processPendingNotifications = async () => {
-  // Find all unsent notifications scheduled for now or in the past
   try {
+    console.log('Processing pending notifications...');
+    
     const now = new Date();
     
-    // Add timeout options and limit the query
-    const options = { 
-      maxTimeMS: 8000, // 8 second timeout for the query
-      limit: 50 // Process max 50 requests at once
-    };
-    
+    // Find all porting requests with unsent notifications due before now
     const portingRequests = await PortingRequest.find({
       'notifications.sent': false,
       'notifications.scheduledFor': { $lte: now }
-    }, null, options).populate('user', 'email phoneNumber');
+    });
     
-    let processed = 0;
-    
-    for (const request of portingRequests) {
-      const user = await User.findById(request.user);
-      if (!user) continue;
-      
-      const pendingNotifications = request.notifications.filter(
-        n => !n.sent && n.scheduledFor <= now
-      );
-      
-      // Skip if no pending notifications
-      if (pendingNotifications.length === 0) continue;
-      
-      // Update notifications in batch
-      const updatedNotifications = [...request.notifications];
-      
-      for (let i = 0; i < updatedNotifications.length; i++) {
-        const notification = updatedNotifications[i];
-        
-        // Skip if already sent or scheduled for future
-        if (notification.sent || notification.scheduledFor > now) continue;
-        
-        let result = { success: false };
-        
-        // Send notification based on type
-        switch (notification.type) {
-          case 'sms':
-            result = await sendSMS(request.mobileNumber, notification.message);
-            break;
-          case 'email':
-            result = await sendEmail(
-              user.email,
-              'PortMySim - Important Porting Update',
-              `<h2>Porting Update</h2><p>${notification.message}</p>`
-            );
-            break;
-          case 'app':
-            result = await sendAppNotification(
-              request.user.toString(),
-              'Porting Update',
-              notification.message
-            );
-            break;
-          case 'mobile_sms':
-            // This will be handled by the mobile app, just mark it as ready for the app to process
-            console.log(`Automated SMS to ${notification.targetNumber} ready for mobile app pickup: ${notification.message}`);
-            result = await prepareAutomatedSms(
-              request.user.toString(),
-              notification.targetNumber,
-              notification.message
-            );
-            break;
-        }
-        
-        // Update notification status in database
-        if (result.success) {
-          updatedNotifications[i].sent = true;
-          updatedNotifications[i].sentAt = new Date();
-          processed++;
-        }
-      }
-      
-      // Save the updated document
-      request.notifications = updatedNotifications;
-      await request.save();
+    if (portingRequests.length === 0) {
+      console.log('No pending notifications found');
+      return { success: true, count: 0 };
     }
     
-    return processed;
+    console.log(`Found ${portingRequests.length} porting requests with pending notifications`);
+    
+    let notificationsSent = 0;
+    let notificationsFailed = 0;
+    
+    // Process each request
+    for (const request of portingRequests) {
+      try {
+        // Get user information for notifications
+        const user = await User.findById(request.user);
+        
+        if (!user) {
+          console.error(`User not found for porting request ${request._id}`);
+          continue;
+        }
+        
+        // Flag to check if request needs to be saved
+        let needsSave = false;
+        
+        // Get unsent notifications that are due
+        const pendingNotifications = request.notifications.filter(
+          notification => !notification.sent && new Date(notification.scheduledFor) <= now
+        );
+        
+        console.log(`Processing ${pendingNotifications.length} notifications for porting request ${request._id}`);
+        
+        // Process each notification
+        for (const notification of pendingNotifications) {
+          try {
+            // Send based on notification type
+            let result;
+            
+            switch (notification.type) {
+              case 'sms':
+                if (request.mobileNumber) {
+                  // Send SMS
+                  result = await sendSMS(request.mobileNumber, notification.message);
+                  
+                  // Record SMS ID if successful
+                  if (result.success) {
+                    notification.externalId = result.result.messageId;
+                    notification.provider = result.result.provider || 'unknown';
+                  }
+                } else {
+                  console.warn(`No mobile number found for porting request ${request._id}`);
+                  result = { success: false, error: 'No mobile number available' };
+                }
+                break;
+                
+              case 'email':
+                // If metadata has email or try user email
+                const email = request.metadata?.email || user.email;
+                if (email) {
+                  // Send email
+                  result = await sendEmail(
+                    email,
+                    `PortMySim: ${notification.message.substring(0, 50)}...`,
+                    notification.message
+                  );
+                } else {
+                  console.warn(`No email found for porting request ${request._id}`);
+                  result = { success: false, error: 'No email available' };
+                }
+                break;
+                
+              case 'app':
+                // Send app notification to user
+                result = await sendAppNotification(
+                  user._id,
+                  'PortMySim Notification',
+                  notification.message,
+                  { portingRequestId: request._id.toString() }
+                );
+                break;
+                
+              default:
+                console.warn(`Unknown notification type: ${notification.type}`);
+                result = { success: false, error: 'Unknown notification type' };
+            }
+            
+            // Update notification status
+            notification.sent = result.success;
+            notification.sentAt = new Date();
+            notification.status = result.success ? 'sent' : 'failed';
+            notification.error = result.success ? null : result.error;
+            
+            // Count successes and failures
+            if (result.success) {
+              notificationsSent++;
+            } else {
+              notificationsFailed++;
+              
+              // Log failures (except for app notifications which might just mean user doesn't have the app)
+              if (notification.type !== 'app') {
+                console.error(`Failed to send ${notification.type} notification:`, result.error);
+              }
+            }
+            
+            needsSave = true;
+            
+          } catch (notificationError) {
+            console.error(`Error processing notification ${notification._id}:`, notificationError);
+            
+            // Update notification with error
+            notification.status = 'failed';
+            notification.error = notificationError.message;
+            notificationsFailed++;
+            
+            needsSave = true;
+          }
+        }
+        
+        // Save the request if any notifications were processed
+        if (needsSave) {
+          await request.save();
+        }
+        
+      } catch (requestError) {
+        console.error(`Error processing notifications for request ${request._id}:`, requestError);
+      }
+    }
+    
+    console.log(`Notification processing complete. Sent: ${notificationsSent}, Failed: ${notificationsFailed}`);
+    
+    return {
+      success: true,
+      sent: notificationsSent,
+      failed: notificationsFailed
+    };
+    
   } catch (error) {
     console.error('Error processing pending notifications:', error);
-    return 0;
+    return { success: false, error: error.message };
   }
+};
+
+/**
+ * Initialize notification processing scheduler
+ * This should be called once when the server starts
+ */
+const initNotificationScheduler = () => {
+  const intervalMinutes = parseInt(process.env.NOTIFICATION_INTERVAL_MINUTES || '5', 10);
+  console.log(`Initializing notification scheduler to run every ${intervalMinutes} minutes`);
+  
+  // Run immediately on startup
+  setTimeout(() => {
+    processPendingNotifications().catch(err => {
+      console.error('Error in scheduled notification processing:', err);
+    });
+  }, 10000); // Wait 10 seconds after server start
+  
+  // Set up the interval
+  setInterval(() => {
+    processPendingNotifications().catch(err => {
+      console.error('Error in scheduled notification processing:', err);
+    });
+  }, intervalMinutes * 60 * 1000);
+  
+  return true;
 };
 
 /**
@@ -502,105 +737,190 @@ const cancelAllPendingNotifications = async (portingRequestId) => {
 };
 
 /**
- * Send a templated SMS using Fast2SMS DLT with retry
+ * Convert template variables to a formatted message
+ * @param {string} template - The template string with placeholders
+ * @param {Object} variables - Object containing variable values
+ * @returns {string} - Formatted message
+ */
+const resolveTemplate = (template, variables) => {
+  let result = template;
+  
+  // Replace each variable in the template
+  for (const [key, value] of Object.entries(variables)) {
+    // Support for multiple variable formats: #{var}, {var}, #var#
+    result = result
+      .replace(new RegExp(`#{${key}}`, 'g'), value)
+      .replace(new RegExp(`{${key}}`, 'g'), value)
+      .replace(new RegExp(`#${key}#`, 'g'), value);
+  }
+  
+  return result;
+};
+
+/**
+ * Send a templated SMS using available providers
  * @param {string} phoneNumber - Recipient's phone number
- * @param {string} templateId - DLT template ID
- * @param {Object} variables - Template variables
+ * @param {string} templateId - ID of the template to use
+ * @param {Object} variables - Variables to replace in the template
  * @param {string} scheduleTime - Optional schedule time (YYYY-MM-DD HH:mm:ss)
  * @param {number} retryCount - Current retry attempt
  * @returns {Promise} - Result of SMS sending
  */
 const sendTemplatedSMS = async (phoneNumber, templateId, variables, scheduleTime = null, retryCount = 0) => {
   try {
+    // Find template by ID or name
+    const templateKey = Object.keys(portingTemplates).find(key => 
+      portingTemplates[key].id === templateId || key === templateId
+    );
+    
+    if (!templateKey) {
+      console.error(`Template not found: ${templateId}`);
+      return { success: false, error: 'SMS template not found' };
+    }
+    
+    const template = portingTemplates[templateKey];
+    
+    // Determine if this is an Indian number (for provider selection)
     const cleanNumber = phoneNumber.replace(/\D/g, '');
+    const isIndianNumber = cleanNumber.length === 10 || 
+                          (cleanNumber.length === 12 && cleanNumber.startsWith('91'));
     
-    if (cleanNumber.length !== 10 && !(cleanNumber.length === 12 && cleanNumber.startsWith('91'))) {
-      console.error('Invalid phone number format for Fast2SMS');
-      return { success: false, error: 'Invalid phone number format' };
-    }
-
-    const params = new URLSearchParams({
-      authorization: fast2smsConfig.authorization,
-      route: 'dlt',
-      template_id: templateId,
-      variables: JSON.stringify(variables),
-      numbers: cleanNumber,
-      flash: fast2smsConfig.flash
-    });
-
-    // Add schedule_time if provided
-    if (scheduleTime) {
-      params.append('schedule_time', scheduleTime);
-    }
-
-    const response = await axios.get(`${fast2smsConfig.baseUrl}?${params.toString()}`);
+    let messageToSend;
     
-    if (response.data.return === true) {
-      console.log('Templated SMS sent successfully:', response.data);
-      return { 
-        success: true, 
-        result: {
-          messageId: response.data.request_id,
-          status: response.data.message[0]
+    // For Indian numbers with Fast2SMS configured, use their template system if template ID exists
+    if (isIndianNumber && process.env.FAST2SMS_API_KEY && template.id) {
+      try {
+        const params = new URLSearchParams({
+          authorization: fast2smsConfig.authorization,
+          route: fast2smsConfig.route,
+          template_id: template.id,
+          flash: fast2smsConfig.flash
+        });
+        
+        // Add number
+        params.append('numbers', cleanNumber.length === 12 ? cleanNumber.substring(2) : cleanNumber);
+        
+        // Add variables
+        template.variables.forEach((varName, index) => {
+          // Convert from template variable format (#var#) to actual value
+          const key = varName.replace(/#/g, '');
+          const value = variables[key];
+          
+          if (value) {
+            params.append(`variable_${index + 1}`, value);
+          } else {
+            console.warn(`Missing variable value for ${varName} in template ${templateId}`);
+            params.append(`variable_${index + 1}`, '-');
+          }
+        });
+        
+        // Add schedule_time if provided
+        if (scheduleTime) {
+          params.append('schedule_time', scheduleTime);
         }
-      };
+
+        const response = await axios.get(`${fast2smsConfig.baseUrl}?${params.toString()}`);
+        
+        if (response.data.return === true) {
+          console.log('Templated SMS sent successfully via Fast2SMS:', response.data);
+          return { 
+            success: true, 
+            result: {
+              messageId: response.data.request_id,
+              status: response.data.message[0],
+              provider: 'fast2sms',
+              template: templateId
+            }
+          };
+        } else {
+          const errorCode = response.data.code || 'default';
+          const errorMessage = fast2smsErrorMap[errorCode] || fast2smsErrorMap.default;
+          
+          console.error(`Fast2SMS templated SMS error (${errorCode}): ${errorMessage}`, response.data);
+          
+          // Fall back to regular SMS with resolved template
+          console.log('Falling back to regular SMS with resolved template');
+          
+          // We need to create the message text ourselves from the template
+          if (template.template) {
+            messageToSend = resolveTemplate(template.template, variables);
+          } else {
+            // If no template text available, create a simple message with variables
+            messageToSend = `Message from PortMySim: ${Object.values(variables).join(', ')}`;
+          }
+        }
+      } catch (error) {
+        console.error('Error sending templated SMS via Fast2SMS:', error);
+        
+        // Fall back to regular SMS with resolved template
+        if (template.template) {
+          messageToSend = resolveTemplate(template.template, variables);
+        } else {
+          // If no template text available, create a simple message with variables
+          messageToSend = `Message from PortMySim: ${Object.values(variables).join(', ')}`;
+        }
+      }
     } else {
-      const errorCode = response.data.code || 'default';
-      const errorMessage = fast2smsErrorMap[errorCode] || fast2smsErrorMap.default;
-      
-      console.error(`Fast2SMS template error (${errorCode}): ${errorMessage}`, response.data);
-      
-      // Retry if we haven't reached max retries and the error is retryable
-      const isRetryableError = ['309', '311', '312'].includes(errorCode);
-      
-      if (isRetryableError && retryCount < fast2smsConfig.maxRetries) {
-        console.log(`Retrying templated SMS (attempt ${retryCount + 1} of ${fast2smsConfig.maxRetries})...`);
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, fast2smsConfig.retryDelay));
-        return sendTemplatedSMS(phoneNumber, templateId, variables, scheduleTime, retryCount + 1);
-      }
-      
-      // If all retries failed or error is not retryable, log the failure
-      if (!isRetryableError || retryCount >= fast2smsConfig.maxRetries) {
-        const error = { 
-          code: errorCode, 
-          error: errorMessage
-        };
-        await logSmsFailure(phoneNumber, 'Templated SMS', error, null, null, templateId, variables, scheduleTime);
-      }
-      
-      return { 
-        success: false, 
-        error: errorMessage,
-        code: errorCode
-      };
-    }
-  } catch (error) {
-    console.error('Failed to send templated SMS:', error);
-    
-    // Retry if network errors
-    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
-      if (retryCount < fast2smsConfig.maxRetries) {
-        console.log(`Network error. Retrying templated SMS (attempt ${retryCount + 1} of ${fast2smsConfig.maxRetries})...`);
-        // Exponential backoff for network errors
-        const backoffDelay = fast2smsConfig.retryDelay * Math.pow(2, retryCount);
-        await new Promise(resolve => setTimeout(resolve, backoffDelay));
-        return sendTemplatedSMS(phoneNumber, templateId, variables, scheduleTime, retryCount + 1);
+      // For non-Indian numbers or if no template ID is available, use regular SMS
+      // Resolve the template text
+      if (template.template) {
+        messageToSend = resolveTemplate(template.template, variables);
+      } else {
+        // Create a default message from variables
+        messageToSend = `PortMySim notification: ${JSON.stringify(variables)}`;
       }
     }
     
-    // Log network errors after all retries
-    if (retryCount >= fast2smsConfig.maxRetries) {
-      await logSmsFailure(phoneNumber, 'Templated SMS', {
-        message: error.message,
-        isNetworkError: true
-      }, null, null, templateId, variables, scheduleTime);
+    // If we've resolved a message to send, use the regular SMS function
+    if (messageToSend) {
+      const result = await sendSMS(phoneNumber, messageToSend, scheduleTime, retryCount);
+      
+      // Add template information to the result
+      if (result.success && result.result) {
+        result.result.template = templateId;
+      }
+      
+      return result;
     }
+    
+    // If we got here, something went wrong
+    await logSmsFailure(
+      phoneNumber, 
+      'Template processing failed', 
+      { templateId, variables }, 
+      null, 
+      null, 
+      templateId, 
+      variables, 
+      scheduleTime
+    );
     
     return { 
       success: false, 
-      error: error.message,
-      isNetworkError: true
+      error: 'Failed to process template',
+      templateId
+    };
+  } catch (error) {
+    console.error('Error in sendTemplatedSMS:', error);
+    
+    // Log the failure
+    await logSmsFailure(
+      phoneNumber, 
+      'Error in template processing', 
+      {
+        message: error.message,
+        stack: error.stack
+      }, 
+      null, 
+      null, 
+      templateId, 
+      variables, 
+      scheduleTime
+    );
+    
+    return { 
+      success: false, 
+      error: 'Error processing SMS template'
     };
   }
 };
@@ -764,29 +1084,17 @@ const logSmsFailure = async (phoneNumber, message, error, userId = null, porting
   }
 };
 
-// Schedule notification processing to run every minute
-setInterval(async () => {
-  try {
-    const processed = await processPendingNotifications();
-    if (processed > 0) {
-      console.log(`Processed ${processed} notifications`);
-    }
-  } catch (error) {
-    console.error('Error processing notifications:', error);
-  }
-}, 60000);
-
 export {
   sendSMS,
   sendEmail,
   sendAppNotification,
   processPendingNotifications,
-  generateReminderMessage,
-  scheduleReminders,
-  cancelAllPendingNotifications,
   prepareAutomatedSms,
   getPendingAutomatedSms,
   updateAutomatedSmsStatus,
+  generateReminderMessage,
+  scheduleReminders,
+  cancelAllPendingNotifications,
   sendTemplatedSMS,
   sendPortingConfirmation,
   sendSmsReminder,
@@ -794,5 +1102,6 @@ export {
   sendDocumentsReminder,
   sendSimActivation,
   sendUpcReceived,
-  logSmsFailure
+  initNotificationScheduler,
+  resolveTemplate
 }; 

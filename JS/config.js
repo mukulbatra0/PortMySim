@@ -1,47 +1,64 @@
-// Configuration for PortMySim application
+/**
+ * Global Configuration for PortMySim
+ * Contains application-wide settings
+ */
 
-const CONFIG = {
-    // API endpoints
-    apiBaseUrl: 'http://localhost:5000/api',
+// Create global CONFIG object with default settings
+window.CONFIG = {
+    // API settings
+    API_BASE_URL: 'http://localhost:5000/api',
     
-    // Feature flags
-    enableLiveSearch: true,
-    enableAutoDetection: false,
-    enableMapFeatures: true,
-    
-    // Authentication settings
-    authTokenKey: 'portmysim_auth_token',
-    userDataKey: 'portmysim_user',
-    sessionExpiryHours: 24,
-    
-    // Mobile number validation
-    mobileNumberPattern: /^[6-9]\d{9}$/,
-    
-    // Maps API settings
-    mapDefaultZoom: 13,
+    // Map settings
+    useOpenStreetMapAsFallback: true,
+    googleMapsApiKey: '',
     mapDefaultLocation: {
         lat: 28.6139,  // New Delhi
         lng: 77.2090
     },
-    googleMapsApiKey: '', // Add your Google Maps API key here
-    useOpenStreetMapAsFallback: true, // Use OpenStreetMap if Google Maps fails or API key is missing
+    mapDefaultZoom: 12,
     
-    // Default providers
+    // Provider settings
     providers: [
-        { id: 'airtel', name: 'Airtel', color: '#e40000' },
-        { id: 'jio', name: 'Jio', color: '#0f3cc9' },
-        { id: 'vi', name: 'Vi', color: '#ee008c' },
-        { id: 'bsnl', name: 'BSNL', color: '#1d8a13' },
-        { id: 'mtnl', name: 'MTNL', color: '#ff6a00' }
+        {
+            id: 'airtel',
+            name: 'Airtel',
+            description: 'Bharti Airtel',
+            logo: '../images/providers/airtel.png',
+            color: '228, 0, 0'
+        },
+        {
+            id: 'jio',
+            name: 'Jio',
+            description: 'Reliance Jio',
+            logo: '../images/providers/jio.png',
+            color: '15, 60, 201'
+        },
+        {
+            id: 'vi',
+            name: 'Vi',
+            description: 'Vodafone Idea',
+            logo: '../images/providers/vi.png', 
+            color: '238, 0, 140'
+        },
+        {
+            id: 'bsnl',
+            name: 'BSNL',
+            description: 'Bharat Sanchar Nigam Limited',
+            logo: '../images/providers/bsnl.png',
+            color: '29, 138, 19'
+        }
     ],
     
-    // App settings
-    appName: 'PortMySim',
-    appVersion: '1.0.0',
+    // Authentication settings
+    authEnabled: true,
+    authRedirect: 'login.html',
     
-    // Default options
-    defaultCircle: 'delhi',
-    defaultProvider: 'jio'
+    // Feature flags
+    features: {
+        automatedPorting: true,
+        notificationsEnabled: true,
+        mapViewEnabled: true
+    }
 };
 
 // Make CONFIG available globally for non-module scripts

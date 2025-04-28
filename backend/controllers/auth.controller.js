@@ -2,19 +2,6 @@ import User from '../models/User.model.js';
 import asyncHandler from '../middlewares/async.middleware.js';
 import crypto from 'crypto';
 import emailService from '../utils/emailService.js';
-import mockUserService from '../utils/mockUserService.js';
-
-// Track if we're using mock DB
-let usingMockDB = false;
-
-// Helper function to get the appropriate user model
-const getUserModel = () => {
-  if (usingMockDB) {
-    console.log('Using mock user service instead of MongoDB');
-    return mockUserService;
-  }
-  return User;
-};
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -25,24 +12,8 @@ export const register = asyncHandler(async (req, res) => {
     
     console.log('Registration attempt:', { name, email, phone });
 
-    let UserModel = getUserModel();
-
-    try {
-      // Check if user already exists
-      var existingUser = await UserModel.findOne({ $or: [{ email }, { phone }] });
-    } catch (error) {
-      console.error('Error checking existing user:', error);
-      
-      // If MongoDB connection failed, fall back to mock user service
-      if (!usingMockDB) {
-        console.log('Falling back to mock user service for registration');
-        usingMockDB = true;
-        UserModel = getUserModel();
-        existingUser = await UserModel.findOne({ $or: [{ email }, { phone }] });
-      } else {
-        throw error; // If already using mock DB, re-throw the error
-      }
-    }
+    // Check if user already exists
+    const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
     
     if (existingUser) {
       console.log('Registration failed: User already exists');
@@ -53,7 +24,7 @@ export const register = asyncHandler(async (req, res) => {
     }
 
     // Create user
-    const user = await UserModel.create({
+    const user = await User.create({
       name,
       email,
       phone,
@@ -62,64 +33,13 @@ export const register = asyncHandler(async (req, res) => {
 
     console.log('User created successfully:', user._id);
 
-    // Set email as verified in development mode if email sending is disabled
-    if (process.env.NODE_ENV === 'development' && process.env.DISABLE_EMAIL_SENDING === 'true') {
-      console.log('Setting email as verified because email sending is disabled in development');
-      user.isEmailVerified = true;
-      try {
-        await user.save({ validateBeforeSave: false });
-      } catch (error) {
-        console.warn('Could not save user verification status, but continuing:', error);
-        // Continue anyway as this is not critical
-      }
-    } else if (!usingMockDB) { // Skip email verification in mock mode (users are already verified)
-      // Regular email verification flow
-      try {
-        // Generate email verification token
-        const verificationToken = user.getEmailVerificationToken();
-        await user.save({ validateBeforeSave: false });
-
-        // Create verification URL
-        const verificationUrl = `${req.protocol}://${req.get('host')}/HTML/verify-email.html?token=${verificationToken}`;
-
-        // Send verification email
-        await emailService.sendVerificationEmail({
-          email: user.email,
-          name: user.name,
-          verificationUrl
-        });
-      } catch (error) {
-        console.error('Error sending verification email:', error);
-        
-        // If email sending fails, remove verification tokens from the database
-        try {
-          user.emailVerificationToken = undefined;
-          user.emailVerificationExpire = undefined;
-          await user.save({ validateBeforeSave: false });
-        } catch (saveError) {
-          console.warn('Could not update user after email error, but continuing:', saveError);
-        }
-        
-        // In development, auto-verify the email despite the error
-        if (process.env.NODE_ENV === 'development') {
-          console.log('Auto-verifying email in development despite email error');
-          user.isEmailVerified = true;
-          try {
-            await user.save({ validateBeforeSave: false });
-          } catch (saveError) {
-            console.warn('Could not save user verification status, but continuing:', saveError);
-          }
-        }
-      }
-    }
-
     // Generate JWT token
     const token = user.getSignedJwtToken();
 
     // Return success response
     res.status(201).json({
       success: true,
-      message: 'Registration successful!' + (user.isEmailVerified ? '' : ' Please check your email to verify your account.'),
+      message: 'Registration successful!',
       token,
       user: {
         id: user._id,
@@ -274,30 +194,50 @@ export const login = asyncHandler(async (req, res) => {
       });
     }
 
-    let UserModel = getUserModel();
-    
+    // Check for user in MongoDB
+    let user;
     try {
-      // Try to check for user in MongoDB
-      var user = await UserModel.findOne({ email }).select('+password');
+      // Include failed login attempts and account lock fields
+      user = await User.findOne({ email })
+        .select('+password +failedLoginAttempts +accountLocked +accountLockedUntil');
     } catch (error) {
-      console.error('Error finding user in database:', error);
-      
-      // If MongoDB connection failed, fall back to mock user service
-      if (!usingMockDB) {
-        console.log('Falling back to mock user service');
-        usingMockDB = true;
-        UserModel = getUserModel();
-        user = await UserModel.findOne({ email });
-      } else {
-        throw error; // If already using mock DB, re-throw the error
-      }
+      console.error('Database error when finding user:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Database connection error. Please try again later.',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
 
+    // Check if user exists
     if (!user) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
+    }
+
+    // Check if account is locked
+    if (user.accountLocked) {
+      const now = new Date();
+      
+      // Check if lock time has expired
+      if (user.accountLockedUntil && user.accountLockedUntil > now) {
+        // Calculate remaining lock time in minutes
+        const remainingMinutes = Math.ceil((user.accountLockedUntil - now) / (1000 * 60));
+        
+        return res.status(401).json({
+          success: false,
+          message: `Account is temporarily locked due to too many failed login attempts. Please try again in ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}.`,
+          locked: true,
+          lockTimeRemaining: user.lockTimeRemaining
+        });
+      } else {
+        // Lock has expired, reset it
+        user.accountLocked = false;
+        user.failedLoginAttempts = 0;
+        await user.save({ validateBeforeSave: false });
+      }
     }
 
     // Check if password matches
@@ -313,13 +253,37 @@ export const login = asyncHandler(async (req, res) => {
     }
 
     if (!isMatch) {
+      // Increment failed login attempts and check if account should be locked
+      await user.incrementLoginAttempts();
+      
+      // Determine how many attempts are left before locking
+      const attemptsLeft = 5 - user.failedLoginAttempts;
+      
+      // If account is now locked
+      if (user.accountLocked) {
+        const lockMinutes = Math.ceil((user.accountLockedUntil - new Date()) / (1000 * 60));
+        
+        return res.status(401).json({
+          success: false,
+          message: `Too many failed login attempts. Your account has been locked for ${lockMinutes} minutes.`,
+          locked: true,
+          lockTimeRemaining: user.lockTimeRemaining
+        });
+      }
+      
+      // Return appropriate message based on attempts left
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: attemptsLeft > 0 
+          ? `Invalid credentials. ${attemptsLeft} attempt${attemptsLeft !== 1 ? 's' : ''} remaining before your account is temporarily locked.` 
+          : 'Invalid credentials.'
       });
     }
 
-    // Update last login time if possible
+    // Reset failed login attempts on successful login
+    await user.resetLoginAttempts();
+
+    // Update last login time
     try {
       user.lastLogin = Date.now();
       await user.save({ validateBeforeSave: false });
@@ -332,9 +296,15 @@ export const login = asyncHandler(async (req, res) => {
     sendTokenResponse(user, 200, res);
   } catch (error) {
     console.error('Login error:', error);
+    
+    // Determine if it's a connection error
+    const errorMessage = error.name === 'MongoServerSelectionError' 
+      ? 'Database connection error. Please try again later.'
+      : 'An error occurred during login. Please try again.';
+      
     return res.status(500).json({
       success: false,
-      message: 'An error occurred during login. Please try again.',
+      message: errorMessage,
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
@@ -542,41 +512,15 @@ export const updateEmail = asyncHandler(async (req, res) => {
 
   // Set new email and require verification
   user.email = email;
-  user.isEmailVerified = false;
+  user.isEmailVerified = true;
 
-  // Generate new verification token
-  const verificationToken = user.getEmailVerificationToken();
   await user.save({ validateBeforeSave: false });
 
-  // Create verification URL
-  const verificationUrl = `${req.protocol}://${req.get('host')}/HTML/verify-email.html?token=${verificationToken}`;
-
-  try {
-    // Send verification email
-    await emailService.sendVerificationEmail({
-      email: user.email,
-      name: user.name,
-      verificationUrl
-    });
-
-    // Return success response
-    res.status(200).json({
-      success: true,
-      message: 'Email updated. Please check your inbox to verify your new email address.'
-    });
-  } catch (error) {
-    console.error('Error sending verification email:', error);
-    
-    // If email sending fails, remove verification tokens but keep the email update
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpire = undefined;
-    await user.save({ validateBeforeSave: false });
-
-    return res.status(500).json({
-      success: false,
-      message: 'Email updated but could not send verification email. Please contact support.'
-    });
-  }
+  // Return success response
+  res.status(200).json({
+    success: true,
+    message: 'Email updated successfully.'
+  });
 });
 
 // @desc    Update user password
@@ -593,24 +537,88 @@ export const updatePassword = asyncHandler(async (req, res) => {
     });
   }
 
-  // Get user with password
-  const user = await User.findById(req.userId).select('+password');
-
-  // Verify current password
-  const isMatch = await user.matchPassword(currentPassword);
-  if (!isMatch) {
-    return res.status(401).json({
+  // Password strength validation
+  if (newPassword.length < 8) {
+    return res.status(400).json({
       success: false,
-      message: 'Current password is incorrect'
+      message: 'Password must be at least 8 characters long'
     });
   }
 
-  // Update password
-  user.password = newPassword;
-  await user.save();
+  // Check password complexity
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+  if (!passwordRegex.test(newPassword)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    });
+  }
 
-  // Generate new token
-  sendTokenResponse(user, 200, res);
+  try {
+    // Get user with password and password history
+    const user = await User.findById(req.userId).select('+password +passwordHistory');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Check if new password is the same as the current one
+    if (await user.matchPassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password cannot be the same as your current password'
+      });
+    }
+
+    // Check if password has been used before
+    if (await user.isPasswordReused(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot reuse a password that you have used recently. Please choose a different password.'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    // Generate new token with updated password version
+    sendTokenResponse(user, 200, res);
+
+    // Log the password change
+    console.log(`Password changed successfully for user: ${user.email}`);
+    
+    // Send password change notification email
+    try {
+      await emailService.sendPasswordChangeNotification({
+        email: user.email,
+        name: user.name
+      });
+    } catch (emailError) {
+      console.error('Error sending password change notification email:', emailError);
+      // Continue anyway since this is not critical
+    }
+    
+  } catch (error) {
+    console.error('Error updating password:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update password. Please try again.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
 });
 
 // @desc    Delete user account

@@ -5,8 +5,6 @@ import {
   getMe, 
   forgotPassword, 
   resetPassword,
-  verifyEmail,
-  resendVerification,
   googleAuth,
   facebookAuth,
   updateProfile,
@@ -48,16 +46,6 @@ router.post('/register', register);
 // @desc    Login user and return JWT token
 // @access  Public
 router.post('/login', loginLimiter, login);
-
-// @route   GET /api/auth/verify-email/:verificationToken
-// @desc    Verify email address
-// @access  Public
-router.get('/verify-email/:verificationToken', verifyEmail);
-
-// @route   POST /api/auth/resend-verification
-// @desc    Resend verification email
-// @access  Public
-router.post('/resend-verification', resendVerification);
 
 // @route   POST /api/auth/google
 // @desc    Login or register with Google

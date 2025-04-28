@@ -5,6 +5,36 @@
 
 console.log('Authentication fix script loaded');
 
+// Synchronize tokens across different storage keys
+function synchronizeAuthTokens() {
+  const AUTH_TOKEN_KEY = 'portmysim_auth_token';
+  const LEGACY_TOKEN_KEY = 'portmysim_token';
+  
+  // Get tokens from both locations
+  const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+  const legacyToken = localStorage.getItem(LEGACY_TOKEN_KEY);
+  
+  console.log('Synchronizing auth tokens...');
+  console.log('Auth token exists:', !!authToken);
+  console.log('Legacy token exists:', !!legacyToken);
+  
+  // If one token exists but not the other, copy it
+  if (authToken && !legacyToken) {
+    localStorage.setItem(LEGACY_TOKEN_KEY, authToken);
+    console.log('Copied auth token to legacy token location');
+  } else if (legacyToken && !authToken) {
+    localStorage.setItem(AUTH_TOKEN_KEY, legacyToken);
+    console.log('Copied legacy token to auth token location');
+  } else if (authToken && legacyToken && authToken !== legacyToken) {
+    // If both exist but are different, use the most recently updated one
+    // For simplicity, we'll use the authToken as the source of truth
+    localStorage.setItem(LEGACY_TOKEN_KEY, authToken);
+    console.log('Synchronized tokens, using auth token as source of truth');
+  }
+  
+  return localStorage.getItem(LEGACY_TOKEN_KEY) || localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
 // Check and fix token in localStorage
 function fixAuthToken() {
   const TOKEN_KEY = 'portmysim_token';
@@ -107,7 +137,8 @@ async function login(email, password) {
   }
 }
 
-// Run the fix immediately
+// Run synchronization and fix immediately
+synchronizeAuthTokens();
 const fixedToken = fixAuthToken();
 console.log('Token fix result:', fixedToken ? 'Token fixed' : 'No valid token');
 

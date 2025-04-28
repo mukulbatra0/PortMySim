@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="../CSS/common.css" />
     <link rel="stylesheet" href="../CSS/schedule.css" />
     <link rel="stylesheet" href="../CSS/loader.css">
+    <link rel="icon" href="../images/logo.png" sizes="32x32" type="image/png" >
+    <!-- <link rel="stylesheet" href="../CSS/main.css" /> -->
     <!-- Google Maps will be loaded dynamically via JavaScript -->
     <style>
       /* Additional Custom Styles */
@@ -241,7 +243,6 @@
           gap: 15px;
           padding: 15px;
           margin-bottom: 15px;
-          background: #fff;
           border-radius: 8px;
           box-shadow: 0 2px 4px rgba(0,0,0,0.1);
           cursor: pointer;
@@ -457,7 +458,7 @@
           <div class="progress-steps">
             <div class="step active" data-step="1">
               <div class="step-icon">
-                <i class="fas fa-mobile-alt"></i>
+                <i class="fas fa-mobile-alt" style="color: #6C5CE7;"></i>
               </div>
               <div class="step-text">Current Details</div>
             </div>
@@ -626,10 +627,10 @@
                   Select your desired new service provider
                 </p>
 
-                <div class="provider-options" style="display: grid; width: 100%;">
+                <div class="provider-options">
                   <div class="provider-card" data-provider="airtel" tabindex="0" role="button" aria-pressed="false">
                     <div class="provider-logo" style="background-color: rgba(228, 0, 0, 0.1);">
-                      <i class="fas fa-broadcast-tower" style="color: #e40000;"></i>
+                      <i class="fas fa-broadcast-tower" style="color: rgb(228, 0, 0);"></i>
                     </div>
                     <h3>Airtel</h3>
                     <p>Wide coverage & great speeds</p>
@@ -637,7 +638,7 @@
 
                   <div class="provider-card" data-provider="jio" tabindex="0" role="button" aria-pressed="false">
                     <div class="provider-logo" style="background-color: rgba(15, 60, 201, 0.1);">
-                      <i class="fas fa-wifi" style="color: #0f3cc9;"></i>
+                      <i class="fas fa-wifi" style="color: rgb(15, 60, 201);"></i>
                     </div>
                     <h3>Jio</h3>
                     <p>Affordable plans & digital benefits</p>
@@ -645,7 +646,7 @@
 
                   <div class="provider-card" data-provider="vi" tabindex="0" role="button" aria-pressed="false">
                     <div class="provider-logo" style="background-color: rgba(238, 0, 140, 0.1);">
-                      <i class="fas fa-mobile-alt" style="color: #ee008c;"></i>
+                      <i class="fas fa-mobile-alt" style="color: rgb(238, 0, 140);"></i>
                     </div>
                     <h3>Vi</h3>
                     <p>Weekend data & entertainment</p>
@@ -653,7 +654,7 @@
 
                   <div class="provider-card" data-provider="bsnl" tabindex="0" role="button" aria-pressed="false">
                     <div class="provider-logo" style="background-color: rgba(29, 138, 19, 0.1);">
-                      <i class="fas fa-phone-alt" style="color: #1d8a13;"></i>
+                      <i class="fas fa-phone-alt" style="color: rgb(29, 138, 19);"></i>
                     </div>
                     <h3>BSNL</h3>
                     <p>Extensive rural coverage</p>
@@ -787,22 +788,15 @@
                   <label for="notifyUpdates">Notify me about porting updates via SMS and email</label>
                 </div>
 
-                <div class="form-group">
-                    <label for="scheduledDate" class="form-label">Select Porting Date</label>
-                    <div class="input-with-icon">
-                      <i class="fas fa-calendar-check form-icon"></i>
-                      <input 
-                        type="date" 
-                        id="scheduledDate" 
-                        name="scheduledDate" 
-                        class="date-input"
-                        placeholder="Select a date"
-                        required
-                      >
-                    </div>
-                    <span class="error-message"></span>
-                    <small class="form-help-text">Choose a date to visit the porting center. The date should be after your SMS date.</small>
-                </div>
+                <!-- Hidden scheduled date field -->
+                <input 
+                  type="date" 
+                  id="scheduledDate" 
+                  name="scheduledDate" 
+                  class="date-input"
+                  style="display: none;"
+                  required
+                >
 
                 <!-- Hidden time slot field -->
                 <input type="hidden" id="timeSlot" name="timeSlot" value="10:00 AM - 12:00 PM">
@@ -1110,37 +1104,16 @@
       </div>
     </footer>
 
-    <!-- JavaScript Files -->
-    <script src="../JS/loader.js"></script>
-    <script src="../JS/transitions.js"></script>
-    <script src="../JS/main.js"></script>
-    <script src="../JS/auth.js" type="module"></script>
+    <!-- Scripts -->
     <script src="../JS/config.js"></script>
-    <script src="../JS/api.js"></script>
-    <script src="../JS/fix-auth.js"></script>
+    <script src="../JS/common.js"></script>
+    <script src="../JS/truecallerHelper.js" type="module"></script>
+    <script src="../JS/porting-submit.js"></script>
     <script src="../JS/schedule.js"></script>
-    <script>
-      // Extra script to update displayed information in the success section
-      document.addEventListener('DOMContentLoaded', function() {
-        const portingForm = document.getElementById('portingForm');
-        if (portingForm) {
-          portingForm.addEventListener('submit', function() {
-            // Store values to display on success screen
-            const currentProvider = document.getElementById('currentProvider');
-            const selectedProviderIndex = currentProvider.selectedIndex;
-            
-            // Set values for success display
-            if (selectedProviderIndex !== -1) {
-              document.getElementById('currentProviderDisplay').textContent = 
-                currentProvider.options[selectedProviderIndex].text;
-            }
-            
-            // Porting date and SMS date will be set by the main JavaScript
-            // Porting center will be set by the backend response
-          });
-        }
-      });
-    </script>
+    <script src="../JS/auth.js" type="module"></script>
+    <script src="../JS/fix-auth.js"></script>
+    <script src="../JS/script-init.js" type="module"></script>
+    <script src="../JS/transitions.js"></script>
     
     <!-- Authentication Verification Script -->
     <script>
@@ -1148,34 +1121,54 @@
       document.addEventListener('DOMContentLoaded', function() {
         console.log('Checking authentication status on schedule-porting page');
         
-        // Try different methods to check authentication
-        const hasLocalToken = !!localStorage.getItem('portmysim_auth_token');
+        // Check if token is valid
+        const token = localStorage.getItem('portmysim_token');
+        const isTokenValid = token && token.length > 0;
+        
+        // Check API authentication if available
         const hasApiAuth = window.PortMySimAPI && window.PortMySimAPI.isAuthenticated && window.PortMySimAPI.isAuthenticated();
+        console.log('API Auth available:', hasApiAuth);
         
-        console.log('Authentication check - Local token exists:', hasLocalToken);
-        console.log('Authentication check - API Auth available:', hasApiAuth);
-        
-        // If no authentication, redirect to login
-        if (!hasLocalToken && !hasApiAuth) {
-          console.warn('User not authenticated, redirecting to login page');
-          alert('Please log in to access the schedule porting page.');
-          window.location.href = 'login.html?redirect=schedule-porting.html';
-        } else {
+        // If authenticated through either method, allow access
+        if (isTokenValid || hasApiAuth) {
           console.log('User is authenticated, can proceed with porting request');
           
           // Add a helper to the form submit button
           const submitButton = document.querySelector('.btn-submit');
           if (submitButton) {
             submitButton.addEventListener('click', function(e) {
-              // This doesn't prevent the normal form submission
-              // It just adds extra logging before the submission
               console.log('Schedule porting button clicked');
-              console.log('Authentication check - Token exists:', !!localStorage.getItem('portmysim_auth_token'));
+              console.log('Authentication check - Token exists:', !!localStorage.getItem('portmysim_token'));
               console.log('Authentication check - API Auth available:', 
                 !!(window.PortMySimAPI && window.PortMySimAPI.isAuthenticated && window.PortMySimAPI.isAuthenticated()));
             });
           }
+        } else {
+          // Store current location to return after login
+          localStorage.setItem('auth_redirect', window.location.href);
+          console.warn('User not authenticated, redirecting to login page');
+          window.location.href = 'login.html?redirect=schedule-porting.html';
         }
+      });
+    </script>
+    
+    <!-- Step 2 Provider Selection Initialization -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Initialize the provider selection functionality
+        if (typeof setupProviderSelection === 'function') {
+          setupProviderSelection();
+          console.log('Provider selection initialized');
+        }
+        
+        // Allow manual navigation to step 2 for testing
+        window.goToStep2 = function() {
+          if (typeof goToStep === 'function') {
+            goToStep(2);
+            updateProgressSteps(2);
+            console.log('Navigated to step 2');
+          }
+        };
       });
     </script>
   </body>

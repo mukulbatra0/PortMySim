@@ -37,6 +37,8 @@ import smsFailuresRoutes from './routes/smsFailures.routes.js';
 import PortingRules from './models/PortingRules.model.js';
 import portingRulesData from './data/portingRules.js';
 import mongoose from 'mongoose';
+import { initNotificationScheduler } from './utils/notificationService.js';
+import { initializeScheduledJobs } from './utils/scheduledJobs.js';
 
 // Get the directory name using ES modules approach
 const __filename = fileURLToPath(import.meta.url);
@@ -64,8 +66,62 @@ app.get('/favicon.ico', (req, res) => {
     res.status(204).end();
 });
 
-// Serve static files from the root directory
-app.use(express.static(path.join(__dirname, '..')));
+// Add better error handling for static files
+app.use((err, req, res, next) => {
+    console.error('Static file error:', err);
+    if (err.code === 'ENOENT') {
+        res.status(404).send('File not found');
+    } else {
+        next(err);
+    }
+});
+
+// Improved static file serving with explicit options
+app.use(express.static(path.join(__dirname, '..'), {
+    fallthrough: true,
+    index: false,
+    etag: true,
+    lastModified: true,
+    maxAge: '1d',
+    setHeaders: (res, path, stat) => {
+        // Set proper content types for common file types to avoid MIME type issues
+        if (path.endsWith('.js')) {
+            res.set('Content-Type', 'application/javascript');
+        } else if (path.endsWith('.css')) {
+            res.set('Content-Type', 'text/css');
+        } else if (path.endsWith('.png')) {
+            res.set('Content-Type', 'image/png'); 
+        } else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+            res.set('Content-Type', 'image/jpeg');
+        } else if (path.endsWith('.svg')) {
+            res.set('Content-Type', 'image/svg+xml');
+        } else if (path.endsWith('.json')) {
+            res.set('Content-Type', 'application/json');
+        }
+    }
+}));
+
+// Create explicit route for images in the providers folder since this was an issue before
+app.get('/images/providers/:filename', (req, res) => {
+    const filePath = path.join(__dirname, '..', 'images', 'providers', req.params.filename);
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            console.error(`Error serving provider image: ${req.params.filename}`, err);
+            if (err.code === 'ENOENT') {
+                // If file doesn't exist, send the generic image
+                res.sendFile(path.join(__dirname, '..', 'images', 'providers', 'generic.png'), (genericErr) => {
+                    if (genericErr) {
+                        // If generic image also fails, send a 404
+                        console.error('Error serving generic fallback image', genericErr);
+                        res.status(404).send('Image not found');
+                    }
+                });
+            } else {
+                res.status(500).send('Error serving image');
+            }
+        }
+    });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -207,24 +263,24 @@ async function startServer() {
     // Initialize porting rules after successful connection
     await initializePortingRules();
     
+    // Initialize notification scheduler
+    initNotificationScheduler();
+    
+    // Initialize scheduled jobs
+    initializeScheduledJobs();
+    
     // Start the server
     app.listen(PORT, () => {
       console.log(`Server running at http://localhost:${PORT}`);
       console.log(`Access the API at http://localhost:${PORT}/api`);
-      if (mongoose.connection.readyState !== 1) {
-        console.warn('Note: Server is running with in-memory database fallback');
-        console.warn('Some features will be limited. Test user: demo@example.com / Password123');
-      }
+      console.log(`Database connected: ${mongoose.connection.host}`);
     });
   } catch (err) {
     console.error('Failed to start server properly:', err);
-    // Still start the server even if there are database issues
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT} (with limited functionality)`);
-      console.log(`Access the API at http://localhost:${PORT}/api`);
-      console.warn('Note: Server is running with limited functionality due to startup errors');
-      console.warn('Some features will be limited. Test user: demo@example.com / Password123');
-    });
+    console.error('Database connection is required for application to function properly');
+    console.error('Please check your MongoDB connection settings in .env file');
+    console.error('Exiting with error code 1');
+    process.exit(1);
   }
 }
 

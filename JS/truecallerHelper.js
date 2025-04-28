@@ -1,6 +1,7 @@
 /**
  * Mobile Number Helper
- * This module provides functions for mobile number operator and circle detection using local database
+ * This module provides empty implementation as per requirement to not use Truecaller API
+ * and not perform automatic detection of circle and operator
  */
 
 /**
@@ -98,14 +99,12 @@ function mapCircleFromRegion(region) {
 }
 
 /**
- * Look up phone number information using local database
+ * Look up phone number information - now returns null as automatic detection is removed
  * @param {string} phoneNumber - The phone number to look up
- * @returns {Promise<Object|null>} - The operator and circle information, or null if not found
+ * @returns {Promise<null>} - Always returns null as automatic detection is disabled
  */
 async function lookupPhoneNumber(phoneNumber) {
-    console.log("Using local database for", phoneNumber);
-    
-    // Simply return null to let the app use its local detection logic
+    console.log("Automatic detection disabled, returning null for", phoneNumber);
     return null;
 }
 

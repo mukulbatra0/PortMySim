@@ -16,7 +16,10 @@
     <link rel="stylesheet" href="../CSS/plans.css" />
     <link rel="stylesheet" href="../CSS/loader.css" />
     <link rel="stylesheet" href="../CSS/button-styles.css" />
+    <link rel="icon" href="../images/logo.png" sizes="32x32" type="image/png" >
     <!-- Dark Theme CSS is now part of common.css -->
+    <!-- Include disable-animations script early -->
+    <script src="../JS/disable-animations.js"></script>
   </head>
   <body class="bg-dark-1" data-requires-api="true">
     <header class="header">
@@ -309,44 +312,70 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Recommendation Cards Section -->
+    <section class="recommendation-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="content-transition" data-animation="slide-up">Recommended Plans For You</h2>
+          <p class="content-transition" data-animation="slide-up" data-delay="0.2s">Based on your usage patterns, these plans might suit you best</p>
+        </div>
+        
+        <div class="recommendations-grid">
+          <div class="recommendation-card">
+            <div class="recommendation-header">
+              <i class="fas fa-bolt"></i>
+              <h3>Jio Freedom Plan</h3>
+            </div>
+            <div class="recommendation-content">
+              <p>Perfect for heavy data users who need unlimited connectivity with premium entertainment benefits.</p>
+              <ul>
+                <li>3GB data per day with unlimited 5G</li>
+                <li>Unlimited voice calls to any network</li>
+                <li>100 SMS per day</li>
+                <li>Free subscription to Disney+ Hotstar and JioTV</li>
+              </ul>
+              <div class="price-tag">₹399 <span>/month</span></div>
+              <a href="#" class="btn-primary mt-3">Select Plan</a>
+            </div>
+          </div>
           
-          <div class="value-meter-container content-transition" data-animation="slide-up" data-delay="0.5s">
-            <h3>Value Score</h3>
-            <p>How much are you getting for your money?</p>
-            
-            <div class="value-meters">
-              <div class="value-meter jio">
-                <div class="meter-label">
-                  <img src="../images/jio.jpeg" alt="Jio" class="operator-icon-small">
-                  <span>Jio Premium</span>
-                </div>
-                <div class="meter-bar">
-                  <div class="meter-fill" style="width: 85%"></div>
-                </div>
-                <div class="meter-value">8.5/10</div>
-              </div>
-              
-              <div class="value-meter airtel">
-                <div class="meter-label">
-                  <img src="../images/airtel.png" alt="Airtel" class="operator-icon-small">
-                  <span>Airtel Smart</span>
-                </div>
-                <div class="meter-bar">
-                  <div class="meter-fill" style="width: 90%"></div>
-                </div>
-                <div class="meter-value">9.0/10</div>
-              </div>
-              
-              <div class="value-meter vi">
-                <div class="meter-label">
-                  <img src="../images/vi.png" alt="Vi" class="operator-icon-small">
-                  <span>Vi Basic</span>
-                </div>
-                <div class="meter-bar">
-                  <div class="meter-fill" style="width: 75%"></div>
-                </div>
-                <div class="meter-value">7.5/10</div>
-              </div>
+          <div class="recommendation-card">
+            <div class="recommendation-header">
+              <i class="fas fa-wifi"></i>
+              <h3>Airtel Premium</h3>
+            </div>
+            <div class="recommendation-content">
+              <p>High-speed data with excellent network coverage and premium streaming services.</p>
+              <ul>
+                <li>2.5GB data per day with unlimited 5G</li>
+                <li>Unlimited voice calls with free roaming</li>
+                <li>100 SMS per day</li>
+                <li>Free Amazon Prime subscription for 1 year</li>
+              </ul>
+              <div class="price-tag">₹449 <span>/month</span></div>
+              <a href="#" class="btn-primary mt-3">Select Plan</a>
+            </div>
+          </div>
+          
+          <div class="recommendation-card">
+            <div class="recommendation-header">
+              <i class="fas fa-piggy-bank"></i>
+              <h3>Vi Value Plan</h3>
+            </div>
+            <div class="recommendation-content">
+              <p>Budget-friendly option with good data allocation and weekend data rollover.</p>
+              <ul>
+                <li>1.5GB data per day with 5G ready network</li>
+                <li>Unlimited voice calls with no FUP</li>
+                <li>100 SMS per day</li>
+                <li>Weekend data rollover and Vi Movies & TV access</li>
+              </ul>
+              <div class="price-tag">₹299 <span>/month</span></div>
+              <a href="#" class="btn-primary mt-3">Select Plan</a>
             </div>
           </div>
         </div>
@@ -397,12 +426,11 @@
       </div>
     </footer>
     <!-- Scripts -->
-    <script src="../JS/common.js" defer></script>
     <script src="../JS/api.js"></script>
+    <script src="../JS/common.js" defer></script>
     <script src="../JS/plans.js"></script>
     <script src="../JS/transitions.js" defer></script>
     <script src="../JS/auth.js" type="module" defer></script>
     <script src="../JS/main.js" defer></script>
-    <script src="../JS/loader.js" defer></script>
   </body>
 </html>

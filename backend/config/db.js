@@ -1,17 +1,18 @@
 import mongoose from 'mongoose';
 
-// Connect to MongoDB with retry mechanism and fallback
-const connectDB = async (retryCount = 0, maxRetries = 3) => {
+// Connect to MongoDB with retry mechanism
+const connectDB = async (retryCount = 0, maxRetries = 5) => {
   try {
     console.log('Attempting to connect to MongoDB...');
     const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/portmysim';
     console.log(`Using MongoDB URI: ${mongoURI.replace(/:[^:]*@/, ':****@')}`); // Hide password if present
     
     const conn = await mongoose.connect(mongoURI, {
-      serverSelectionTimeoutMS: 15000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 30000,
-      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 30000, // Increased timeout
+      socketTimeoutMS: 60000, // Increased timeout
+      connectTimeoutMS: 45000, // Increased timeout
+      maxPoolSize: 50, // Increased for better performance
+      minPoolSize: 5, // Ensure minimum connections
       bufferCommands: true,
       autoIndex: process.env.NODE_ENV !== 'production'
     });
@@ -27,12 +28,20 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
       console.warn('MongoDB disconnected. Attempting to reconnect...');
     });
     
-    // Handle graceful shutdown
-    process.on('SIGINT', () => {
-      mongoose.connection.close(() => {
+    mongoose.connection.on('reconnected', () => {
+      console.log('MongoDB reconnected successfully');
+    });
+    
+    // Handle graceful shutdown - updated to use modern approach without callbacks
+    process.on('SIGINT', async () => {
+      try {
+        await mongoose.connection.close();
         console.log('MongoDB connection closed due to app termination');
         process.exit(0);
-      });
+      } catch (err) {
+        console.error('Error during MongoDB connection close:', err);
+        process.exit(1);
+      }
     });
     
     return conn;
@@ -43,7 +52,7 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
     if (error.name === 'MongoServerSelectionError') {
       console.error('Could not connect to any MongoDB servers. Check your connection string and make sure MongoDB is running.');
       
-      // Retry logic
+      // Retry logic with exponential backoff
       if (retryCount < maxRetries) {
         const retryDelay = Math.pow(2, retryCount) * 1000; // Exponential backoff
         console.log(`Retrying connection in ${retryDelay/1000} seconds... (Attempt ${retryCount + 1}/${maxRetries})`);
@@ -56,11 +65,9 @@ const connectDB = async (retryCount = 0, maxRetries = 3) => {
       }
     }
     
-    // In development mode, provide a fallback to prevent crashing
-    console.warn('WARNING: Application running without MongoDB connection. Using in-memory fallback for development.');
-    console.warn('Some features will be limited, but basic API functionality will work.');
-    console.warn('Predefined test user: demo@example.com / Password123');
-    return { connection: { host: 'in-memory-fallback' } };
+    // Instead of fallback, throw error to properly handle at application level
+    console.error('Failed to connect to MongoDB after multiple attempts. Application cannot start without database connection.');
+    throw new Error('Database connection failed: ' + error.message);
   }
 };
 

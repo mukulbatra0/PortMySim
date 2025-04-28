@@ -11,10 +11,23 @@ class EmailService {
       port: process.env.EMAIL_PORT || 587,
       secure: process.env.EMAIL_SECURE === 'true',
       auth: {
-        user: process.env.EMAIL_USERNAME,
+        user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
       }
     });
+    
+    // Verify connection configuration
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+      this.transporter.verify((error) => {
+        if (error) {
+          console.error('SMTP connection error:', error);
+        } else {
+          console.log('Email server is ready to send messages');
+        }
+      });
+    } else {
+      console.warn('Email credentials not set in environment variables. Email sending will be simulated.');
+    }
   }
 
   /**
@@ -39,7 +52,7 @@ class EmailService {
 
       // Create mail options
       const mailOptions = {
-        from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+        from: process.env.EMAIL_FROM || '"PortMySim" <no-reply@portmysim.com>',
         to: options.to,
         subject: options.subject,
         html: options.html
@@ -172,6 +185,80 @@ class EmailService {
     return this.sendEmail({
       to: email,
       subject: 'Welcome to PortMySim!',
+      html
+    });
+  }
+
+  /**
+   * Send password change notification email
+   * @param {Object} options - Notification options
+   * @returns {Promise} - Send mail result
+   */
+  async sendPasswordChangeNotification(options) {
+    const { email, name } = options;
+
+    const html = `
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://portmysim.com/logo.png" alt="PortMySim Logo" style="max-width: 150px;" />
+        </div>
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">Password Changed</h2>
+          <p style="color: #666; line-height: 1.5;">Hello ${name},</p>
+          <p style="color: #666; line-height: 1.5;">Your PortMySim account password was recently changed. If you made this change, you can safely ignore this email.</p>
+          <p style="color: #666; line-height: 1.5;">If you did not change your password, please secure your account immediately:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://portmysim.com/forgot-password" style="background-color: #ED4245; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Your Password</a>
+          </div>
+          <p style="color: #666; line-height: 1.5;">For security, you may be asked to verify your identity when signing in from a new device or browser.</p>
+        </div>
+        <div style="color: #999; font-size: 12px; text-align: center;">
+          <p>&copy; ${new Date().getFullYear()} PortMySim. All rights reserved.</p>
+          <p>If you have any questions, please contact our support team at support@portmysim.com</p>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject: 'PortMySim Password Changed - Action Notice',
+      html
+    });
+  }
+
+  /**
+   * Send account locked notification email
+   * @param {Object} options - Notification options
+   * @returns {Promise} - Send mail result
+   */
+  async sendAccountLockedEmail(options) {
+    const { email, name, unlockTime } = options;
+
+    const html = `
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="https://portmysim.com/logo.png" alt="PortMySim Logo" style="max-width: 150px;" />
+        </div>
+        <div style="background-color: #f9f9f9; border-radius: 5px; padding: 20px; margin-bottom: 20px;">
+          <h2 style="color: #333; margin-top: 0;">Account Temporarily Locked</h2>
+          <p style="color: #666; line-height: 1.5;">Hello ${name},</p>
+          <p style="color: #666; line-height: 1.5;">Your PortMySim account has been temporarily locked after multiple failed login attempts.</p>
+          <p style="color: #666; line-height: 1.5;">For your security, the account will be locked until: <strong>${new Date(unlockTime).toLocaleString()}</strong></p>
+          <p style="color: #666; line-height: 1.5;">If this was not you, someone may be attempting to access your account. We recommend updating your password after the account unlocks.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://portmysim.com/forgot-password" style="background-color: #4F46E5; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+          </div>
+        </div>
+        <div style="color: #999; font-size: 12px; text-align: center;">
+          <p>&copy; ${new Date().getFullYear()} PortMySim. All rights reserved.</p>
+          <p>If you have any questions, please contact our support team at support@portmysim.com</p>
+        </div>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: email,
+      subject: 'PortMySim Account Temporarily Locked',
       html
     });
   }

@@ -10,7 +10,104 @@
     <link rel="stylesheet" href="../CSS/loader.css"> 
     <link rel="stylesheet" href="../CSS/contact.css">
 
-   
+    <style>
+        /* Enhanced Contact Info Styles */
+        .contact-info {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .item-icon.pulse-icon {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .item-icon.pulse-icon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(var(--primary-rgb), 0.2);
+        }
+        
+        .item-icon.pulse-icon:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(var(--primary-rgb), 0.3);
+            opacity: 0;
+            transform: scale(0.8);
+            z-index: -1;
+            transition: all 0.5s ease;
+        }
+        
+        .item-icon.pulse-icon:hover:after {
+            opacity: 1;
+            transform: scale(1.5);
+        }
+        
+        .info-item .item-content h3 {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .info-item .item-content h3:after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .info-item:hover .item-content h3:after {
+            width: 100%;
+        }
+        
+        .info-item .item-content a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .info-item .item-content a:hover {
+            color: var(--primary-color);
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .social-icons a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            transform: translateY(-5px);
+            background: var(--primary-color);
+        }
+        
+        .contact-divider {
+            margin: 25px 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+    </style>
    
 </head>
 <body class="bg-dark-1">
@@ -63,10 +160,7 @@
     <!-- Contact Section -->
     <section class="contact-section">
         <div class="container">
-            <div class="section-title">
-                <h2>Contact Us</h2>
-                <p>We'd love to hear from you. Reach out to us through any of these channels.</p>
-            </div>
+           
             <div class="contact-container">
                 <!-- Contact Information -->
                 <div class="contact-info always-visible">
@@ -77,33 +171,44 @@
                     <p>Have questions about porting your number? Our support team is here to help you 24/7.</p>
                     
                     <div class="info-item always-visible">
-                        <div class="item-icon">
-                            <i class="fas fa-phone-alt"></i>
+                        <div class="item-icon pulse-icon">
+                            <i class="fas fa-phone-alt fa-rotate-180"></i>
                         </div>
                         <div class="item-content">
-                            <h3>Phone</h3>
-                            <p>+91 1234 567 890</p>
-                            <p class="text-muted">Monday to Friday, 9am to 6pm IST</p>
+                            <h3>Call Us</h3>
+                            <p><a href="tel:+911234567890">+91 1234 567 890</a></p>
+                            <p class="text-muted">Monday to Saturday, 9am to 8pm IST</p>
                         </div>
                     </div>
                     
                     <div class="info-item always-visible">
-                        <div class="item-icon">
+                        <div class="item-icon pulse-icon">
                             <i class="fas fa-envelope"></i>
                         </div>
                         <div class="item-content">
-                            <h3>Email</h3>
-                            <p>support@portxpress.com</p>
+                            <h3>Email Support</h3>
+                            <p><a href="mailto:support@portxpress.com">support@portxpress.com</a></p>
                             <p class="text-muted">We'll respond within 24 hours</p>
                         </div>
                     </div>
                     
                     <div class="info-item always-visible">
-                        <div class="item-icon">
+                        <div class="item-icon pulse-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="item-content">
+                            <h3>Live Chat</h3>
+                            <p>Available on our website</p>
+                            <p class="text-muted">24/7 Instant Support</p>
+                        </div>
+                    </div>
+                    
+                    <div class="info-item always-visible">
+                        <div class="item-icon pulse-icon">
                             <i class="fas fa-map-marker-alt"></i>
                         </div>
                         <div class="item-content">
-                            <h3>Office</h3>
+                            <h3>Visit Us</h3>
                             <p>123 Tech Park, Cyber City</p>
                             <p>Gurugram, Haryana 122002</p>
                         </div>
@@ -118,13 +223,16 @@
                                 <i class="fab fa-facebook-f"></i>
                             </a>
                             <a href="#" class="twitter always-visible" aria-label="Twitter">
-                                <i class="fab fa-instagram"></i>
+                                <i class="fab fa-twitter"></i>
                             </a>
                             <a href="#" class="instagram always-visible" aria-label="Instagram">
                                 <i class="fab fa-instagram"></i>
                             </a>
                             <a href="#" class="linkedin always-visible" aria-label="LinkedIn">
                                 <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="youtube always-visible" aria-label="YouTube">
+                                <i class="fab fa-youtube"></i>
                             </a>
                         </div>
                     </div>
@@ -320,6 +428,60 @@
     <script src="../JS/contact.js"></script>
     <script src="../JS/loader.js"></script>
 
+    <script>
+        // Enhanced Contact Info Animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate info items on page load
+            const infoItems = document.querySelectorAll('.info-item');
+            infoItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.opacity = '0';
+                    item.style.transform = 'translateY(20px)';
+                    item.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    
+                    setTimeout(() => {
+                        item.style.opacity = '1';
+                        item.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 200);
+            });
+            
+            // Add hover effects for social icons
+            const socialIcons = document.querySelectorAll('.social-icons a');
+            socialIcons.forEach(icon => {
+                icon.addEventListener('mouseenter', function() {
+                    this.querySelector('i').style.transform = 'scale(1.2)';
+                    this.querySelector('i').style.transition = 'transform 0.3s ease';
+                });
+                
+                icon.addEventListener('mouseleave', function() {
+                    this.querySelector('i').style.transform = 'scale(1)';
+                });
+            });
+            
+            // Make phone icon visually indicate it's "ringing" on page load
+            const phoneIcon = document.querySelector('.item-icon .fa-phone-alt');
+            if (phoneIcon) {
+                setTimeout(() => {
+                    phoneIcon.style.animation = 'ringing 1s ease';
+                    phoneIcon.style.animationIterationCount = '3';
+                    
+                    // Add the keyframes for the ringing animation
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes ringing {
+                            0% { transform: rotate(0deg); }
+                            25% { transform: rotate(-5deg); }
+                            50% { transform: rotate(5deg); }
+                            75% { transform: rotate(-5deg); }
+                            100% { transform: rotate(0deg); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }, 1500);
+            }
+        });
+    </script>
 
 </body>
 </html>

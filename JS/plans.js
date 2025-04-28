@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update current year in footer
     document.getElementById('currentYear').textContent = new Date().getFullYear();
+    
+    // NEW: Remove all animations from feature-value.best elements
+    removeAllFeatureValueAnimations();
 });
 
 // FAQ Accordion
@@ -79,26 +82,19 @@ function initPlanCardHover() {
 
 // Initialize animations with reduced effects
 function initAnimations() {
-    const animateOnScroll = (entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('animate');
-                // Remove continuous animations after initial animation
-                setTimeout(() => {
-                    entry.target.style.animation = 'none';
-                }, 1000);
-                observer.unobserve(entry.target);
-            }
-        });
-    };
-
-    const observer = new IntersectionObserver(animateOnScroll, {
-        threshold: 0.1
-    });
-
-    // Observe elements for animation
-    document.querySelectorAll('.plan-card, .faq-item').forEach(element => {
-        observer.observe(element);
+    // Simplified function that doesn't add animations
+    const elementsToNormalize = document.querySelectorAll('.plan-card, .faq-item, .feature-value.best, .comparison-table, .text-summary-container');
+    
+    elementsToNormalize.forEach(element => {
+        // Remove any existing animations
+        element.style.animation = 'none';
+        element.style.transition = 'background-color 0.3s ease';
+        
+        // Make sure elements are visible
+        element.style.opacity = '1';
+        
+        // Remove animation classes
+        element.classList.remove('animate', 'pulse', 'glow', 'shine', 'fadeIn', 'fadeInUp');
     });
 }
 
@@ -942,28 +938,9 @@ function updateComparisonTable(data) {
     summaryContainer.className = 'text-summary-container';
     summaryContainer.innerHTML = '<div class="comparison-summary"></div>';
     
-    // Create value meters container
-    const metersContainer = document.createElement('div');
-    metersContainer.className = 'value-meters-container';
-    
-    // Add value meters for each plan
-    plans.forEach((plan, index) => {
-        const meterHTML = `
-            <div class="value-meter ${plan.operator}">
-                <div class="meter-label">Value for <span>${plan.name}</span></div>
-                <div class="meter-container">
-                    <div class="meter-fill"></div>
-                    <div class="meter-value">0/10</div>
-                </div>
-            </div>
-        `;
-        metersContainer.innerHTML += meterHTML;
-    });
-    
     // Add all containers to the result
     comparisonResult.appendChild(tableContainer);
     comparisonResult.appendChild(summaryContainer);
-    comparisonResult.appendChild(metersContainer);
     
     // Get the table and populate it
     const table = tableContainer.querySelector('table');
@@ -1097,21 +1074,8 @@ function updateComparisonTable(data) {
     // Update value meters
     plans.forEach((plan, index) => {
         if (valueScores && valueScores[index]) {
-            const score = parseFloat(valueScores[index].score) || 0;
-            const meterFill = metersContainer.querySelector(`.value-meter.${plan.operator} .meter-fill`);
-            if (meterFill) {
-                meterFill.style.width = `${Math.min(score * 10, 100)}%`;
-            }
-            
-            const meterValue = metersContainer.querySelector(`.value-meter.${plan.operator} .meter-value`);
-            if (meterValue) {
-                meterValue.textContent = `${score.toFixed(1)}/10`;
-            }
-            
-            const meterLabel = metersContainer.querySelector(`.value-meter.${plan.operator} .meter-label span`);
-            if (meterLabel) {
-                meterLabel.textContent = plan.name;
-            }
+            // Skip value meter updates since the container has been removed
+            // Removed code for updating meter fills, values, and labels
         }
     });
     
@@ -1243,7 +1207,8 @@ function updateComparisonTable(data) {
             color: var(--primary-color);
             border-left: 3px solid var(--primary-color);
             border-right: 3px solid var(--primary-color);
-            animation: pulseFade 2s infinite;
+            animation: none !important;
+            box-shadow: none !important;
         }
         
         .feature-value i.fas.fa-check {
@@ -1374,9 +1339,9 @@ function updateComparisonTable(data) {
         }
         
         @keyframes pulseFade {
-            0% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0.4); }
-            70% { box-shadow: 0 0 0 8px rgba(var(--primary-rgb), 0); }
-            100% { box-shadow: 0 0 0 0 rgba(var(--primary-rgb), 0); }
+            0% { box-shadow: none; }
+            70% { box-shadow: none; }
+            100% { box-shadow: none; }
         }
         
         /* Responsive styles */
@@ -1434,47 +1399,24 @@ function updateComparisonTable(data) {
         // Animate the best values with a staggered delay and pulse effect
         const bestValues = tbody.querySelectorAll('.feature-value.best');
         bestValues.forEach((cell, index) => {
-            cell.style.animation = `fadeInUp 0.5s ease-out forwards, pulse-glow 2s infinite ease-in-out 1s`;
-            cell.style.animationDelay = `${0.8 + (index * 0.1)}s`;
-        });
-        
-        // Apply animated entrance to value meters with staggered delay
-        const meters = metersContainer.querySelectorAll('.value-meter');
-        meters.forEach((meter, index) => {
-            meter.style.animation = `fadeInUp 0.7s ease-out forwards`;
-            meter.style.animationDelay = `${1.2 + (index * 0.2)}s`;
-            meter.style.opacity = '0';
-            
-            // Animate the meter fill after a delay
-            const meterFill = meter.querySelector('.meter-fill');
-            if (meterFill) {
-                setTimeout(() => {
-                    meterFill.style.transition = 'width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                }, 1500 + (index * 200));
-            }
-            
-            // Animate the operator icon with a bounce effect
-            const iconElement = meter.querySelector('.operator-icon-small');
-            if (iconElement) {
-                iconElement.style.animation = `bounceIn 0.6s ease-out forwards`;
-                iconElement.style.animationDelay = `${1.5 + (index * 0.2)}s`;
-                iconElement.style.opacity = '0';
-            }
+            // Remove animations
+            cell.style.animation = 'none';
+            cell.style.animationDelay = '0';
         });
         
         // Add smooth reveal animation to the text summary container
         const summaryContainer = document.querySelector('.text-summary-container');
         if (summaryContainer) {
-            summaryContainer.style.animation = `fadeInUp 0.8s ease-out forwards`;
-            summaryContainer.style.animationDelay = `0.5s`;
-            summaryContainer.style.opacity = '0';
+            summaryContainer.style.animation = 'none';
+            summaryContainer.style.animationDelay = '0';
+            summaryContainer.style.opacity = '1';
             
             // Add typing animation effect to the summary text
             const summaryText = summaryContainer.querySelector('.comparison-summary');
             if (summaryText && summaryText.textContent.trim().length > 0) {
-                summaryText.style.animation = `fadeIn 1s ease-out forwards`;
-                summaryText.style.animationDelay = `1.2s`;
-                summaryText.style.opacity = '0';
+                summaryText.style.animation = 'none';
+                summaryText.style.animationDelay = '0';
+                summaryText.style.opacity = '1';
             }
         }
         
@@ -1483,17 +1425,17 @@ function updateComparisonTable(data) {
             row.addEventListener('mouseenter', () => {
                 const cells = row.querySelectorAll('td:not(:first-child)');
                 cells.forEach(cell => {
-                    cell.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease';
-                    cell.style.transform = 'translateY(-3px)';
-                    cell.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
-                    cell.style.backgroundColor = 'rgba(var(--primary-rgb), 0.15)';
+                    cell.style.transition = 'background-color 0.3s ease';
+                    cell.style.transform = 'none';
+                    cell.style.boxShadow = 'none';
+                    cell.style.backgroundColor = 'rgba(var(--primary-rgb), 0.05)';
                 });
             });
             
             row.addEventListener('mouseleave', () => {
                 const cells = row.querySelectorAll('td:not(:first-child)');
                 cells.forEach(cell => {
-                    cell.style.transform = 'translateY(0)';
+                    cell.style.transform = 'none';
                     cell.style.boxShadow = 'none';
                     cell.style.backgroundColor = '';
                 });
@@ -1503,80 +1445,39 @@ function updateComparisonTable(data) {
         // Add ripple effect to plan headers
         const planHeaders = table.querySelectorAll('.plan-header');
         planHeaders.forEach(header => {
-            header.classList.add('ripple');
-            header.addEventListener('click', function(e) {
-                const rect = this.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                const ripple = document.createElement('span');
-                ripple.className = 'ripple-effect';
-                ripple.style.left = `${x}px`;
-                ripple.style.top = `${y}px`;
-                
-                this.appendChild(ripple);
-                
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
-            });
+            // Remove ripple effect
+            header.classList.remove('ripple');
         });
     }, 100);
     
     // Add extra animations to the comparison table
     const comparisonTable = tableContainer.querySelector('.comparison-table');
     if (comparisonTable) {
-        comparisonTable.style.animation = `fadeIn 0.8s ease-out forwards`;
-        comparisonTable.style.animationDelay = `0.3s`;
-        comparisonTable.style.opacity = '0';
+        comparisonTable.style.animation = 'none';
+        comparisonTable.style.animationDelay = '0';
+        comparisonTable.style.opacity = '1';
     }
     
     // Show the comparison result
     comparisonResult.style.display = 'block';
     
-    // Add new animation styles
+    // Add new animation styles with all animations removed
     const animationStyle = document.createElement('style');
     animationStyle.textContent = `
         @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.1); opacity: 1; }
-            70% { transform: scale(0.9); }
+            0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; }
+            from { opacity: 1; }
             to { opacity: 1; }
         }
         
         @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.3); }
-            50% { box-shadow: 0 0 15px rgba(var(--primary-rgb), 0.5); }
-            100% { box-shadow: 0 0 5px rgba(var(--primary-rgb), 0.3); }
-        }
-        
-        .ripple {
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .ripple-effect {
-            position: absolute;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.4);
-            width: 100px;
-            height: 100px;
-            margin-top: -50px;
-            margin-left: -50px;
-            animation: ripple-animation 0.6s linear;
-            opacity: 0;
-        }
-        
-        @keyframes ripple-animation {
-            0% { transform: scale(0); opacity: 0.5; }
-            100% { transform: scale(2.5); opacity: 0; }
+            0% { box-shadow: none; }
+            50% { box-shadow: none; }
+            100% { box-shadow: none; }
         }
     `;
     document.head.appendChild(animationStyle);
@@ -1633,4 +1534,40 @@ function fetchPlansByOperatorName(operator) {
             console.error(`Error getting plans for ${operator}:`, error);
             return [];
         });
+}
+
+// NEW: Function to explicitly remove all animations from best features
+function removeAllFeatureValueAnimations() {
+    // Select all best feature value elements
+    const bestFeatures = document.querySelectorAll('.feature-value.best');
+    
+    // Create a style element to forcefully remove animations
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        .feature-value.best {
+            animation: none !important;
+            box-shadow: none !important;
+            transition: background-color 0.3s ease !important;
+            border-left: 3px solid var(--primary-color);
+            border-right: 3px solid var(--primary-color);
+            background-color: rgba(var(--primary-rgb), 0.1);
+        }
+        
+        @keyframes pulseFade {
+            0%, 50%, 100% { box-shadow: none !important; }
+        }
+    `;
+    document.head.appendChild(styleElement);
+    
+    // Apply styles directly to each element
+    bestFeatures.forEach(element => {
+        element.style.animation = 'none';
+        element.style.boxShadow = 'none';
+        element.style.transition = 'background-color 0.3s ease';
+        
+        // Force a reflow to ensure styles are applied
+        void element.offsetWidth;
+    });
+    
+    console.log('Removed animations from', bestFeatures.length, 'best feature elements');
 } 
