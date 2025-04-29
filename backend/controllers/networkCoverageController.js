@@ -315,36 +315,63 @@ const getBestNetwork = async (req, res) => {
 /**
  * Get tower data for a location
  * @route GET /api/network-coverage/tower-data
- * @param {string} location - Location name
+ * @param {string} location - Location name (optional if coordinates provided)
+ * @param {number} lat - Latitude (optional if location provided)
+ * @param {number} lng - Longitude (optional if location provided)
+ * @param {number} radius - Search radius in kilometers (default: 5)
+ * @param {string} operator - Network operator filter (optional)
  * @returns {object} - Tower data
  */
 const getTowerData = async (req, res) => {
   try {
-    const { location, operator } = req.query;
+    const { location, lat, lng, radius = 5, operator } = req.query;
     
-    if (!location) {
-      return res.status(400).json({ error: 'Location parameter is required' });
+    if (!location && (!lat || !lng)) {
+      return res.status(400).json({ error: 'Location or coordinates (lat & lng) are required' });
     }
     
-    // Create query filter
-    const filter = { location: new RegExp(location, 'i') };
-    if (operator) {
-      filter.operator = operator;
-    }
+    let coverageData;
     
-    // Find coverage data from database
-    const coverageData = await NetworkCoverage.find(filter);
+    if (location) {
+      // Find coverage data by location name
+      const filter = { location: new RegExp(location, 'i') };
+      if (operator) {
+        filter.operator = operator;
+      }
+      coverageData = await NetworkCoverage.find(filter);
+    } else {
+      // Find nearest location by coordinates
+      const point = {
+        type: 'Point',
+        coordinates: [parseFloat(lng), parseFloat(lat)]  // MongoDB uses [lng, lat]
+      };
+      
+      const filter = {
+        locationCoordinates: {
+          $near: {
+            $geometry: point,
+            $maxDistance: parseInt(radius) * 1000  // Convert km to meters
+          }
+        }
+      };
+      
+      if (operator) {
+        filter.operator = operator;
+      }
+      
+      coverageData = await NetworkCoverage.find(filter);
+    }
     
     if (coverageData.length === 0) {
-      return res.status(404).json({ error: 'No tower data found for this location' });
+      return res.status(404).json({ error: 'No tower data found for this location/coordinates' });
     }
     
     // Process and format the tower data
-    const towerData = coverageData.map(data => ({
+    const towers = coverageData.map(data => ({
+      id: data._id.toString(),
       operator: data.operator,
-      technologyType: data.technologyType,
-      location: data.location,
-      coordinates: data.locationCoordinates.coordinates.reverse(),  // Convert to [lat, lng]
+      type: data.technologyType,
+      position: data.locationCoordinates.coordinates.reverse(),  // Convert to [lat, lng]
       signalStrength: data.signalStrength,
       downloadSpeed: data.downloadSpeed,
       uploadSpeed: data.uploadSpeed,
@@ -354,7 +381,7 @@ const getTowerData = async (req, res) => {
       lastUpdated: data.updatedAt
     }));
     
-    return res.status(200).json(towerData);
+    return res.status(200).json({ towers });
   } catch (error) {
     console.error('Error fetching tower data:', error);
     return res.status(500).json({ error: 'Failed to fetch tower data' });

@@ -20,6 +20,9 @@ let selectedCity = null; // For tracking the selected city
 let locationSearchInput = null; // Reference to the location search input element
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Global initialization flag to prevent multiple inits
+let hasInitialized = false;
+
 // Define the cities array for state-city browser
 const cities = [
   // Major Metros
@@ -318,10 +321,10 @@ window.searchLocation = function(locationName) {
     return;
   }
   
-  // Update the search input value if it exists
-  let locationSearchInput = document.getElementById('location-search');
-  if (locationSearchInput) {
-    locationSearchInput.value = locationName;
+  // Always get a fresh reference to the input element to avoid stale references
+  const searchInput = document.getElementById('location-search');
+  if (searchInput) {
+    searchInput.value = locationName;
   } else {
     console.warn('Location search input element not found');
   }
@@ -332,28 +335,42 @@ window.searchLocation = function(locationName) {
 
 // Wait for DOM to be fully loaded before initializing
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize global locationSearchInput right away to prevent reference errors
-  if (locationSearchInput === null || locationSearchInput === undefined) {
-    locationSearchInput = document.getElementById('location-search');
+  // Check if already initialized to prevent duplicate initialization
+  if (hasInitialized) {
+    console.log('Page already initialized, skipping initialization');
+    return;
   }
   
-  // Initialize the page
-  initComparePage();
+  console.log('Starting page initialization');
   
-  // Set up event listeners for the remove network buttons
-  setupRemoveNetworkButtons();
+  // Mark as initialized immediately to prevent any duplicate initialization attempts
+  hasInitialized = true;
   
-  // Set up event listeners for the view details buttons
-  setupViewDetailsButtons();
-  
-  // Check authentication status and update UI
-  updateAuthUI();
-  
-  // Initialize the improved city selection UI
-  initializeCitySelectionUI();
-  
-  // Initialize state item listeners
-  initializeStateItemListeners();
+  try {
+    // Initialize global locationSearchInput right away to prevent reference errors
+    locationSearchInput = document.getElementById('location-search');
+    
+    // Initialize the page
+    initComparePage();
+    
+    // Set up event listeners for the remove network buttons
+    setupRemoveNetworkButtons();
+    
+    // Set up event listeners for the view details buttons
+    setupViewDetailsButtons();
+    
+    // Check authentication status and update UI
+    updateAuthUI();
+    
+    // Initialize the improved city selection UI
+    initializeCitySelectionUI();
+    
+    // Initialize state item listeners
+    initializeStateItemListeners();
+  } catch (error) {
+    console.error('Error during page initialization:', error);
+    showNotification('Error initializing page. Please refresh and try again.', 'error');
+  }
 });
 
 async function initComparePage() {
@@ -369,15 +386,20 @@ async function initComparePage() {
   // Setup state-city browser
   setupStateCityBrowser();
   
-  // Initialize tower layers (empty initially)
-  towerLayers = {
-    jio: L.layerGroup(),
-    airtel: L.layerGroup(),
-    vi: L.layerGroup()
-  };
+  // Use existing tower layers or initialize if they don't exist
+  if (!towerLayers) {
+    towerLayers = {
+      jio: L.layerGroup(),
+      airtel: L.layerGroup(),
+      vi: L.layerGroup()
+    };
+  }
   
-  // Global function for updating map layers
-  window.updateMapLayers = function() {
+  // Store the original updateMapLayers function from HTML if it exists
+  const originalUpdateMapLayers = window.updateMapLayers;
+  
+  // Define our version of the function that works with the compare.js logic
+  const ourUpdateMapLayers = function() {
     // Get the selected options
     const networkSelect = document.getElementById('network-select');
     const coverageRadios = document.querySelectorAll('input[name="coverage-type"]');
@@ -391,20 +413,13 @@ async function initComparePage() {
       }
     });
     
-    // Remove existing layers
+    // Remove existing layers by clearing them rather than removing from map
     if (window.networkLayers && typeof window.networkLayers === 'object') {
       Object.values(window.networkLayers).forEach(layer => {
-        if (map && layer && map.hasLayer(layer)) {
-          map.removeLayer(layer);
+        if (map && layer) {
+          layer.clearLayers();
         }
       });
-    } else {
-      console.warn('Initializing network layers');
-      window.networkLayers = {
-        jio: L.layerGroup(),
-        airtel: L.layerGroup(),
-        vi: L.layerGroup()
-      };
     }
     
     // For demonstration, we'll use simple circle overlays with different colors
@@ -431,7 +446,7 @@ async function initComparePage() {
       if (!color) return;
       
       // Ensure we have the cities array
-      const allCities = cities || [];
+      const allCities = window.cities || cities || [];
       
       // For demo purposes, create coverage circles for each city
       allCities.forEach(city => {
@@ -458,39 +473,45 @@ async function initComparePage() {
         // Add to appropriate layer group
         if (window.networkLayers && window.networkLayers[network]) {
           window.networkLayers[network].addLayer(circle);
-          if (map) {
-            map.addLayer(window.networkLayers[network]);
-          }
-        } else {
-          console.warn(`Network layer "${network}" not initialized`);
-          
-          // Initialize the layer if it doesn't exist
-          window.networkLayers[network] = L.layerGroup();
-          window.networkLayers[network].addLayer(circle);
-          if (map) {
-            map.addLayer(window.networkLayers[network]);
-          }
         }
       });
     }
     
-    // After updating layers, ensure correct z-index and positioning
-    if (typeof ensureCorrectZIndex === 'function') ensureCorrectZIndex();
-    if (typeof positionMapControls === 'function') positionMapControls();
+    // Call the original function if it exists and is not our function
+    if (typeof originalUpdateMapLayers === 'function' && originalUpdateMapLayers !== window.updateMapLayers) {
+      try {
+        originalUpdateMapLayers();
+      } catch (e) {
+        console.warn('Error calling original updateMapLayers function:', e);
+      }
+    }
   };
+  
+  // Register our function without overriding if it already exists
+  if (!window.updateMapLayers) {
+    window.updateMapLayers = ourUpdateMapLayers;
+  } else {
+    // If it exists, augment it to ensure our functionality works
+    const existingFunction = window.updateMapLayers;
+    window.updateMapLayers = function() {
+      ourUpdateMapLayers();
+      
+      try {
+        // Call the original HTML function if it's not our function
+        if (existingFunction !== ourUpdateMapLayers) {
+          existingFunction();
+        }
+      } catch (e) {
+        console.warn('Error calling existing updateMapLayers function:', e);
+      }
+    };
+  }
   
   // Initialize with all networks
   setTimeout(() => {
     if (typeof window.updateMapLayers === 'function') {
       window.updateMapLayers();
     }
-  }, 500);
-  
-  // Set initial z-index and positions for map elements
-  setTimeout(function() {
-    if (typeof ensureCorrectZIndex === 'function') ensureCorrectZIndex();
-    if (typeof positionMapControls === 'function') positionMapControls();
-    if (typeof manageLayers === 'function') manageLayers();
   }, 500);
   
   // Set up the view details buttons after initialization
@@ -500,87 +521,29 @@ async function initComparePage() {
 }
 
 /**
- * Initializes the map with default settings
+ * Initializes the map with default settings by linking to the map created in HTML
  */
 function initializeMap() {
-  console.log('Initializing map...');
+  console.log('Linking to the map initialized in HTML...');
   
-  // Check if map already exists
-  if (window.map || map) {
-    console.log('Map already initialized');
-    if (!map && window.map) {
-      map = window.map;
-    }
-    return;
-  }
-  
-  // Create the map container if it doesn't exist
-  let mapContainer = document.getElementById('coverage-map');
-  if (!mapContainer) {
-    console.log('Map container not found, creating one');
-    mapContainer = document.createElement('div');
-    mapContainer.id = 'coverage-map';
-    const mapSection = document.querySelector('.map-section');
-    if (mapSection) {
-      mapSection.appendChild(mapContainer);
-    } else {
-      const comparisonSection = document.querySelector('.comparison-results-section');
-      if (comparisonSection) {
-        const mapWrapper = document.createElement('div');
-        mapWrapper.className = 'map-section';
-        mapWrapper.appendChild(mapContainer);
-        comparisonSection.prepend(mapWrapper);
-      } else {
-        document.body.appendChild(mapContainer);
-      }
-    }
-  }
-  
-  // Set map dimensions if not already set by CSS
-  if (mapContainer.clientHeight < 200) {
-    mapContainer.style.height = '500px';
-  }
-  if (mapContainer.clientWidth < 200) {
-    mapContainer.style.width = '100%';
-  }
-  
-  // Initialize the map with Leaflet
   try {
-    if (typeof L === 'undefined') {
-      console.error('Leaflet library not loaded');
-      showNotification('Map library not loaded properly. Please refresh the page.', 'error');
-      return;
+    // Simply use the map that was already created in the HTML
+    if (window.coverageMap) {
+      console.log('Found existing coverageMap in window, using it');
+      map = window.coverageMap;
+      window.map = map; // For consistency with our code
+      
+      // Get the network layers that were already created in the HTML
+      networkLayers = window.networkLayers;
+      
+      console.log('Successfully linked to map from HTML');
+    } else {
+      // If we can't find the map, log an error
+      console.error('Could not find coverageMap created in HTML');
+      showNotification('Map initialization issue detected. Please refresh the page.', 'error');
     }
-    
-    // Create the map with India as the default center
-    map = L.map('coverage-map').setView([22.5726, 78.9629], 5);
-    
-    // Save reference to global scope
-    window.map = map;
-    
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19
-    }).addTo(map);
-    
-    // Add the scale control
-    L.control.scale().addTo(map);
-    
-    // Initialize network layers
-    networkLayers = {
-      jio: L.layerGroup().addTo(map),
-      airtel: L.layerGroup().addTo(map),
-      vi: L.layerGroup().addTo(map)
-    };
-    
-    // Make sure window.networkLayers is also set
-    window.networkLayers = networkLayers;
-    
-    console.log('Map successfully initialized');
-    
   } catch (error) {
-    console.error('Error initializing map:', error);
+    console.error('Error during map initialization:', error);
     showNotification('Error initializing map. Please refresh the page.', 'error');
   }
 }
@@ -615,6 +578,67 @@ function compareNetworksAction(locationName, stateName = null) {
   // Update the UI to show we're comparing networks
   updateLocationDisplay(fullLocationName);
   
+  // Find coordinates for this location
+  findLocationCoordinates(locationName)
+    .then(coords => {
+      // Store coordinates for tower visualization
+      userCoordinates = coords;
+      
+      // Move the map to the location
+      if (map) {
+        map.flyTo(coords, 10);
+        
+        // Add a marker for the selected location if it doesn't exist yet
+        if (userLocationMarker) {
+          userLocationMarker.setLatLng(coords);
+        } else {
+          userLocationMarker = L.marker(coords, {
+            icon: L.divIcon({
+              className: 'user-location-marker',
+              html: '<div class="location-pin"></div>',
+              iconSize: [30, 30],
+              iconAnchor: [15, 30]
+            })
+          }).addTo(map);
+        }
+      }
+    })
+    .catch(error => {
+      console.error('Error finding coordinates for location:', error);
+      
+      // If we have the cities array, try to find the location there
+      const city = (window.cities || cities || []).find(
+        c => c.name.toLowerCase() === locationName.toLowerCase() ||
+             (c.name.toLowerCase() + ', ' + c.state?.toLowerCase() === locationName.toLowerCase())
+      );
+      
+      if (city && city.coords) {
+        userCoordinates = city.coords;
+        
+        // Move the map to the location
+        if (map) {
+          map.flyTo(city.coords, 10);
+          
+          // Add a marker for the selected location if it doesn't exist yet
+          if (userLocationMarker) {
+            userLocationMarker.setLatLng(city.coords);
+          } else {
+            userLocationMarker = L.marker(city.coords, {
+              icon: L.divIcon({
+                className: 'user-location-marker',
+                html: '<div class="location-pin"></div>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 30]
+              })
+            }).addTo(map);
+          }
+        }
+      } else {
+        // Could not find coordinates
+        showNotification('Could not find coordinates for this location. Network coverage may not be accurate.', 'warning');
+      }
+    });
+  
   // Scroll to the results section
   const resultsSection = document.querySelector('.comparison-results-section');
   if (resultsSection) {
@@ -644,6 +668,70 @@ function compareNetworksAction(locationName, stateName = null) {
         compareBtn.disabled = false;
       }
     });
+}
+
+/**
+ * Finds coordinates for a location by name
+ * @param {string} locationName - The name of the location
+ * @returns {Promise<Array>} - Promise resolving to [lat, lng] array
+ */
+async function findLocationCoordinates(locationName) {
+  try {
+    // First check if we have this location in our cities array
+    const city = (window.cities || cities || []).find(
+      c => c.name.toLowerCase() === locationName.toLowerCase() ||
+           (c.name.toLowerCase() + ', ' + c.state?.toLowerCase() === locationName.toLowerCase())
+    );
+    
+    if (city && city.coords) {
+      return city.coords;
+    }
+    
+    // If we have access to the API client, try to use its geolocation function
+    if (window.PortMySimAPI && typeof window.PortMySimAPI.getCoordinates === 'function') {
+      const coords = await window.PortMySimAPI.getCoordinates(locationName);
+      if (coords && coords.lat && coords.lng) {
+        return [coords.lat, coords.lng];
+      }
+    }
+    
+    // Fallback to a simple lookup for Indian cities
+    // In a real app, you would use a geocoding service like Google Maps or Nominatim
+    
+    // Delhi
+    if (/delhi|new delhi/i.test(locationName)) {
+      return [28.7041, 77.1025];
+    }
+    // Mumbai
+    else if (/mumbai|bombay/i.test(locationName)) {
+      return [19.0760, 72.8777];
+    }
+    // Bangalore
+    else if (/bangalore|bengaluru/i.test(locationName)) {
+      return [12.9716, 77.5946];
+    }
+    // Chennai
+    else if (/chennai|madras/i.test(locationName)) {
+      return [13.0827, 80.2707];
+    }
+    // Kolkata
+    else if (/kolkata|calcutta/i.test(locationName)) {
+      return [22.5726, 88.3639];
+    }
+    // Hyderabad
+    else if (/hyderabad/i.test(locationName)) {
+      return [17.3850, 78.4867];
+    }
+    // Pune
+    else if (/pune/i.test(locationName)) {
+      return [18.5204, 73.8567];
+    }
+    // Default to center of India
+    throw new Error('Location not found in database');
+  } catch (error) {
+    console.error('Error finding coordinates:', error);
+    throw error;
+  }
 }
 
 /**
@@ -710,26 +798,34 @@ async function updateCoverageResults(locationName) {
  * @param {Array} coverageData - Array of operator coverage data
  */
 function updateMapWithCoverageData(coverageData) {
+  // First, ensure we have the correct map instance
+  if (!map && window.coverageMap) {
+    map = window.coverageMap;
+  }
+  
   if (!map) {
-    console.error('Map not initialized');
+    console.error('No valid map instance available');
     return;
   }
   
-  // Clear existing layers
-  if (window.networkLayers && typeof window.networkLayers === 'object') {
-    Object.values(window.networkLayers).forEach(layer => {
-      if (layer && map.hasLayer(layer)) {
-        map.removeLayer(layer);
-      }
-    });
-  } else {
-    // Initialize network layers if they don't exist
+  // Ensure network layers are properly initialized
+  if (!window.networkLayers) {
     window.networkLayers = {
-      jio: L.layerGroup(),
-      airtel: L.layerGroup(),
-      vi: L.layerGroup()
+      jio: L.layerGroup().addTo(map),
+      airtel: L.layerGroup().addTo(map),
+      vi: L.layerGroup().addTo(map)
     };
   }
+  
+  // Set local reference to the global layers
+  networkLayers = window.networkLayers;
+  
+  // Clear existing layers
+  Object.values(networkLayers).forEach(layer => {
+    if (layer && map.hasLayer(layer)) {
+      layer.clearLayers();
+    }
+  });
   
   // Verify coverageData is valid before attempting to iterate
   if (!coverageData) {
@@ -745,31 +841,59 @@ function updateMapWithCoverageData(coverageData) {
   
   // Add new layers for each network
   if (coverageData.length > 0) {
+    const coverageColors = {
+      jio: '#E53935',    // Bright red for Jio
+      airtel: '#1E88E5', // Blue for Airtel
+      vi: '#7B1FA2',     // Purple for Vi
+    };
+    
+    // Local implementation of addCoverageForNetwork
+    function addCoverageForNetwork(network, coverageType, opacity) {
+      const color = coverageColors[network];
+      if (!color) return;
+      
+      // Ensure we have the cities array
+      const allCities = window.cities || cities || [];
+      
+      // For demo purposes, create coverage circles for each city
+      allCities.forEach(city => {
+        // Calculate radius based on network and coverage type
+        let radius;
+        if (coverageType === '5g') {
+          radius = network === 'jio' ? 30000 : 
+                  network === 'airtel' ? 35000 : 25000;
+        } else {
+          radius = network === 'jio' ? 45000 : 
+                  network === 'airtel' ? 50000 : 40000;
+        }
+        
+        // Add circle
+        const circle = L.circle(city.coords, {
+          radius: radius,
+          color: color,
+          fillColor: color,
+          fillOpacity: opacity,
+          weight: 1,
+          className: 'coverage-layer'
+        });
+        
+        // Add to appropriate layer group
+        if (networkLayers[network]) {
+          networkLayers[network].addLayer(circle);
+        }
+      });
+    }
+    
+    // Process the coverage data
     coverageData.forEach(network => {
       if (network && network.operator) {
-        // Check if we can access the global function
-        if (typeof window.addCoverageForNetwork === 'function') {
-          window.addCoverageForNetwork(
-            network.operator, 
-            network.coverageType || '4G', 
-            0.7
-          );
-        } else if (typeof addCoverageForNetwork === 'function') {
-          // Try the local function if global isn't available
-          addCoverageForNetwork(
-            network.operator, 
-            network.coverageType || '4G', 
-            0.7
-          );
-        } else {
-          console.warn('addCoverageForNetwork function not found');
-        }
-      } else {
-        console.warn('Invalid network object in coverageData:', network);
+        addCoverageForNetwork(
+          network.operator, 
+          network.coverageType || '4G', 
+          0.7
+        );
       }
     });
-  } else {
-    console.warn('Empty coverage data array to display on map');
   }
 }
 
@@ -887,17 +1011,18 @@ function getFallbackNetworkData(location) {
 function setupEventListeners() {
   console.log('Setting up event listeners');
   
-  // Initialize the locationSearchInput variable - using let to make it clear this is initializing the global variable
-  locationSearchInput = document.getElementById('location-search');
-  console.log('Location search input found:', locationSearchInput ? 'yes' : 'no');
+  // Get a fresh reference to the search input element and update the global variable
+  const searchInput = document.getElementById('location-search');
+  locationSearchInput = searchInput; // Update global reference
+  console.log('Location search input found:', searchInput ? 'yes' : 'no');
   
   // Set up location search input event listeners
-  if (locationSearchInput) {
+  if (searchInput) {
     // Handle Enter key press
-    locationSearchInput.addEventListener('keypress', function(event) {
+    searchInput.addEventListener('keypress', function(event) {
       if (event.key === 'Enter') {
         event.preventDefault();
-        const location = locationSearchInput.value.trim();
+        const location = searchInput.value.trim();
         if (location) {
           compareNetworksAction(location);
         } else {
@@ -913,9 +1038,9 @@ function setupEventListeners() {
   const locationSearchBtn = document.getElementById('location-search-btn');
   if (locationSearchBtn) {
     locationSearchBtn.addEventListener('click', function() {
-      // Get the input element again in case it wasn't available earlier
-      const searchInput = locationSearchInput || document.getElementById('location-search');
-      const location = searchInput ? searchInput.value.trim() : '';
+      // Always get a fresh reference to the input element
+      const currentSearchInput = document.getElementById('location-search');
+      const location = currentSearchInput ? currentSearchInput.value.trim() : '';
       if (location) {
         compareNetworksAction(location);
       } else {
@@ -928,10 +1053,9 @@ function setupEventListeners() {
   const compareBtn = document.getElementById('compare-btn');
   if (compareBtn) {
     compareBtn.addEventListener('click', function() {
-      // Check if we have a location from either the search input or state/city selectors
-      // Get the input element again in case it wasn't available earlier
-      const searchInput = locationSearchInput || document.getElementById('location-search');
-      const location = searchInput ? searchInput.value.trim() : '';
+      // Always get a fresh reference to the input element
+      const currentSearchInput = document.getElementById('location-search');
+      const location = currentSearchInput ? currentSearchInput.value.trim() : '';
       const citySelector = document.getElementById('city-selector');
       const stateSelector = document.getElementById('state-selector');
       
@@ -1062,6 +1186,34 @@ function setupEventListeners() {
       });
     });
   }
+  
+  // Set up show towers checkbox
+  const showTowersCheckbox = document.getElementById('show-towers');
+  if (showTowersCheckbox) {
+    showTowersCheckbox.addEventListener('change', function() {
+      const isChecked = this.checked;
+      toggleTowerVisualization(isChecked);
+    });
+  }
+  
+  // Set up tower radius slider
+  const towerRadiusSlider = document.getElementById('tower-radius');
+  const radiusValueDisplay = document.getElementById('radius-value');
+  
+  if (towerRadiusSlider) {
+    towerRadiusSlider.addEventListener('input', function() {
+      const radius = this.value;
+      if (radiusValueDisplay) {
+        radiusValueDisplay.textContent = `${radius} km`;
+      }
+      
+      // If towers are currently visible, update them with the new radius
+      const showTowersCheckbox = document.getElementById('show-towers');
+      if (showTowersCheckbox && showTowersCheckbox.checked) {
+        toggleTowerVisualization(true, radius);
+      }
+    });
+  }
 }
 
 /**
@@ -1148,7 +1300,9 @@ function initLocationSuggestions() {
   console.log('Initializing location suggestions');
   
   return new Promise((resolve) => {
+    // Always get a fresh reference to the input element
     const locationInput = document.getElementById('location-search');
+    locationSearchInput = locationInput; // Update global reference
     const suggestionsContainer = document.getElementById('location-suggestions');
     
     if (!locationInput || !suggestionsContainer) {
@@ -1309,7 +1463,91 @@ function initializeStateItemListeners() {
 
 function showNotification(message, type = 'info', duration = 3000) {
   console.log(`Notification (${type}):`, message);
-  alert(`${type.toUpperCase()}: ${message}`);
+  
+  // Create toast container if it doesn't exist
+  let toastContainer = document.getElementById('toast-container');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toast-container';
+    toastContainer.style.position = 'fixed';
+    toastContainer.style.bottom = '20px';
+    toastContainer.style.right = '20px';
+    toastContainer.style.zIndex = '9999';
+    document.body.appendChild(toastContainer);
+  }
+  
+  // Create toast element
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <div class="toast-icon">
+      <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                         type === 'error' ? 'exclamation-circle' :
+                         type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+    </div>
+    <div class="toast-message">${message}</div>
+    <button class="toast-close"><i class="fas fa-times"></i></button>
+  `;
+  
+  // Apply styles
+  toast.style.display = 'flex';
+  toast.style.alignItems = 'center';
+  toast.style.margin = '10px 0';
+  toast.style.padding = '12px 16px';
+  toast.style.backgroundColor = type === 'success' ? '#4CAF50' :
+                               type === 'error' ? '#F44336' :
+                               type === 'warning' ? '#FF9800' : '#2196F3';
+  toast.style.color = '#fff';
+  toast.style.borderRadius = '4px';
+  toast.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+  toast.style.opacity = '0';
+  toast.style.transition = 'opacity 0.3s ease';
+  toast.style.cursor = 'default';
+  
+  // Style icon and message
+  const toastIcon = toast.querySelector('.toast-icon');
+  toastIcon.style.marginRight = '10px';
+  
+  const toastMessage = toast.querySelector('.toast-message');
+  toastMessage.style.flex = '1';
+  
+  // Style close button
+  const closeButton = toast.querySelector('.toast-close');
+  closeButton.style.background = 'none';
+  closeButton.style.border = 'none';
+  closeButton.style.color = '#fff';
+  closeButton.style.marginLeft = 'auto';
+  closeButton.style.cursor = 'pointer';
+  
+  // Add toast to container
+  toastContainer.appendChild(toast);
+  
+  // Show toast with animation
+  setTimeout(() => {
+    toast.style.opacity = '1';
+  }, 10);
+  
+  // Close button handler
+  closeButton.addEventListener('click', () => {
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      if (toastContainer.contains(toast)) {
+        toastContainer.removeChild(toast);
+      }
+    }, 300);
+  });
+  
+  // Auto close after duration
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.style.opacity = '0';
+      setTimeout(() => {
+        if (toastContainer.contains(toast)) {
+          toastContainer.removeChild(toast);
+        }
+      }, 300);
+    }
+  }, duration);
 }
 
 function updateDetailedComparisonTable(data) {
@@ -1328,17 +1566,541 @@ function updateDetailedComparisonTable(data) {
     return;
   }
   
-  // For now, just display the data in a pre element
-  let preElement = comparisonTableContainer.querySelector('pre');
-  if (!preElement) {
-    preElement = document.createElement('pre');
-    comparisonTableContainer.appendChild(preElement);
+  // Get the table element
+  const comparisonTable = comparisonTableContainer.querySelector('table');
+  if (!comparisonTable) {
+    console.error('Comparison table element not found');
+    return;
   }
   
-  preElement.textContent = JSON.stringify(data, null, 2);
-  preElement.style.maxHeight = '300px';
-  preElement.style.overflow = 'auto';
+  // Get the table body where we'll update the rows
+  const tableBody = comparisonTable.querySelector('tbody');
+  if (!tableBody) {
+    console.error('Table body not found');
+    return;
+  }
+  
+  // Clear any pre elements we might have added for debugging
+  const preElement = comparisonTableContainer.querySelector('pre');
+  if (preElement) {
+    preElement.remove();
+  }
+  
+  // Extract data for each operator
+  const jioData = data.find(item => item.operator === 'jio') || {};
+  const airtelData = data.find(item => item.operator === 'airtel') || {};
+  const viData = data.find(item => item.operator === 'vi') || {};
+  
+  // Helper function to find the best value in a row and add 'best' class
+  const markBestValue = (row, values) => {
+    // Find the maximum value
+    const maxValue = Math.max(...values.filter(v => !isNaN(parseFloat(v))));
+    
+    // Mark the cell with the max value
+    values.forEach((value, index) => {
+      const cell = row.children[index + 1]; // +1 to skip the first cell (feature name)
+      if (cell && parseFloat(value) === maxValue) {
+        cell.classList.add('best');
+      } else if (cell) {
+        cell.classList.remove('best');
+      }
+    });
+  };
+  
+  // Update 4G Coverage row
+  const fourGRow = tableBody.rows[0];
+  if (fourGRow) {
+    const jioValue = jioData['4g_coverage'] || 0;
+    const airtelValue = airtelData['4g_coverage'] || 0;
+    const viValue = viData['4g_coverage'] || 0;
+    
+    fourGRow.children[1].textContent = `${jioValue}%`;
+    fourGRow.children[2].textContent = `${airtelValue}%`;
+    fourGRow.children[3].textContent = `${viValue}%`;
+    
+    markBestValue(fourGRow, [jioValue, airtelValue, viValue]);
+  }
+  
+  // Update 5G Coverage row
+  const fiveGRow = tableBody.rows[1];
+  if (fiveGRow) {
+    const jioValue = jioData['5g_coverage'] || 0;
+    const airtelValue = airtelData['5g_coverage'] || 0;
+    const viValue = viData['5g_coverage'] || 0;
+    
+    fiveGRow.children[1].textContent = `${jioValue}%`;
+    fiveGRow.children[2].textContent = `${airtelValue}%`;
+    fiveGRow.children[3].textContent = `${viValue}%`;
+    
+    markBestValue(fiveGRow, [jioValue, airtelValue, viValue]);
+  }
+  
+  // Update Download Speed row
+  const downloadRow = tableBody.rows[2];
+  if (downloadRow) {
+    const jioValue = jioData['download_speed'] || 0;
+    const airtelValue = airtelData['download_speed'] || 0;
+    const viValue = viData['download_speed'] || 0;
+    
+    downloadRow.children[1].textContent = `${jioValue} Mbps`;
+    downloadRow.children[2].textContent = `${airtelValue} Mbps`;
+    downloadRow.children[3].textContent = `${viValue} Mbps`;
+    
+    markBestValue(downloadRow, [jioValue, airtelValue, viValue]);
+  }
+  
+  // Update Upload Speed row
+  const uploadRow = tableBody.rows[3];
+  if (uploadRow) {
+    const jioValue = jioData['upload_speed'] || 0;
+    const airtelValue = airtelData['upload_speed'] || 0;
+    const viValue = viData['upload_speed'] || 0;
+    
+    uploadRow.children[1].textContent = `${jioValue} Mbps`;
+    uploadRow.children[2].textContent = `${airtelValue} Mbps`;
+    uploadRow.children[3].textContent = `${viValue} Mbps`;
+    
+    markBestValue(uploadRow, [jioValue, airtelValue, viValue]);
+  }
+  
+  // Update Call Quality row
+  const callQualityRow = tableBody.rows[4];
+  if (callQualityRow) {
+    const jioValue = jioData['call_quality'] || 'Average';
+    const airtelValue = airtelData['call_quality'] || 'Average';
+    const viValue = viData['call_quality'] || 'Average';
+    
+    callQualityRow.children[1].textContent = jioValue;
+    callQualityRow.children[2].textContent = airtelValue;
+    callQualityRow.children[3].textContent = viValue;
+    
+    // For qualitative values, mark cells with 'Excellent' as best
+    callQualityRow.children[1].classList.toggle('best', jioValue === 'Excellent');
+    callQualityRow.children[2].classList.toggle('best', airtelValue === 'Excellent');
+    callQualityRow.children[3].classList.toggle('best', viValue === 'Excellent');
+  }
+  
+  // Update Indoor Reception row
+  const indoorRow = tableBody.rows[5];
+  if (indoorRow) {
+    const jioValue = jioData['indoor_reception'] || 'Average';
+    const airtelValue = airtelData['indoor_reception'] || 'Average';
+    const viValue = viData['indoor_reception'] || 'Average';
+    
+    indoorRow.children[1].textContent = jioValue;
+    indoorRow.children[2].textContent = airtelValue;
+    indoorRow.children[3].textContent = viValue;
+    
+    // For qualitative values, mark cells with 'Excellent' as best
+    indoorRow.children[1].classList.toggle('best', jioValue === 'Excellent');
+    indoorRow.children[2].classList.toggle('best', airtelValue === 'Excellent');
+    indoorRow.children[3].classList.toggle('best', viValue === 'Excellent');
+  }
+  
+  // Update Congestion Handling row
+  const congestionRow = tableBody.rows[6];
+  if (congestionRow) {
+    const jioValue = jioData['congestion'] || 'Average';
+    const airtelValue = airtelData['congestion'] || 'Average';
+    const viValue = viData['congestion'] || 'Average';
+    
+    congestionRow.children[1].textContent = jioValue;
+    congestionRow.children[2].textContent = airtelValue;
+    congestionRow.children[3].textContent = viValue;
+    
+    // For qualitative values, mark cells with 'Excellent' as best
+    congestionRow.children[1].classList.toggle('best', jioValue === 'Excellent');
+    congestionRow.children[2].classList.toggle('best', airtelValue === 'Excellent');
+    congestionRow.children[3].classList.toggle('best', viValue === 'Excellent');
+  }
+  
+  // Update Customer Satisfaction row
+  const satisfactionRow = tableBody.rows[7];
+  if (satisfactionRow) {
+    const jioValue = jioData['satisfaction'] || '0.0';
+    const airtelValue = airtelData['satisfaction'] || '0.0';
+    const viValue = viData['satisfaction'] || '0.0';
+    
+    satisfactionRow.children[1].textContent = `${jioValue}/5`;
+    satisfactionRow.children[2].textContent = `${airtelValue}/5`;
+    satisfactionRow.children[3].textContent = `${viValue}/5`;
+    
+    markBestValue(satisfactionRow, [jioValue, airtelValue, viValue]);
+  }
+  
+  // Also update the coverage metrics section
+  updateCoverageMetrics(data);
   
   // Make the container visible
   comparisonTableContainer.style.display = 'block';
+}
+
+/**
+ * Updates the coverage metrics in the lower section
+ * @param {Array} data - Network data array
+ */
+function updateCoverageMetrics(data) {
+  // Find the coverage metrics container
+  const metricsContainer = document.querySelector('.coverage-metrics');
+  if (!metricsContainer) {
+    return;
+  }
+  
+  // Extract data for each operator
+  const jioData = data.find(item => item.operator === 'jio') || {};
+  const airtelData = data.find(item => item.operator === 'airtel') || {};
+  const viData = data.find(item => item.operator === 'vi') || {};
+  
+  // Update progress bars
+  const metricItems = metricsContainer.querySelectorAll('.metric-item');
+  if (metricItems.length >= 6) {
+    // Jio 4G Coverage
+    updateMetric(metricItems[0], jioData['4g_coverage'] || 0);
+    
+    // Airtel 4G Coverage
+    updateMetric(metricItems[1], airtelData['4g_coverage'] || 0);
+    
+    // Vi 4G Coverage
+    updateMetric(metricItems[2], viData['4g_coverage'] || 0);
+    
+    // Jio 5G Coverage
+    updateMetric(metricItems[3], jioData['5g_coverage'] || 0);
+    
+    // Airtel 5G Coverage
+    updateMetric(metricItems[4], airtelData['5g_coverage'] || 0);
+    
+    // Vi 5G Coverage
+    updateMetric(metricItems[5], viData['5g_coverage'] || 0);
+  }
+  
+  // Update network ranking
+  updateNetworkRanking(data);
+}
+
+/**
+ * Updates a single metric item
+ * @param {Element} metricItem - The metric item element
+ * @param {number} value - The value to display
+ */
+function updateMetric(metricItem, value) {
+  const progressFill = metricItem.querySelector('.progress-fill');
+  const metricValue = metricItem.querySelector('.metric-value');
+  
+  if (progressFill) {
+    progressFill.style.width = `${value}%`;
+  }
+  
+  if (metricValue) {
+    metricValue.textContent = `${value}%`;
+  }
+}
+
+/**
+ * Updates the network ranking display
+ * @param {Array} data - Network data array
+ */
+function updateNetworkRanking(data) {
+  // Find the ranking container
+  const rankingContainer = document.querySelector('.network-ranking');
+  if (!rankingContainer) {
+    return;
+  }
+  
+  // Calculate overall scores
+  const calculateScore = (networkData) => {
+    if (!networkData) return 0;
+    
+    const coverage4g = networkData['4g_coverage'] || 0;
+    const coverage5g = networkData['5g_coverage'] || 0;
+    const downloadSpeed = networkData['download_speed'] || 0;
+    
+    // Calculate a weighted score
+    return Math.round(
+      (coverage4g * 0.3) +
+      (coverage5g * 0.3) +
+      (downloadSpeed * 1.5)
+    );
+  };
+  
+  const jioData = data.find(item => item.operator === 'jio') || {};
+  const airtelData = data.find(item => item.operator === 'airtel') || {};
+  const viData = data.find(item => item.operator === 'vi') || {};
+  
+  const jioScore = calculateScore(jioData);
+  const airtelScore = calculateScore(airtelData);
+  const viScore = calculateScore(viData);
+  
+  // Sort networks by score
+  const rankings = [
+    { operator: 'jio', score: jioScore },
+    { operator: 'airtel', score: airtelScore },
+    { operator: 'vi', score: viScore }
+  ].sort((a, b) => b.score - a.score);
+  
+  // Get the ranking items
+  const rankingItems = rankingContainer.querySelectorAll('.ranking-item');
+  if (rankingItems.length >= 3) {
+    // Update each ranking item
+    for (let i = 0; i < 3; i++) {
+      const rankItem = rankingItems[i];
+      const networkData = rankings[i];
+      
+      const rankNumber = rankItem.querySelector('.rank-number');
+      const rankNetwork = rankItem.querySelector('.rank-network img');
+      const rankNetworkName = rankItem.querySelector('.rank-network span');
+      const rankScore = rankItem.querySelector('.rank-score');
+      
+      if (rankNumber) rankNumber.textContent = i + 1;
+      
+      if (rankNetwork) {
+        rankNetwork.src = `../images/${networkData.operator}.${networkData.operator === 'jio' ? 'jpeg' : 'png'}`;
+        rankNetwork.alt = networkData.operator.charAt(0).toUpperCase() + networkData.operator.slice(1);
+      }
+      
+      if (rankNetworkName) {
+        rankNetworkName.textContent = networkData.operator.charAt(0).toUpperCase() + networkData.operator.slice(1);
+      }
+      
+      if (rankScore) rankScore.textContent = `${networkData.score}/100`;
+      
+      // Mark the top rank
+      rankItem.classList.toggle('top-rank', i === 0);
+    }
+  }
+}
+
+/**
+ * Toggles the visibility of network towers on the map
+ * @param {boolean} show - Whether to show or hide towers
+ * @param {number} radius - Search radius in kilometers
+ */
+function toggleTowerVisualization(show, radius) {
+  console.log('toggleTowerVisualization called:', show, radius);
+  
+  // Clear existing tower layers
+  if (towerLayers) {
+    Object.values(towerLayers).forEach(layer => {
+      if (layer && typeof layer.clearLayers === 'function') {
+        layer.clearLayers();
+      }
+    });
+  }
+  
+  // If not showing, just return
+  if (!show) {
+    // Update tower counts to 0
+    updateTowerCounts({ jio: 0, airtel: 0, vi: 0 });
+    return;
+  }
+  
+  // Ensure we have user coordinates or a selected location
+  if (!userCoordinates) {
+    showNotification('Please select a location first', 'warning');
+    
+    // Uncheck the show towers checkbox since we can't show towers yet
+    const showTowersCheckbox = document.getElementById('show-towers');
+    if (showTowersCheckbox) {
+      showTowersCheckbox.checked = false;
+    }
+    return;
+  }
+  
+  // Get radius from slider if not provided
+  const actualRadius = radius || document.getElementById('tower-radius')?.value || 5;
+  
+  // Show loading state
+  showNotification('Fetching nearby towers...', 'info');
+  
+  // Fetch tower data
+  fetchTowerData(userCoordinates[0], userCoordinates[1], actualRadius)
+    .then(data => {
+      displayTowers(data);
+    })
+    .catch(error => {
+      console.error('Error fetching tower data:', error);
+      showNotification('Error fetching tower data. Using sample data.', 'warning');
+      
+      // Use fallback data
+      const fallbackData = generateFallbackTowerData(userCoordinates[0], userCoordinates[1], actualRadius);
+      displayTowers(fallbackData);
+    });
+}
+
+/**
+ * Fetches tower data from the API
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {number} radius - Search radius in kilometers
+ * @returns {Promise} - Promise resolving to tower data
+ */
+async function fetchTowerData(lat, lng, radius) {
+  try {
+    // If we have access to the API client, use it
+    if (window.PortMySimAPI && typeof window.PortMySimAPI.findTowers === 'function') {
+      return await window.PortMySimAPI.findTowers({ lat, lng, radius });
+    }
+    
+    // Fall back to using fetch directly
+    const response = await fetch(`${API_BASE_URL}/network-coverage/tower-data?lat=${lat}&lng=${lng}&radius=${radius}`);
+    
+    if (!response.ok) {
+      throw new Error(`API responded with ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching tower data:', error);
+    throw error;
+  }
+}
+
+/**
+ * Generates fallback tower data when API calls fail
+ * @param {number} lat - Latitude
+ * @param {number} lng - Longitude
+ * @param {number} radius - Search radius in kilometers
+ * @returns {object} - Fallback tower data
+ */
+function generateFallbackTowerData(lat, lng, radius) {
+  const towers = [];
+  const operators = ['jio', 'airtel', 'vi'];
+  const towerTypes = ['macro', 'micro', 'small-cell'];
+  
+  // Generate random number of towers (5-20)
+  const towerCount = 5 + Math.floor(Math.random() * 15);
+  
+  // Helper to get a random element from an array
+  const randomElement = arr => arr[Math.floor(Math.random() * arr.length)];
+  
+  // Helper to get a random coordinate within the radius
+  const randomCoordinate = (centerLat, centerLng, radiusKm) => {
+    // Earth's radius in kilometers
+    const earthRadius = 6371;
+    
+    // Convert radius from kilometers to radians
+    const radiusRadians = radiusKm / earthRadius;
+    
+    // Random angle
+    const randomAngle = Math.random() * 2 * Math.PI;
+    
+    // Random distance within the radius
+    const randomDistance = Math.random() * radiusRadians;
+    
+    // Calculate new position
+    const lat1 = centerLat * (Math.PI / 180);
+    const lng1 = centerLng * (Math.PI / 180);
+    
+    const lat2 = Math.asin(Math.sin(lat1) * Math.cos(randomDistance) + 
+                 Math.cos(lat1) * Math.sin(randomDistance) * Math.cos(randomAngle));
+    
+    const lng2 = lng1 + Math.atan2(Math.sin(randomAngle) * Math.sin(randomDistance) * Math.cos(lat1), 
+                    Math.cos(randomDistance) - Math.sin(lat1) * Math.sin(lat2));
+    
+    // Convert back to degrees
+    return [lat2 * (180 / Math.PI), lng2 * (180 / Math.PI)];
+  };
+  
+  // Generate towers
+  for (let i = 0; i < towerCount; i++) {
+    const operator = randomElement(operators);
+    const position = randomCoordinate(lat, lng, radius);
+    
+    towers.push({
+      id: `tower-${i}`,
+      operator: operator,
+      type: randomElement(towerTypes),
+      position: position,
+      signalStrength: 50 + Math.floor(Math.random() * 50) // 50-100
+    });
+  }
+  
+  return { towers };
+}
+
+/**
+ * Displays towers on the map
+ * @param {object} data - Tower data from API or fallback
+ */
+function displayTowers(data) {
+  if (!data || !data.towers || !Array.isArray(data.towers)) {
+    console.error('Invalid tower data:', data);
+    showNotification('No valid tower data available', 'error');
+    return;
+  }
+  
+  // Initialize tower counts
+  const towerCounts = {
+    jio: 0,
+    airtel: 0,
+    vi: 0
+  };
+  
+  // Ensure tower layers exist
+  if (!towerLayers) {
+    towerLayers = {
+      jio: L.layerGroup(),
+      airtel: L.layerGroup(),
+      vi: L.layerGroup()
+    };
+  }
+  
+  // Add layer groups to map if they're not already added
+  Object.values(towerLayers).forEach(layer => {
+    if (map && !map.hasLayer(layer)) {
+      map.addLayer(layer);
+    }
+  });
+  
+  // Tower colors
+  const towerColors = {
+    jio: '#E53935',
+    airtel: '#1E88E5',
+    vi: '#7B1FA2'
+  };
+  
+  // Process each tower
+  data.towers.forEach(tower => {
+    const { operator, position, signalStrength } = tower;
+    
+    // Skip if invalid data
+    if (!operator || !position || position.length !== 2) return;
+    
+    // Update tower count
+    if (towerCounts.hasOwnProperty(operator)) {
+      towerCounts[operator]++;
+    }
+    
+    // Create marker
+    const towerIcon = L.divIcon({
+      className: `tower-icon ${operator}`,
+      html: `<div class="tower ${operator}"></div>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10]
+    });
+    
+    // Create marker and add to appropriate layer
+    const marker = L.marker(position, { icon: towerIcon })
+      .bindPopup(`<strong>${operator.toUpperCase()} Tower</strong><br>Signal Strength: ${signalStrength || 'Unknown'}%`);
+    
+    if (towerLayers[operator]) {
+      towerLayers[operator].addLayer(marker);
+    }
+  });
+  
+  // Update tower count display in UI
+  updateTowerCounts(towerCounts);
+  
+  // Show success notification
+  showNotification(`Displaying ${data.towers.length} nearby towers`, 'success');
+}
+
+/**
+ * Updates the tower count display in the UI
+ * @param {object} counts - Object with counts for each operator
+ */
+function updateTowerCounts(counts) {
+  // Update count elements in the UI
+  document.getElementById('jio-tower-count').textContent = counts.jio || 0;
+  document.getElementById('airtel-tower-count').textContent = counts.airtel || 0;
+  document.getElementById('vi-tower-count').textContent = counts.vi || 0;
 }

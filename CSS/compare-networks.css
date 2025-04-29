@@ -2812,6 +2812,77 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 }
 
+/* Tower markers and location pin styling */
+.tower-icon {
+  background: none !important;
+  border: none !important;
+}
+
+.tower {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.tower::after {
+  content: "";
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 14px;
+  background-color: currentColor;
+}
+
+.tower.jio {
+  background-color: #E53935;
+  border: 2px solid #E53935;
+}
+
+.tower.airtel {
+  background-color: #1E88E5;
+  border: 2px solid #1E88E5;
+}
+
+.tower.vi {
+  background-color: #7B1FA2;
+  border: 2px solid #7B1FA2;
+}
+
+/* Location pin styling */
+.user-location-marker {
+  background: none !important;
+  border: none !important;
+}
+
+.location-pin {
+  width: 20px;
+  height: 20px;
+  background-color: var(--primary-color);
+  border: 3px solid white;
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.location-pin::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 12px solid var(--primary-color);
+  z-index: -1;
+}
+
 
 
 

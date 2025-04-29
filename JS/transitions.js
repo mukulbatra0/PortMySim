@@ -25,6 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
             !link.hasAttribute('data-no-transition') &&
             link.hostname === window.location.hostname) { // Only for same-domain links
             
+            // Skip primary buttons since they're handled in loader.js
+            const isPrimaryButton = link.classList.contains('btn-primary') || 
+                                  (link.classList.contains('hero-btn') && link.classList.contains('primary'));
+            
+            if (isPrimaryButton) {
+                return; // Let loader.js handle these buttons
+            }
+            
             // Prevent default navigation
             e.preventDefault();
             
@@ -59,7 +67,11 @@ function createPageTransitions() {
 function startPageTransition(type = 'fade', destination) {
     // Get the transition element
     const transitionElement = document.querySelector(`.page-transition-${type}`);
-    if (!transitionElement) return;
+    if (!transitionElement) {
+        // If transition element doesn't exist, just navigate directly
+        window.location.href = destination;
+        return;
+    }
     
     // Show loader if available
     if (window.PortMySim && window.PortMySim.loader) {
@@ -69,10 +81,23 @@ function startPageTransition(type = 'fade', destination) {
     // Activate transition
     transitionElement.classList.add('active');
     
-    // Navigate to destination after transition
+    // Handle navigation with a timeout
     setTimeout(() => {
-        window.location.href = destination;
+        try {
+            window.location.href = destination;
+        } catch (e) {
+            console.error('Navigation error:', e);
+            // Fallback direct navigation
+            document.location.href = destination;
+        }
     }, 600); // Match this with the transition duration
+    
+    // Set a fallback timeout in case the navigation fails
+    setTimeout(() => {
+        if (window.location.href !== destination) {
+            document.location.href = destination;
+        }
+    }, 1500);
 }
 
 // Initialize content transitions

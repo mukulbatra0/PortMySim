@@ -24,9 +24,57 @@ document.addEventListener('DOMContentLoaded', () => {
         document.addEventListener('click', (e) => {
             // Check if clicked element is a link that navigates to another page
             const link = e.target.closest('a');
-            if (link && link.href && !link.href.startsWith('#') && !link.target) {
+            if (link && link.href && 
+                !link.href.startsWith('#') && 
+                !link.href.startsWith('javascript') && 
+                link.hostname === window.location.hostname && 
+                !link.hasAttribute('data-no-loader') &&
+                !link.target) {
+                
+                // Special handling for primary and hero buttons
+                const isPrimaryButton = link.classList.contains('btn-primary') || 
+                                      (link.classList.contains('hero-btn') && link.classList.contains('primary'));
+                
+                if (isPrimaryButton) {
+                    // Prevent default behavior
+                    e.preventDefault();
+                    
+                    // Get the target URL
+                    const targetUrl = link.href;
+                    
+                    // Skip if we're already on this page
+                    if (window.location.href === targetUrl) {
+                        return;
+                    }
+                    
+                    // Show loader
+                    showLoader();
+                    
+                    // Navigate directly and quickly
+                    setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 200);
+                    
+                    return;
+                }
+                
+                // Get the target URL
+                const targetUrl = link.href;
+                
+                // Don't show loader if we're already on this page
+                if (window.location.href === targetUrl) {
+                    return;
+                }
+                
                 // Show loader before navigation
                 showLoader();
+                
+                // Safety fallback - navigate after 2 seconds if we're still on the same page
+                setTimeout(() => {
+                    if (window.location.href !== targetUrl) {
+                        window.location.href = targetUrl;
+                    }
+                }, 2000);
             }
         });
     }
@@ -118,6 +166,11 @@ function showLoader() {
     
     // Prevent scrolling when loader is showing
     document.body.style.overflow = 'hidden';
+    
+    // Set a safety timeout to ensure we don't permanently block navigation
+    setTimeout(() => {
+        hideLoader();
+    }, 5000); // 5 second backup timeout
 }
 
 // Function to hide loader
