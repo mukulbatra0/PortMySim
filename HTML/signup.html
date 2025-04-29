@@ -13,6 +13,9 @@
     <link rel="icon" href="../images/logo.png" sizes="32x32" type="image/png" >
 </head>
 <body class="bg-dark-1" data-requires-api="true">
+    <!-- Auth transition overlay for smooth transitions -->
+    <div class="auth-transition-overlay"></div>
+    
     <header class="header">
         <nav class="nav">
             <div class="nav-container">
@@ -36,7 +39,7 @@
                     
                     <!-- Authentication Buttons -->
                     <div class="auth-btns">
-                        <a href="login.html" class="btn btn-login">Login</a>
+                        <a href="login.html" class="btn btn-login" data-transition="slide" data-no-loader>Login</a>
                         <a href="signup.html" class="btn btn-signup active">Sign Up</a>
                     </div>
                 </div>
@@ -128,7 +131,7 @@
                     </form>
                     
                     <div class="auth-footer">
-                        <p>Already have an account? <a href="login.html">Log In</a></p>
+                        <p>Already have an account? <a href="login.html" data-transition="slide" data-no-loader>Log In</a></p>
                     </div>
                 </div>
                 
@@ -196,5 +199,60 @@
     <script src="../JS/auth.js" type="module"></script>
     <script src="../JS/signup.js"></script>
     <script src="../JS/loader.js"></script>
+    
+    <!-- Animation init script -->
+    <script>
+        // Initialize auth page animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation classes to form and image containers
+            const formContainer = document.querySelector('.auth-form-container');
+            const imageContainer = document.querySelector('.auth-image');
+            const transitionOverlay = document.querySelector('.auth-transition-overlay');
+            
+            // Handle the transition overlay
+            if (transitionOverlay) {
+                // First make it visible to create a transition effect
+                transitionOverlay.classList.add('active');
+                
+                // Then fade it out
+                setTimeout(() => {
+                    transitionOverlay.classList.remove('active');
+                }, 200);
+            }
+            
+            // Remove any existing animation classes
+            if (formContainer) {
+                formContainer.classList.remove('animate-out');
+                formContainer.classList.add('animate-in');
+            }
+            
+            if (imageContainer) {
+                imageContainer.classList.remove('animate-out');
+                imageContainer.classList.add('animate-in');
+            }
+            
+            // Set up transition for auth links
+            document.querySelectorAll('a[data-no-loader]').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (this.getAttribute('href').includes('login.html') || 
+                        this.getAttribute('href').includes('signup.html')) {
+                        e.preventDefault();
+                        
+                        // Animate the content out
+                        if (formContainer) formContainer.classList.add('animate-out');
+                        if (imageContainer) imageContainer.classList.add('animate-out');
+                        
+                        // Show transition overlay
+                        if (transitionOverlay) transitionOverlay.classList.add('active');
+                        
+                        // Navigate after transition animation
+                        setTimeout(() => {
+                            window.location.href = this.getAttribute('href');
+                        }, 500);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html> 

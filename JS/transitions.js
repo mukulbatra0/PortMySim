@@ -73,6 +73,18 @@ function startPageTransition(type = 'fade', destination) {
         return;
     }
     
+    // Special handling for auth page transitions (login/signup)
+    const isAuthPageTransition = (
+        (destination.includes('/login.html') && window.location.href.includes('/signup.html')) ||
+        (destination.includes('/signup.html') && window.location.href.includes('/login.html'))
+    );
+    
+    if (isAuthPageTransition) {
+        // More dramatic transition for auth pages
+        handleAuthPageTransition(type, destination);
+        return;
+    }
+    
     // Show loader if available
     if (window.PortMySim && window.PortMySim.loader) {
         window.PortMySim.loader.show();
@@ -98,6 +110,95 @@ function startPageTransition(type = 'fade', destination) {
             document.location.href = destination;
         }
     }, 1500);
+}
+
+// Special handling for auth page transitions (login/signup)
+function handleAuthPageTransition(type, destination) {
+    // Prevent loader from showing for auth page transitions
+    if (window.PortMySim && window.PortMySim.loader) {
+        // Store the original show method
+        if (!window.PortMySim.loader._originalShow) {
+            window.PortMySim.loader._originalShow = window.PortMySim.loader.show;
+        }
+        // Override the show method temporarily to prevent loader from appearing
+        window.PortMySim.loader.show = function() {
+            console.log('Loader display suppressed for auth transition');
+        };
+        
+        // Restore original method after transition
+        setTimeout(() => {
+            if (window.PortMySim && window.PortMySim.loader && window.PortMySim.loader._originalShow) {
+                window.PortMySim.loader.show = window.PortMySim.loader._originalShow;
+            }
+        }, 2500);
+    }
+    
+    // Create transition container if it doesn't exist
+    let transitionContainer = document.querySelector('.page-transition-container');
+    if (!transitionContainer) {
+        transitionContainer = document.createElement('div');
+        transitionContainer.className = 'page-transition-container';
+        document.body.appendChild(transitionContainer);
+        
+        // Create transition layers for multi-layer effect
+        for (let i = 0; i < 3; i++) {
+            const layer = document.createElement('div');
+            layer.className = 'transition-layer';
+            transitionContainer.appendChild(layer);
+        }
+        
+        // Create main overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'transition-overlay';
+        transitionContainer.appendChild(overlay);
+    }
+    
+    // First animate out the current content
+    const formContainer = document.querySelector('.auth-form-container');
+    const imageContainer = document.querySelector('.auth-image');
+    
+    if (formContainer) {
+        formContainer.classList.add('animate-out');
+    }
+    
+    if (imageContainer) {
+        imageContainer.classList.add('animate-out');
+    }
+    
+    // After content fades out, start the page transition
+    setTimeout(() => {
+        // Activate transition layers
+        const layers = document.querySelectorAll('.transition-layer');
+        const overlay = document.querySelector('.transition-overlay');
+        
+        layers.forEach(layer => {
+            layer.classList.add('animate');
+        });
+        
+        if (overlay) {
+            overlay.classList.add('animate');
+        }
+        
+        // Remove the body overflow hidden that might be set by loader
+        document.body.style.overflow = '';
+        
+        // Navigate to destination after transition is underway
+        setTimeout(() => {
+            try {
+                window.location.href = destination;
+            } catch (e) {
+                console.error('Auth navigation error:', e);
+                document.location.href = destination;
+            }
+        }, 500);
+    }, 300);
+    
+    // Set a fallback timeout in case the navigation fails
+    setTimeout(() => {
+        if (window.location.href !== destination) {
+            document.location.href = destination;
+        }
+    }, 2000);
 }
 
 // Initialize content transitions
@@ -174,17 +275,98 @@ function initScrollAnimations() {
     const scrollObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
+                // Add in-view class to element
                 entry.target.classList.add('in-view');
+                
+                // Enhanced animation for timeline cards and requirement cards
+                if (entry.target.classList.contains('timeline-item') || 
+                    entry.target.classList.contains('requirement-card')) {
+                    // Add more dynamic animation based on position
+                    const delay = parseFloat(window.getComputedStyle(entry.target).transitionDelay || '0s');
+                    
+                    // Staggered entrance for child elements
+                    const animatableChildren = entry.target.querySelectorAll('h3, p, .timeline-features, .requirement-icon');
+                    animatableChildren.forEach((child, index) => {
+                        child.style.transitionDelay = `${delay + (index * 0.1)}s`;
+                        child.style.opacity = '0';
+                        child.style.transform = 'translateY(20px)';
+                        
+                        setTimeout(() => {
+                            child.style.transition = 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                            child.style.opacity = '1';
+                            child.style.transform = 'translateY(0)';
+                        }, 50);
+                    });
+                    
+                    // Special animation for timeline-date
+                    const timelineDate = entry.target.querySelector('.timeline-date');
+                    if (timelineDate) {
+                        // Set initial state
+                        timelineDate.style.opacity = '0';
+                        timelineDate.style.transform = 'translateY(-20px) scale(0.8)';
+                        
+                        // Animate with a slight delay
+                        setTimeout(() => {
+                            timelineDate.style.transition = 'opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                            timelineDate.style.opacity = '1';
+                            timelineDate.style.transform = 'translateY(0) scale(1)';
+                        }, delay * 1000 + 300);
+                    }
+                }
+                
                 scrollObserver.unobserve(entry.target);
             }
         });
     }, {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        threshold: 0.15, // Increased threshold for better timing
+        rootMargin: '0px 0px -100px 0px' // Adjusted to trigger earlier
     });
     
     scrollElements.forEach(element => {
         scrollObserver.observe(element);
+    });
+    
+    // Handle hover effects for cards more dynamically
+    const cards = document.querySelectorAll('.timeline-item, .requirement-card');
+    cards.forEach(card => {
+        // Add ripple effect to cards on hover
+        card.addEventListener('mouseenter', function(e) {
+            // Create ripple element if it doesn't exist
+            if (!this.querySelector('.ripple-hover')) {
+                const ripple = document.createElement('div');
+                ripple.classList.add('ripple-hover');
+                this.appendChild(ripple);
+            }
+            
+            const ripple = this.querySelector('.ripple-hover');
+            const rect = this.getBoundingClientRect();
+            
+            // Calculate position relative to card
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Set ripple position and animate
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+            ripple.style.opacity = '1';
+            ripple.style.transform = 'scale(1.5)';
+            
+            // Reset after animation
+            setTimeout(() => {
+                ripple.style.opacity = '0';
+                ripple.style.transform = 'scale(0)';
+            }, 600);
+            
+            // Enhance timeline-date animation on hover
+            const timelineDate = this.querySelector('.timeline-date');
+            if (timelineDate) {
+                // Add subtle bounce effect
+                timelineDate.style.animation = 'none';
+                setTimeout(() => {
+                    timelineDate.style.animation = 'timelineDatePulse 2s infinite';
+                }, 10);
+            }
+        });
     });
     
     // Fallback: make sure all scroll elements are visible after 5 seconds

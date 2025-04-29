@@ -333,47 +333,1122 @@ window.searchLocation = function(locationName) {
   compareNetworksAction(locationName);
 };
 
-// Wait for DOM to be fully loaded before initializing
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if already initialized to prevent duplicate initialization
-  if (hasInitialized) {
-    console.log('Page already initialized, skipping initialization');
+/**
+ * Apply dark theme to select dropdowns
+ * Merged from compareMap.js
+ */
+function applyDarkThemeToDropdowns() {
+  console.log('Applying dark theme to dropdowns');
+  const stateSelector = document.getElementById('state-selector');
+  const citySelector = document.getElementById('city-selector');
+  
+  // Function to apply dark theme to a select element's options
+  function applyDarkThemeToOptions(selectElement) {
+    if (!selectElement) return;
+    
+    // Apply initially
+    const initialOptions = selectElement.querySelectorAll('option');
+    initialOptions.forEach(option => {
+      option.style.backgroundColor = '#212529';
+      option.style.color = '#ffffff';
+      option.style.padding = '10px 15px';
+    });
+  }
+  
+  // Apply immediately on page load
+  applyDarkThemeToOptions(stateSelector);
+  applyDarkThemeToOptions(citySelector);
+  
+  // Ensure dark theme is applied when dropdown is opened
+  if (stateSelector) {
+    stateSelector.addEventListener('mousedown', function() {
+      // Force dark style on all options
+      setTimeout(() => {
+        const options = this.querySelectorAll('option');
+        options.forEach(option => {
+          option.style.backgroundColor = '#212529'; // Use hex instead of CSS var
+          option.style.color = '#ffffff';
+          option.style.padding = '10px 15px';
+        });
+      }, 0);
+    });
+    
+    // Also apply on focus
+    stateSelector.addEventListener('focus', function() {
+      setTimeout(() => {
+        const options = this.querySelectorAll('option');
+        options.forEach(option => {
+          option.style.backgroundColor = '#212529';
+          option.style.color = '#ffffff';
+          option.style.padding = '10px 15px';
+        });
+      }, 0);
+    });
+  }
+  
+  // Apply the same to the city selector
+  if (citySelector) {
+    citySelector.addEventListener('mousedown', function() {
+      setTimeout(() => {
+        const options = this.querySelectorAll('option');
+        options.forEach(option => {
+          option.style.backgroundColor = '#212529';
+          option.style.color = '#ffffff';
+          option.style.padding = '10px 15px';
+        });
+      }, 0);
+    });
+    
+    // Also apply on focus
+    citySelector.addEventListener('focus', function() {
+      setTimeout(() => {
+        const options = this.querySelectorAll('option');
+        options.forEach(option => {
+          option.style.backgroundColor = '#212529';
+          option.style.color = '#ffffff';
+          option.style.padding = '10px 15px';
+        });
+      }, 0);
+    });
+  }
+}
+
+/**
+ * Adds necessary CSS styles for map improvements
+ */
+function addMapStyles() {
+  // Only add styles if they don't already exist
+  if (document.getElementById('map-custom-styles')) return;
+  
+  // Create a style element
+  const styleEl = document.createElement('style');
+  styleEl.id = 'map-custom-styles';
+  
+  // Define styles with a cleaner, minimal approach
+  styleEl.textContent = `
+    /* Map Container Styles */
+    #coverage-map {
+      width: 100%;
+      height: 500px;
+      margin: 0 auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    /* Fix for overlapping layers on the map */
+    .leaflet-top {
+      z-index: 800;
+    }
+    
+    .leaflet-bottom {
+      z-index: 700;
+    }
+    
+    /* Coverage Legend Styles */
+    .coverage-legend {
+      background: rgba(33, 37, 41, 0.8);
+      color: #fff;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 30px !important;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      max-width: 180px;
+    }
+    
+    .coverage-legend h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      padding-bottom: 5px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+    
+    .legend-color {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    
+    .legend-label {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    
+    .legend-section {
+      margin-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 6px;
+      font-size: 11px;
+    }
+    
+    .legend-section p {
+      margin: 4px 0;
+    }
+    
+    /* Layer Controls Styles */
+    .leaflet-control-layers {
+      background: rgba(33, 37, 41, 0.8) !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 4px !important;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+      padding: 10px !important;
+      margin-top: 10px !important;
+      font-size: 13px !important;
+    }
+    
+    .leaflet-control-layers-list {
+      color: white !important;
+      min-width: 150px !important;
+    }
+    
+    .leaflet-control-layers-toggle {
+      background-color: rgba(33, 37, 41, 0.8) !important;
+    }
+    
+    .leaflet-control-layers label {
+      display: flex !important;
+      align-items: center !important;
+      margin-bottom: 8px !important;
+      cursor: pointer !important;
+    }
+    
+    .leaflet-control-layers input {
+      margin-right: 8px !important;
+      opacity: 1 !important;
+      position: relative !important;
+      width: 16px !important;
+      height: 16px !important;
+    }
+    
+    /* Better zoom controls */
+    .leaflet-control-zoom {
+      border: none !important;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    .leaflet-control-zoom a {
+      background-color: rgba(33, 37, 41, 0.8) !important;
+      color: white !important;
+      width: 30px !important;
+      height: 30px !important;
+      line-height: 30px !important;
+      font-size: 18px !important;
+      border: none !important;
+    }
+    
+    .leaflet-control-zoom a:hover {
+      background-color: rgba(52, 58, 64, 0.9) !important;
+    }
+    
+    /* City Markers */
+    .city-marker {
+      background: transparent;
+    }
+    
+    .marker-pin {
+      width: 16px;
+      height: 16px;
+      background-color: #343a40;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Coverage Layer Styling */
+    .coverage-layer {
+      transition: opacity 0.2s ease;
+    }
+    
+    .coverage-layer:hover {
+      opacity: 0.8 !important;
+    }
+    
+    /* Coverage visualization styling */
+    .coverage-jio {
+      stroke-width: 1.5px !important;
+    }
+    
+    .coverage-airtel {
+      stroke-width: 1.5px !important;
+    }
+    
+    .coverage-vi {
+      stroke-width: 1.5px !important;
+    }
+    
+    /* Popup Styling */
+    .leaflet-popup-content-wrapper {
+      background: rgba(33, 37, 41, 0.9) !important;
+      color: #fff !important;
+      border-radius: 4px !important;
+      padding: 0 !important;
+    }
+    
+    .leaflet-popup-content {
+      margin: 12px !important;
+      font-size: 12px !important;
+      line-height: 1.4 !important;
+    }
+    
+    .leaflet-popup-tip {
+      background: rgba(33, 37, 41, 0.9) !important;
+    }
+    
+    .coverage-popup h4 {
+      margin: 0 0 8px 0 !important;
+      color: #fff !important;
+      font-size: 13px !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+      padding-bottom: 5px !important;
+    }
+    
+    .coverage-popup p {
+      margin: 5px 0 !important;
+      font-size: 12px !important;
+    }
+    
+    /* Custom radio buttons for coverage type */
+    .coverage-type-control {
+      background: rgba(33, 37, 41, 0.8) !important;
+      border: none !important;
+      border-radius: 4px !important;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+      padding: 8px 10px !important;
+      margin-top: 10px !important;
+      color: white !important;
+      font-size: 12px !important;
+    }
+    
+    /* Attribution position fix */
+    .leaflet-control-attribution {
+      font-size: 9px !important;
+      padding: 2px 4px !important;
+      background-color: rgba(255, 255, 255, 0.7) !important;
+    }
+  `;
+  
+  // Add to document
+  document.head.appendChild(styleEl);
+}
+
+/**
+ * Updates or creates a legend for the coverage map with fixed positioning
+ */
+function updateCoverageLegend(selectedNetwork, coverageColors) {
+  // Remove existing legend if it exists
+  if (window.coverageLegend && map) {
+    map.removeControl(window.coverageLegend);
+  }
+  
+  // Create new legend
+  const legend = L.control({position: 'bottomleft'});
+  
+  legend.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'coverage-legend');
+    div.innerHTML = '<h4>Network Coverage</h4>';
+    
+    // Add legend entries based on selected network
+    if (selectedNetwork === 'all') {
+      Object.entries(coverageColors).forEach(([network, color]) => {
+        div.innerHTML += `
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: ${color}"></span>
+            <span class="legend-label">${network.toUpperCase()}</span>
+          </div>
+        `;
+      });
+    } else {
+      // Just show the selected network
+      const color = coverageColors[selectedNetwork];
+      div.innerHTML += `
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: ${color}"></span>
+          <span class="legend-label">${selectedNetwork.toUpperCase()}</span>
+        </div>
+      `;
+    }
+    
+    // Add coverage type info
+    div.innerHTML += `
+      <div class="legend-section">
+        <p>Solid lines: 4G Coverage</p>
+        <p>Dashed lines: 5G Coverage</p>
+      </div>
+    `;
+    
+    return div;
+  };
+  
+  // Add legend to map and store reference
+  legend.addTo(map);
+  window.coverageLegend = legend;
+}
+
+/**
+ * Adds coverage type radio control to the map
+ */
+function addCoverageTypeControl() {
+  // Remove existing control if it exists
+  if (window.coverageTypeControl && map) {
+    map.removeControl(window.coverageTypeControl);
+  }
+  
+  // Create the control
+  const CoverageTypeControl = L.Control.extend({
+    options: {
+      position: 'topright'
+    },
+    
+    onAdd: function() {
+      const container = L.DomUtil.create('div', 'coverage-type-control');
+      
+      container.innerHTML = `
+        <div style="font-weight:bold;margin-bottom:6px;">Coverage Type</div>
+        <label style="display:block;margin-bottom:5px;">
+          <input type="radio" name="coverage-type" value="4g" checked style="margin-right:5px;">
+          <span>4G</span>
+        </label>
+        <label style="display:block;">
+          <input type="radio" name="coverage-type" value="5g" style="margin-right:5px;">
+          <span>5G</span>
+        </label>
+      `;
+      
+      // Prevent map events from propagating
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      
+      // Add event listeners
+      setTimeout(() => {
+        const radios = container.querySelectorAll('input[type="radio"]');
+        radios.forEach(radio => {
+          radio.addEventListener('change', function() {
+            if (typeof window.updateMapLayers === 'function') {
+              window.updateMapLayers();
+            }
+          });
+        });
+      }, 100);
+      
+      return container;
+    }
+  });
+  
+  // Add to map
+  const control = new CoverageTypeControl();
+  control.addTo(map);
+  window.coverageTypeControl = control;
+}
+
+/**
+ * Adds network selector control to the map
+ */
+function addNetworkSelectorControl() {
+  // Remove existing control if it exists
+  if (window.networkSelectorControl && map) {
+    map.removeControl(window.networkSelectorControl);
+  }
+  
+  // Create the control
+  const NetworkSelectorControl = L.Control.extend({
+    options: {
+      position: 'topright'
+    },
+    
+    onAdd: function() {
+      const container = L.DomUtil.create('div', 'coverage-type-control');
+      
+      container.innerHTML = `
+        <div style="font-weight:bold;margin-bottom:6px;">Network</div>
+        <select id="network-select" style="width:100%;background:#343a40;color:white;border:1px solid #495057;padding:3px;">
+          <option value="all">All Networks</option>
+          <option value="jio">Jio</option>
+          <option value="airtel">Airtel</option>
+          <option value="vi">Vi</option>
+        </select>
+      `;
+      
+      // Prevent map events from propagating
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.disableScrollPropagation(container);
+      
+      // Add event listeners
+      setTimeout(() => {
+        const select = container.querySelector('#network-select');
+        if (select) {
+          select.addEventListener('change', function() {
+            if (typeof window.updateMapLayers === 'function') {
+              window.updateMapLayers();
+            }
+          });
+        }
+      }, 100);
+      
+      return container;
+    }
+  });
+  
+  // Add to map
+  const control = new NetworkSelectorControl();
+  control.addTo(map);
+  window.networkSelectorControl = control;
+}
+
+/**
+ * Initialize map UI components
+ */
+function initMapUIComponents() {
+  if (!map) return;
+  
+  // Add network selector control
+  addNetworkSelectorControl();
+  
+  // Add coverage type control (4G/5G)
+  addCoverageTypeControl();
+}
+
+/**
+ * Initializes the map with default settings 
+ * Combined logic from both files to avoid conflicts
+ */
+function initializeMap() {
+  console.log('Initializing map...');
+  
+  try {
+    // First, ensure the map container has proper dimensions
+    ensureMapContainerSetup();
+    
+    // Check if the map is already initialized in our code
+    if (map) {
+      console.log('Map already initialized in our code, using existing instance');
+      return;
+    }
+
+    // Check if the map is already initialized somewhere else
+    if (window.coverageMap) {
+      console.log('Found existing coverageMap in window, using it');
+      map = window.coverageMap;
+      window.map = map; // For consistency with our code
+      
+      // Get the network layers that were already created
+      networkLayers = window.networkLayers;
+      
+      console.log('Successfully linked to existing map');
+      return;
+    }
+    
+    // Check if the map container already has a Leaflet map instance attached to it
+    const mapContainer = document.getElementById('coverage-map');
+    if (mapContainer && mapContainer._leaflet_id) {
+      console.log('Map container already has a Leaflet instance, retrieving it');
+      // Get the existing map instance from the container
+      const existingMap = L.DomUtil.get('coverage-map')._leaflet_id;
+      if (existingMap) {
+        map = existingMap;
+        window.coverageMap = map;
+        window.map = map;
+        
+        // Initialize network layers if they don't exist
+        if (!window.networkLayers) {
+          networkLayers = {
+            jio: L.layerGroup().addTo(map),
+            airtel: L.layerGroup().addTo(map),
+            vi: L.layerGroup().addTo(map)
+          };
+          window.networkLayers = networkLayers;
+        } else {
+          networkLayers = window.networkLayers;
+        }
+        
+        console.log('Successfully retrieved existing map instance');
+        return;
+      }
+    }
+    
+    // Create a new map only if one doesn't already exist
+    console.log('No existing map found, initializing a new one');
+    
+    map = L.map('coverage-map', {
+      center: [20.5937, 78.9629], // Center of India
+      zoom: 5,
+      zoomControl: false, // We'll use our custom zoom controls
+      attributionControl: true,
+      maxBounds: L.latLngBounds(
+        L.latLng(5.5, 65.0), // Southwest corner
+        L.latLng(37.0, 97.5)  // Northeast corner
+      ),
+      minZoom: 4,
+      maxZoom: 18
+    });
+    
+    // Add tile layer (map background)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 18
+    }).addTo(map);
+    
+    // Make map accessible globally for modules
+    window.coverageMap = map;
+    window.map = map; // For consistency
+    
+    // Add custom zoom controls
+    const zoomControl = L.control.zoom({
+      position: 'bottomright'
+    });
+    zoomControl.addTo(map);
+    
+    // Initialize network layers
+    networkLayers = {
+      jio: L.layerGroup().addTo(map),
+      airtel: L.layerGroup().addTo(map),
+      vi: L.layerGroup().addTo(map)
+    };
+    
+    // Make layers accessible globally
+    window.networkLayers = networkLayers;
+    
+    // Add major city markers to the map
+    cities.slice(0, 10).forEach(city => {
+      L.marker(city.coords, {
+        icon: L.divIcon({
+          className: 'city-marker',
+          html: `<div class="marker-pin"></div><span>${city.name}</span>`,
+          iconSize: [30, 42],
+          iconAnchor: [15, 42]
+        })
+      }).addTo(map).on('click', function() {
+        // When a city marker is clicked, update the location search and trigger search
+        const locationSearchInput = document.getElementById('location-search');
+        if (locationSearchInput) {
+          locationSearchInput.value = city.name;
+        }
+        
+        // Use the global searchLocation function
+        if (typeof window.searchLocation === 'function') {
+          window.searchLocation(city.name);
+        } else {
+          // Fallback if the function isn't available yet
+          map.flyTo(city.coords, 9);
+          
+          L.popup()
+            .setLatLng(city.coords)
+            .setContent(`<h3>${city.name}</h3><p>Click to compare networks</p>`)
+            .openOn(map);
+        }
+      });
+    });
+    
+    // Add the UI components
+    initMapUIComponents();
+    
+    console.log('Successfully created new map');
+  } catch (error) {
+    console.error('Error during map initialization:', error);
+    showNotification('Error initializing map. Please refresh the page.', 'error');
+  }
+}
+
+/**
+ * Ensures the map container is properly set up before initializing the map
+ */
+function ensureMapContainerSetup() {
+  const mapContainer = document.getElementById('coverage-map');
+  if (!mapContainer) {
+    console.warn('Map container not found, cannot initialize map');
     return;
   }
   
-  console.log('Starting page initialization');
-  
-  // Mark as initialized immediately to prevent any duplicate initialization attempts
-  hasInitialized = true;
-  
-  try {
-    // Initialize global locationSearchInput right away to prevent reference errors
-    locationSearchInput = document.getElementById('location-search');
-    
-    // Initialize the page
-    initComparePage();
-    
-    // Set up event listeners for the remove network buttons
-    setupRemoveNetworkButtons();
-    
-    // Set up event listeners for the view details buttons
-    setupViewDetailsButtons();
-    
-    // Check authentication status and update UI
-    updateAuthUI();
-    
-    // Initialize the improved city selection UI
-    initializeCitySelectionUI();
-    
-    // Initialize state item listeners
-    initializeStateItemListeners();
-  } catch (error) {
-    console.error('Error during page initialization:', error);
-    showNotification('Error initializing page. Please refresh and try again.', 'error');
+  // Ensure the container has proper dimensions
+  if (!mapContainer.style.height || mapContainer.style.height === 'auto' || mapContainer.style.height === '0px') {
+    // Set a reasonable default height if none is specified
+    mapContainer.style.height = '500px';
   }
-});
+  
+  // Add required CSS classes and clean up any conflicting styles
+  mapContainer.classList.add('leaflet-container');
+  
+  // Ensure the container has position relative for proper stacking of elements
+  if (getComputedStyle(mapContainer).position === 'static') {
+    mapContainer.style.position = 'relative';
+  }
+  
+  // Clear any existing elements to prevent overlaps if we're reinitializing
+  if (!mapContainer._leaflet_id && mapContainer.innerHTML.trim() !== '') {
+    const loadingElement = document.createElement('div');
+    loadingElement.id = 'map-loading-indicator';
+    loadingElement.className = 'map-loading';
+    loadingElement.innerHTML = '<div class="spinner"></div><p>Loading map...</p>';
+    
+    // Store the original content to restore if needed
+    mapContainer.setAttribute('data-original-content', mapContainer.innerHTML);
+    mapContainer.innerHTML = '';
+    mapContainer.appendChild(loadingElement);
+  }
+}
 
+/**
+ * Shows a loading indicator while the map initializes
+ */
+function showMapLoadingIndicator() {
+  let loadingEl = document.getElementById('map-loading-indicator');
+  
+  if (!loadingEl) {
+    loadingEl = document.createElement('div');
+    loadingEl.id = 'map-loading-indicator';
+    loadingEl.className = 'map-loading';
+    loadingEl.innerHTML = '<div class="spinner"></div><p>Loading map...</p>';
+    
+    const mapContainer = document.getElementById('coverage-map');
+    if (mapContainer) {
+      mapContainer.appendChild(loadingEl);
+    }
+  } else {
+    loadingEl.style.display = 'flex';
+  }
+}
+
+/**
+ * Hides the map loading indicator
+ */
+function hideMapLoadingIndicator() {
+  const loadingEl = document.getElementById('map-loading-indicator');
+  if (loadingEl) {
+    loadingEl.style.opacity = '0';
+    setTimeout(() => {
+      if (loadingEl.parentNode) {
+        loadingEl.parentNode.removeChild(loadingEl);
+      }
+    }, 300);
+  }
+}
+
+/**
+ * Adds city markers to the map
+ */
+function addCityMarkers() {
+  // Only add markers if we have the cities data
+  if (!cities || !Array.isArray(cities)) return;
+  
+  // Create a feature group to manage all markers together
+  const cityMarkersGroup = L.featureGroup();
+  
+  // Add markers for major cities with improved spacing
+    cities.slice(0, 10).forEach(city => {
+    const marker = L.marker(city.coords, {
+        icon: L.divIcon({
+          className: 'city-marker',
+        html: `<div class="marker-pin"></div><span class="marker-label">${city.name}</span>`,
+          iconSize: [30, 42],
+          iconAnchor: [15, 42]
+        })
+    });
+    
+    // Add click handler for each city marker
+    marker.on('click', function() {
+        // When a city marker is clicked, update the location search and trigger search
+        const locationSearchInput = document.getElementById('location-search');
+        if (locationSearchInput) {
+          locationSearchInput.value = city.name;
+        }
+        
+        // Use the global searchLocation function
+        if (typeof window.searchLocation === 'function') {
+          window.searchLocation(city.name);
+        } else {
+          // Fallback if the function isn't available yet
+          map.flyTo(city.coords, 9);
+          
+          L.popup()
+            .setLatLng(city.coords)
+            .setContent(`<h3>${city.name}</h3><p>Click to compare networks</p>`)
+            .openOn(map);
+        }
+      });
+    
+    // Add the marker to the group
+    cityMarkersGroup.addLayer(marker);
+  });
+  
+  // Add the feature group to the map
+  cityMarkersGroup.addTo(map);
+  
+  // Store it for later access
+  window.cityMarkersGroup = cityMarkersGroup;
+}
+
+/**
+ * Handles map resizing to ensure it fits properly in the container
+ */
+function handleMapResizing() {
+  // Handle window resize
+  const resizeMapToFit = () => {
+    if (map) {
+      map.invalidateSize();
+    }
+  };
+  
+  // Listen for window resize events
+  window.addEventListener('resize', debounce(resizeMapToFit, 250));
+  
+  // Also handle tab/panel visibility changes
+  const mapTabs = document.querySelectorAll('[data-toggle="tab"]');
+  if (mapTabs) {
+    mapTabs.forEach(tab => {
+      tab.addEventListener('shown.bs.tab', function() {
+        setTimeout(resizeMapToFit, 10);
+      });
+    });
+  }
+  
+  // Helper debounce function
+  function debounce(func, wait) {
+    let timeout;
+    return function() {
+      const context = this;
+      const args = arguments;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+  }
+}
+
+/**
+ * Adds necessary CSS styles for map improvements
+ */
+function addMapStyles() {
+  // Only add styles if they don't already exist
+  if (document.getElementById('map-custom-styles')) return;
+  
+  // Create a style element
+  const styleEl = document.createElement('style');
+  styleEl.id = 'map-custom-styles';
+  
+  // Define styles
+  styleEl.textContent = `
+    /* Map Container Styles */
+    #coverage-map {
+      width: 100%;
+      height: 500px;
+      margin: 0 auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+    }
+    
+    /* Loading Indicator */
+    .map-loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(33, 37, 41, 0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.3s ease;
+    }
+    
+    .map-loading .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    .map-loading p {
+      color: white;
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* City Marker Styles */
+    .city-marker {
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .marker-pin {
+      width: 20px;
+      height: 20px;
+      background-color: #2C3E50;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+    }
+    
+    .marker-label {
+      background-color: rgba(44, 62, 80, 0.85);
+      color: #fff;
+      font-size: 12px;
+      padding: 3px 6px;
+      border-radius: 3px;
+      margin-top: 4px;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      font-weight: bold;
+    }
+    
+    /* Coverage Legend Styles */
+    .coverage-legend {
+      background: rgba(25, 25, 25, 0.85);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      max-width: 200px;
+    }
+    
+    .coverage-legend h4 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 5px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .legend-color {
+      display: inline-block;
+      width: 15px;
+      height: 15px;
+      margin-right: 8px;
+      border-radius: 50%;
+    }
+    
+    .legend-label {
+      font-size: 14px;
+    }
+    
+    .legend-section {
+      margin-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.3);
+      padding-top: 8px;
+      font-size: 12px;
+    }
+    
+    .legend-section p {
+      margin: 4px 0;
+    }
+    
+    /* Layer Controls Styles */
+    .leaflet-control-layers {
+      background: rgba(25, 25, 25, 0.85) !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 5px !important;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5) !important;
+      padding: 8px !important;
+    }
+    
+    .leaflet-control-layers-list {
+      color: white !important;
+    }
+    
+    .leaflet-control-layers-toggle {
+      background-color: rgba(25, 25, 25, 0.85) !important;
+    }
+    
+    .leaflet-control-layers label {
+      margin-bottom: 5px !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+    
+    .leaflet-control-layers input {
+      margin-right: 8px !important;
+    }
+    
+    /* Coverage Layer Styling */
+    .coverage-layer {
+      transition: opacity 0.3s ease;
+    }
+    
+    .coverage-layer:hover {
+      opacity: 0.8 !important;
+    }
+    
+    /* Popup Styling */
+    .coverage-popup {
+      color: #333;
+      font-family: Arial, sans-serif;
+    }
+    
+    .coverage-popup h4 {
+      margin: 0 0 8px 0;
+      color: #333;
+      font-size: 14px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+    
+    .coverage-popup p {
+      margin: 5px 0;
+      font-size: 13px;
+    }
+    
+    /* Fix for overlapping controls */
+    .leaflet-top {
+      z-index: 1000;
+    }
+    
+    .leaflet-bottom {
+      z-index: 999;
+    }
+    
+    /* Network-specific styles for better distinction */
+    .coverage-jio {
+      /* Custom styles for Jio layers */
+    }
+    
+    .coverage-airtel {
+      /* Custom styles for Airtel layers */
+    }
+    
+    .coverage-vi {
+      /* Custom styles for Vi layers */
+    }
+    
+    /* Make the attribution control less intrusive */
+    .leaflet-control-attribution {
+      background: rgba(255, 255, 255, 0.7) !important;
+      padding: 3px 5px !important;
+      font-size: 10px !important;
+    }
+  `;
+  
+  // Add to document
+  document.head.appendChild(styleEl);
+}
+
+/**
+ * Updates or creates a legend for the coverage map
+ */
+function updateCoverageLegend(selectedNetwork, coverageColors) {
+  // Remove existing legend if it exists
+  if (window.coverageLegend && map) {
+    map.removeControl(window.coverageLegend);
+  }
+  
+  // Create new legend
+  const legend = L.control({position: 'bottomleft'});
+  
+  legend.onAdd = function(map) {
+    const div = L.DomUtil.create('div', 'coverage-legend');
+    div.innerHTML = '<h4>Network Coverage</h4>';
+    
+    // Add legend entries based on selected network
+    if (selectedNetwork === 'all') {
+      Object.entries(coverageColors).forEach(([network, color]) => {
+        div.innerHTML += `
+          <div class="legend-item">
+            <span class="legend-color" style="background-color: ${color}"></span>
+            <span class="legend-label">${network.toUpperCase()}</span>
+          </div>
+        `;
+      });
+    } else {
+      // Just show the selected network
+      const color = coverageColors[selectedNetwork];
+      div.innerHTML += `
+        <div class="legend-item">
+          <span class="legend-color" style="background-color: ${color}"></span>
+          <span class="legend-label">${selectedNetwork.toUpperCase()}</span>
+        </div>
+      `;
+    }
+    
+    // Add coverage type info
+    div.innerHTML += `
+      <div class="legend-section">
+        <p>Solid lines: 4G Coverage</p>
+        <p>Dashed lines: 5G Coverage</p>
+      </div>
+    `;
+    
+    return div;
+  };
+  
+  // Add legend to map and store reference
+  legend.addTo(map);
+  window.coverageLegend = legend;
+}
+
+/**
+ * Adds layer controls to the map if they don't exist
+ */
+function addLayerControls() {
+  // Remove existing controls if they exist
+  if (window.layerControl && map) {
+    map.removeControl(window.layerControl);
+  }
+  
+  // Only proceed if we have network layers
+  if (!window.networkLayers) return;
+  
+  // Create the layer control with proper labels
+  const overlayMaps = {
+    "Jio Network": window.networkLayers.jio,
+    "Airtel Network": window.networkLayers.airtel,
+    "Vi Network": window.networkLayers.vi
+  };
+  
+  // Add the layer control to the map
+  const layerControl = L.control.layers(null, overlayMaps, {
+    position: 'topright',
+    collapsed: false
+  });
+  
+  layerControl.addTo(map);
+  window.layerControl = layerControl;
+}
+
+/**
+ * Initializes the compare page
+ */
 async function initComparePage() {
+  // Check if the compare page has already been initialized
+  if (window.comparePageInitialized) {
+    console.log('Compare page already initialized, skipping initialization');
+    return;
+  }
+  
+  // Mark as initialized
+  window.comparePageInitialized = true;
+  
+  // Add CSS styles for the map UI improvements
+  addMapStyles();
+  
   // Initialize the map before doing anything else
   initializeMap();
   
@@ -395,117 +1470,11 @@ async function initComparePage() {
     };
   }
   
-  // Store the original updateMapLayers function from HTML if it exists
-  const originalUpdateMapLayers = window.updateMapLayers;
+  // Apply dark theme to dropdowns
+  applyDarkThemeToDropdowns();
   
-  // Define our version of the function that works with the compare.js logic
-  const ourUpdateMapLayers = function() {
-    // Get the selected options
-    const networkSelect = document.getElementById('network-select');
-    const coverageRadios = document.querySelectorAll('input[name="coverage-type"]');
-    
-    const selectedNetwork = networkSelect ? networkSelect.value : 'all';
-    
-    let selectedCoverage = '4g';
-    coverageRadios.forEach(radio => {
-      if (radio.checked) {
-        selectedCoverage = radio.value;
-      }
-    });
-    
-    // Remove existing layers by clearing them rather than removing from map
-    if (window.networkLayers && typeof window.networkLayers === 'object') {
-      Object.values(window.networkLayers).forEach(layer => {
-        if (map && layer) {
-          layer.clearLayers();
-        }
-      });
-    }
-    
-    // For demonstration, we'll use simple circle overlays with different colors
-    // In a real app, you would use GeoJSON data for accurate coverage areas
-    const coverageColors = {
-      jio: '#E53935',    // Bright red for Jio
-      airtel: '#1E88E5', // Blue for Airtel
-      vi: '#7B1FA2',     // Purple for Vi
-    };
-    
-    // Add coverage based on selection
-    if (selectedNetwork === 'all') {
-      // Show all networks with different colors (semi-transparent)
-      Object.keys(coverageColors).forEach(network => {
-        addCoverageForNetwork(network, selectedCoverage, 0.25);
-      });
-    } else {
-      // Show just the selected network
-      addCoverageForNetwork(selectedNetwork, selectedCoverage, 0.5);
-    }
-    
-    function addCoverageForNetwork(network, coverageType, opacity) {
-      const color = coverageColors[network];
-      if (!color) return;
-      
-      // Ensure we have the cities array
-      const allCities = window.cities || cities || [];
-      
-      // For demo purposes, create coverage circles for each city
-      allCities.forEach(city => {
-        // Calculate radius based on network and coverage type
-        let radius;
-        if (coverageType === '5g') {
-          radius = network === 'jio' ? 30000 : 
-                  network === 'airtel' ? 35000 : 25000;
-        } else {
-          radius = network === 'jio' ? 45000 : 
-                  network === 'airtel' ? 50000 : 40000;
-        }
-        
-        // Add circle
-        const circle = L.circle(city.coords, {
-          radius: radius,
-          color: color,
-          fillColor: color,
-          fillOpacity: opacity,
-          weight: 1,
-          className: 'coverage-layer'
-        });
-        
-        // Add to appropriate layer group
-        if (window.networkLayers && window.networkLayers[network]) {
-          window.networkLayers[network].addLayer(circle);
-        }
-      });
-    }
-    
-    // Call the original function if it exists and is not our function
-    if (typeof originalUpdateMapLayers === 'function' && originalUpdateMapLayers !== window.updateMapLayers) {
-      try {
-        originalUpdateMapLayers();
-      } catch (e) {
-        console.warn('Error calling original updateMapLayers function:', e);
-      }
-    }
-  };
-  
-  // Register our function without overriding if it already exists
-  if (!window.updateMapLayers) {
-    window.updateMapLayers = ourUpdateMapLayers;
-  } else {
-    // If it exists, augment it to ensure our functionality works
-    const existingFunction = window.updateMapLayers;
-    window.updateMapLayers = function() {
-      ourUpdateMapLayers();
-      
-      try {
-        // Call the original HTML function if it's not our function
-        if (existingFunction !== ourUpdateMapLayers) {
-          existingFunction();
-        }
-      } catch (e) {
-        console.warn('Error calling existing updateMapLayers function:', e);
-      }
-    };
-  }
+  // Register updateMapLayers function globally
+  window.updateMapLayers = updateMapLayers;
   
   // Initialize with all networks
   setTimeout(() => {
@@ -518,34 +1487,9 @@ async function initComparePage() {
   setTimeout(function() {
     setupViewDetailsButtons();
   }, 1500);
-}
-
-/**
- * Initializes the map with default settings by linking to the map created in HTML
- */
-function initializeMap() {
-  console.log('Linking to the map initialized in HTML...');
   
-  try {
-    // Simply use the map that was already created in the HTML
-    if (window.coverageMap) {
-      console.log('Found existing coverageMap in window, using it');
-      map = window.coverageMap;
-      window.map = map; // For consistency with our code
-      
-      // Get the network layers that were already created in the HTML
-      networkLayers = window.networkLayers;
-      
-      console.log('Successfully linked to map from HTML');
-    } else {
-      // If we can't find the map, log an error
-      console.error('Could not find coverageMap created in HTML');
-      showNotification('Map initialization issue detected. Please refresh the page.', 'error');
-    }
-  } catch (error) {
-    console.error('Error during map initialization:', error);
-    showNotification('Error initializing map. Please refresh the page.', 'error');
-  }
+  // Initialize enhanced map UI elements
+  initEnhancedMapUI();
 }
 
 /**
@@ -668,6 +1612,9 @@ function compareNetworksAction(locationName, stateName = null) {
         compareBtn.disabled = false;
       }
     });
+  
+  // Update the location badge with the selected location
+  updateLocationBadge(locationName);
 }
 
 /**
@@ -1214,6 +2161,23 @@ function setupEventListeners() {
       }
     });
   }
+  
+  // Add event listener for coverage type change
+  const coverageTypeInputs = document.querySelectorAll('input[name="coverage-type"]');
+  coverageTypeInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      if (map && currentLocation) {
+        // Update the map when coverage type changes
+        updateMapLayers();
+        
+        // Get the current data and update the metrics summary
+        const currentNetworkData = getNetworkCoverageData();
+        if (currentNetworkData) {
+          updateCoverageMetricsSummary(currentNetworkData);
+        }
+      }
+    });
+  });
 }
 
 /**
@@ -2104,3 +3068,437 @@ function updateTowerCounts(counts) {
   document.getElementById('airtel-tower-count').textContent = counts.airtel || 0;
   document.getElementById('vi-tower-count').textContent = counts.vi || 0;
 }
+
+// Document ready function - wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+  if (hasInitialized) {
+    console.log('Page already initialized, skipping initialization');
+    return;
+  }
+  
+  console.log('Starting page initialization');
+  
+  // Mark as initialized immediately to prevent any duplicate initialization attempts
+  hasInitialized = true;
+  
+  try {
+    // Initialize global locationSearchInput right away to prevent reference errors
+    locationSearchInput = document.getElementById('location-search');
+    
+    // Initialize the page
+    initComparePage();
+    
+    // Set up event listeners for the remove network buttons
+    setupRemoveNetworkButtons();
+    
+    // Set up event listeners for the view details buttons
+    setupViewDetailsButtons();
+    
+    // Check authentication status and update UI
+    updateAuthUI();
+    
+    // Initialize the improved city selection UI
+    initializeCitySelectionUI();
+    
+    // Initialize state item listeners
+    initializeStateItemListeners();
+  } catch (error) {
+    console.error('Error during page initialization:', error);
+    showNotification('Error initializing page. Please refresh and try again.', 'error');
+  }
+});
+
+/**
+ * Handles map resizing to ensure it fits properly in the container
+ */
+function handleMapResizing() {
+  // Handle window resize
+  const resizeMapToFit = () => {
+    if (map) {
+      map.invalidateSize();
+    }
+  };
+  
+  // Listen for window resize events
+  window.addEventListener('resize', debounce(resizeMapToFit, 250));
+  
+  // Also handle tab/panel visibility changes
+  const mapTabs = document.querySelectorAll('[data-toggle="tab"]');
+  if (mapTabs) {
+    mapTabs.forEach(tab => {
+      tab.addEventListener('shown.bs.tab', function() {
+        setTimeout(resizeMapToFit, 10);
+      });
+    });
+  }
+  
+  // Helper debounce function
+  function debounce(func, wait) {
+    let timeout;
+    return function() {
+      const context = this;
+      const args = arguments;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(context, args), wait);
+    };
+  }
+}
+
+// Update map layers based on UI selection
+function updateMapLayers() {
+  console.log('Updating map layers');
+  
+  try {
+    // Get the selected options
+    const networkSelect = document.getElementById('network-select');
+    const coverageRadios = document.querySelectorAll('input[name="coverage-type"]');
+    
+    const selectedNetwork = networkSelect ? networkSelect.value : 'all';
+    
+    let selectedCoverage = '4g';
+    coverageRadios.forEach(radio => {
+      if (radio.checked) {
+        selectedCoverage = radio.value;
+      }
+    });
+    
+    // Remove existing layers by clearing them rather than removing from map
+    if (window.networkLayers && typeof window.networkLayers === 'object') {
+      Object.values(window.networkLayers).forEach(layer => {
+        if (map && layer) {
+          layer.clearLayers();
+        }
+      });
+    }
+    
+    // For demonstration, we'll use simple circle overlays with different colors
+    // In a real app, you would use GeoJSON data for accurate coverage areas
+    const coverageColors = {
+      jio: '#E53935',    // Bright red for Jio
+      airtel: '#1E88E5', // Blue for Airtel
+      vi: '#7B1FA2',     // Purple for Vi
+    };
+    
+    // Create or update legend for the map
+    updateCoverageLegend(selectedNetwork, coverageColors);
+    
+    // Add coverage based on selection - with staggered radii to prevent complete overlap
+    if (selectedNetwork === 'all') {
+      // Show all networks with different colors and slightly different sizes to prevent complete overlap
+      const networks = Object.keys(coverageColors);
+      networks.forEach((network, index) => {
+        // Use different opacity and size offset for each network to improve visibility
+        const opacityValue = 0.2 + (index * 0.05);
+        const radiusOffset = 1 - (index * 0.1); // Slightly different sizes
+        addCoverageForNetwork(network, selectedCoverage, opacityValue, radiusOffset);
+      });
+    } else {
+      // Show just the selected network with higher opacity
+      addCoverageForNetwork(selectedNetwork, selectedCoverage, 0.6, 1.0);
+    }
+    
+    function addCoverageForNetwork(network, coverageType, opacity, radiusMultiplier = 1.0) {
+      const color = coverageColors[network];
+      if (!color) return;
+      
+      // Ensure we have the cities array
+      const allCities = window.cities || cities || [];
+      
+      // Only visualize a reasonable number of cities to prevent overcrowding
+      const citiesToShow = allCities.length > 20 ? allCities.slice(0, 20) : allCities;
+      
+      // For demo purposes, create coverage circles for each city with better styling
+      citiesToShow.forEach(city => {
+        // Calculate radius based on network and coverage type
+        let radius;
+        if (coverageType === '5g') {
+          radius = network === 'jio' ? 30000 : 
+                  network === 'airtel' ? 35000 : 25000;
+        } else {
+          radius = network === 'jio' ? 45000 : 
+                  network === 'airtel' ? 50000 : 40000;
+        }
+        
+        // Apply the radius multiplier to create visual separation
+        radius = radius * radiusMultiplier;
+        
+        // Add circle with improved styling
+        const circle = L.circle(city.coords, {
+          radius: radius,
+          color: color,
+          fillColor: color,
+          fillOpacity: opacity,
+          weight: 1.5,
+          dashArray: network === 'jio' ? '0' : 
+                    network === 'airtel' ? '5,5' : '1,5',
+          className: `coverage-layer coverage-${network}`,
+          interactive: true
+        });
+        
+        // Add a popup with coverage information
+        circle.bindPopup(`
+          <div class="coverage-popup">
+            <h4>${city.name} - ${network.toUpperCase()} ${coverageType.toUpperCase()} Coverage</h4>
+            <p>Estimated signal strength: ${getSignalStrength(network, coverageType)}</p>
+            <p>Coverage radius: ${(radius/1000).toFixed(0)} km</p>
+          </div>
+        `);
+        
+        // Add to appropriate layer group
+        if (window.networkLayers && window.networkLayers[network]) {
+          window.networkLayers[network].addLayer(circle);
+        }
+      });
+    }
+    
+    // Helper function to get signal strength description
+    function getSignalStrength(network, coverageType) {
+      // Return a descriptive signal strength based on network and coverage type
+      if (coverageType === '5g') {
+        return network === 'jio' ? 'Excellent' : 
+               network === 'airtel' ? 'Very Good' : 'Good';
+      } else {
+        return network === 'jio' ? 'Very Good' : 
+               network === 'airtel' ? 'Excellent' : 'Good';
+      }
+    }
+    
+    // Add or update layer controls if they don't exist yet
+    addLayerControls();
+    
+  } catch (error) {
+    console.error('Error updating map layers:', error);
+  }
+}
+
+// Add these functions after the initMapUIComponents function
+
+/**
+ * Initialize the enhanced map UI elements
+ */
+function initEnhancedMapUI() {
+  // Set up recenter map button
+  const recenterButton = document.getElementById('recenter-map');
+  if (recenterButton) {
+    recenterButton.addEventListener('click', () => {
+      if (userCoordinates) {
+        map.setView(userCoordinates, 10);
+      } else if (currentLocation) {
+        map.setView(currentLocation, 10);
+      } else {
+        // Default view of India
+        map.setView([20.5937, 78.9629], 5);
+      }
+      showNotification('Map recentered', 'success', 1500);
+    });
+  }
+
+  // Set up fullscreen toggle
+  const fullscreenButton = document.getElementById('toggle-fullscreen');
+  if (fullscreenButton) {
+    let isFullscreen = false;
+    const mapWindow = document.querySelector('.map-window');
+    
+    fullscreenButton.addEventListener('click', () => {
+      if (!isFullscreen) {
+        // Enter fullscreen
+        if (mapWindow.requestFullscreen) {
+          mapWindow.requestFullscreen();
+        } else if (mapWindow.mozRequestFullScreen) {
+          mapWindow.mozRequestFullScreen();
+        } else if (mapWindow.webkitRequestFullscreen) {
+          mapWindow.webkitRequestFullscreen();
+        } else if (mapWindow.msRequestFullscreen) {
+          mapWindow.msRequestFullscreen();
+        }
+        fullscreenButton.querySelector('i').classList.remove('fa-expand');
+        fullscreenButton.querySelector('i').classList.add('fa-compress');
+        fullscreenButton.setAttribute('title', 'Exit Fullscreen');
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+        fullscreenButton.querySelector('i').classList.remove('fa-compress');
+        fullscreenButton.querySelector('i').classList.add('fa-expand');
+        fullscreenButton.setAttribute('title', 'Enter Fullscreen');
+      }
+      isFullscreen = !isFullscreen;
+    });
+    
+    // Listen for fullscreen change events
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement && 
+          !document.webkitFullscreenElement && 
+          !document.mozFullScreenElement && 
+          !document.msFullscreenElement) {
+        isFullscreen = false;
+        fullscreenButton.querySelector('i').classList.remove('fa-compress');
+        fullscreenButton.querySelector('i').classList.add('fa-expand');
+        fullscreenButton.setAttribute('title', 'Enter Fullscreen');
+      }
+    }
+  }
+
+  // Set up location badge
+  updateLocationBadge('Select a location');
+  
+  // Set up map legend controls
+  setupMapLegend();
+}
+
+/**
+ * Updates the location badge on the map
+ * @param {string} locationName - Name of the location to display
+ */
+function updateLocationBadge(locationName) {
+  const locationDisplay = document.getElementById('map-location-display');
+  const locationBadge = document.getElementById('current-location-badge');
+  
+  if (locationDisplay && locationBadge) {
+    locationDisplay.textContent = locationName;
+    
+    if (locationName && locationName !== 'Select a location') {
+      locationBadge.classList.remove('hidden');
+    } else {
+      locationBadge.classList.add('hidden');
+    }
+  }
+}
+
+/**
+ * Updates the coverage metrics summary cards
+ * @param {Object} data - Coverage data for different networks
+ */
+function updateCoverageMetricsSummary(data) {
+  if (!data) return;
+  
+  const jioValue = document.querySelector('.metric-card.jio .metric-value');
+  const airtelValue = document.querySelector('.metric-card.airtel .metric-value');
+  const viValue = document.querySelector('.metric-card.vi .metric-value');
+  
+  const jioLabel = document.querySelector('.metric-card.jio .metric-label');
+  const airtelLabel = document.querySelector('.metric-card.airtel .metric-label');
+  const viLabel = document.querySelector('.metric-card.vi .metric-label');
+  
+  // Get the selected coverage type (4G or 5G)
+  const coverageType = document.querySelector('input[name="coverage-type"]:checked').value;
+  const coverageLabel = `${coverageType.toUpperCase()} Coverage`;
+  
+  if (jioLabel) jioLabel.textContent = coverageLabel;
+  if (airtelLabel) airtelLabel.textContent = coverageLabel;
+  if (viLabel) viLabel.textContent = coverageLabel;
+  
+  // Set the values
+  if (data.jio && jioValue) {
+    const jioCoverage = data.jio[coverageType === '4g' ? 'coverage4g' : 'coverage5g'] || 0;
+    jioValue.textContent = `${jioCoverage}%`;
+  }
+  
+  if (data.airtel && airtelValue) {
+    const airtelCoverage = data.airtel[coverageType === '4g' ? 'coverage4g' : 'coverage5g'] || 0;
+    airtelValue.textContent = `${airtelCoverage}%`;
+  }
+  
+  if (data.vi && viValue) {
+    const viCoverage = data.vi[coverageType === '4g' ? 'coverage4g' : 'coverage5g'] || 0;
+    viValue.textContent = `${viCoverage}%`;
+  }
+}
+
+// Add a helper function to get the current network coverage data
+function getNetworkCoverageData() {
+  // This is a placeholder - in a real implementation, 
+  // you would get this from your application state or API
+  return window.currentNetworkData || null;
+}
+
+// Add this function to ensure the map legend can be toggled and remains visible when needed
+function setupMapLegend() {
+  const mapLegend = document.querySelector('.map-legend');
+  
+  if (mapLegend && map) {
+    // Create a toggle button for the legend
+    const legendToggle = document.createElement('button');
+    legendToggle.className = 'legend-toggle';
+    legendToggle.innerHTML = '<i class="fas fa-times"></i>';
+    legendToggle.setAttribute('title', 'Hide legend');
+    legendToggle.style.position = 'absolute';
+    legendToggle.style.top = '8px';
+    legendToggle.style.right = '8px';
+    legendToggle.style.background = 'transparent';
+    legendToggle.style.border = 'none';
+    legendToggle.style.color = 'var(--text-secondary)';
+    legendToggle.style.cursor = 'pointer';
+    legendToggle.style.fontSize = '0.8rem';
+    legendToggle.style.padding = '2px';
+    
+    // Add the toggle button to the legend
+    mapLegend.appendChild(legendToggle);
+    
+    // Create a show legend button
+    const showLegendBtn = document.createElement('button');
+    showLegendBtn.className = 'show-legend-btn';
+    showLegendBtn.innerHTML = '<i class="fas fa-info-circle"></i>';
+    showLegendBtn.setAttribute('title', 'Show legend');
+    showLegendBtn.style.position = 'absolute';
+    showLegendBtn.style.bottom = '20px';
+    showLegendBtn.style.left = '20px';
+    showLegendBtn.style.zIndex = '900';
+    showLegendBtn.style.width = '40px';
+    showLegendBtn.style.height = '40px';
+    showLegendBtn.style.borderRadius = '50%';
+    showLegendBtn.style.backgroundColor = 'var(--card-bg)';
+    showLegendBtn.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+    showLegendBtn.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+    showLegendBtn.style.display = 'none';
+    showLegendBtn.style.alignItems = 'center';
+    showLegendBtn.style.justifyContent = 'center';
+    showLegendBtn.style.cursor = 'pointer';
+    
+    // Add the show legend button to the map
+    document.querySelector('.map-window').appendChild(showLegendBtn);
+    
+    // Toggle legend visibility
+    legendToggle.addEventListener('click', () => {
+      mapLegend.style.display = 'none';
+      showLegendBtn.style.display = 'flex';
+    });
+    
+    // Show legend
+    showLegendBtn.addEventListener('click', () => {
+      mapLegend.style.display = 'block';
+      showLegendBtn.style.display = 'none';
+    });
+    
+    // Ensure legend doesn't overlap with other map controls on smaller screens
+    const adjustLegendPosition = () => {
+      if (window.innerWidth <= 576) {
+        mapLegend.style.bottom = '60px';
+        mapLegend.style.left = '10px';
+      } else if (window.innerWidth <= 768) {
+        mapLegend.style.bottom = '70px';
+        mapLegend.style.left = '20px';
+      } else {
+        mapLegend.style.bottom = '20px';
+        mapLegend.style.left = '70px';
+      }
+    };
+    
+    // Run initially and on resize
+    adjustLegendPosition();
+    window.addEventListener('resize', adjustLegendPosition);
+  }
+}
+

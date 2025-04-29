@@ -82,9 +82,12 @@
   }
 }
 
-/* Animation for content elements */
+/* Enhanced animation for content elements - added .auth-form-container and .auth-image animations */
 .auth-form-container.animate-out {
   animation: contentFadeOut 0.5s forwards;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: none;
 }
 
 .auth-form-container.animate-in {
@@ -95,6 +98,9 @@
 
 .auth-image.animate-out {
   animation: contentSlideOut 0.5s forwards;
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: none;
 }
 
 .auth-image.animate-in {
@@ -147,7 +153,26 @@
   }
 }
 
-/* Ghost elements that follow cursor for interactive feel */
+/* Auth page specific transitions - NEW */
+.auth-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+  z-index: 9998;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s ease;
+}
+
+.auth-transition-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Improved ghost element that follows cursor for interactive feel */
 .ghost-follower {
   position: absolute;
   width: 100px;

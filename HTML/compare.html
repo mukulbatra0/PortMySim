@@ -25,7 +25,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <link rel="icon" href="../images/logo.png" sizes="32x32" type="image/png" >
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:*; script-src 'self' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* http://127.0.0.1:*; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https://*.tile.openstreetmap.org;">
   </head>
   <body class="bg-dark-1" data-requires-api="true">
     <header class="header">
@@ -171,124 +171,87 @@
         
         <!-- India Map Container -->
         <div class="india-map-container content-transition" data-animation="fade-in" data-delay="0.5s">
-          <div class="map-header">
-            <div class="map-title">Network Coverage Map</div>
-            <p class="map-description">See which network provides the best coverage in your area. Toggle between networks to compare.</p>
-          </div>
-          
-          <div class="map-controls-container">
-            <div class="map-controls">
-              <div class="control-group">
-                <div class="network-selector">
-                  <label for="network-select">Select Network:</label>
-                  <select id="network-select" class="map-select">
-                    <option value="jio">Jio</option>
-                    <option value="airtel">Airtel</option>
-                    <option value="vi">Vi</option>
-                    <option value="all">Compare All</option>
-                  </select>
+          <div class="map-card">
+            <div class="map-header">
+              <div class="map-title-section">
+                <div class="map-icon">
+                  <i class="fas fa-map-marked-alt"></i>
                 </div>
-                
-                <div class="coverage-type-options">
-                  <label class="radio-label">
-                    <input type="radio" name="coverage-type" value="4g" checked />
-                    <span>4G</span>
-                  </label>
-                  <label class="radio-label">
-                    <input type="radio" name="coverage-type" value="5g" />
-                    <span>5G</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="control-group">
-                <div class="tower-visualization-controls">
-                  <label class="toggle-label">
-                    <input type="checkbox" id="show-towers" />
-                    <span>Show Nearby Towers</span>
-                  </label>
-                  <div class="tower-radius-control">
-                    <label for="tower-radius">Search Radius (km):</label>
-                    <input type="range" id="tower-radius" min="1" max="10" value="5" />
-                    <span id="radius-value">5 km</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="control-group">
-                <div class="coverage-opacity-control">
-                  <label for="coverage-opacity">Coverage Opacity:</label>
-                  <input type="range" id="coverage-opacity" class="opacity-slider" min="0" max="100" value="70">
-                  <span id="opacity-value">70%</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div class="map-interface-container">
-            <div id="india-map-svg-container" class="content-transition" data-animation="fade-in" data-delay="0.6s">
-              <!-- Interactive Map will be inserted here via JavaScript -->
-              <div id="coverage-map" class="coverage-map map-fixed-container"></div>
-              
-              <!-- Map Legend - nPerf style -->
-              <div class="map-legend" id="map-legend">
-                <h4>Network Coverage</h4>
-                <div class="legend-item">
-                  <div class="legend-color" style="background-color: #E53935;"></div>
-                  <span>Jio</span>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background-color: #1E88E5;"></div>
-                  <span>Airtel</span>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color" style="background-color: #7B1FA2;"></div>
-                  <span>Vi</span>
-                </div>
-                <h4 style="margin-top: 10px;">Signal Strength</h4>
-                <div class="legend-item">
-                  <div class="legend-color signal-strength-high"></div>
-                  <span>Strong (80-100%)</span>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color signal-strength-medium"></div>
-                  <span>Medium (50-79%)</span>
-                </div>
-                <div class="legend-item">
-                  <div class="legend-color signal-strength-low"></div>
-                  <span>Weak (0-49%)</span>
+                <div class="map-title-content">
+                  <h3 class="map-title">Network Coverage Map</h3>
+                  <p class="map-description">Interactive coverage visualization across India. Compare networks to find the best service in your area.</p>
                 </div>
               </div>
             </div>
             
-            <div class="info-panel-container">
-              <div class="map-info-panel">
-                <div class="selected-state-info">
-                  <h4>Select a location to see detailed coverage</h4>
-                </div>
-
-                <div class="tower-info-panel" id="tower-info-panel">
-                  <h4>Nearby Network Towers</h4>
-                  <div class="tower-count-list" id="tower-count-list">
-                    <div class="tower-count-item">
-                      <img src="../images/jio.jpeg" alt="Jio" class="network-icon">
-                      <div class="count" id="jio-tower-count">0</div>
-                      <div class="label">Jio Towers</div>
-                    </div>
-                    <div class="tower-count-item">
-                      <img src="../images/airtel.png" alt="Airtel" class="network-icon">
-                      <div class="count" id="airtel-tower-count">0</div>
-                      <div class="label">Airtel Towers</div>
-                    </div>
-                    <div class="tower-count-item">
-                      <img src="../images/vi.png" alt="Vi" class="network-icon">
-                      <div class="count" id="vi-tower-count">0</div>
-                      <div class="label">Vi Towers</div>
-                    </div>
+            <div class="map-controls-container">
+              <div class="map-controls">
+                <div class="control-group primary-controls">
+                  <div class="network-selector">
+                    <label for="network-select">
+                      <i class="fas fa-broadcast-tower"></i> Network
+                    </label>
+                    <select id="network-select" class="map-select">
+                      <option value="jio">Jio</option>
+                      <option value="airtel">Airtel</option>
+                      <option value="vi">Vi</option>
+                      <option value="all">Compare All</option>
+                    </select>
+                  </div>
+                  
+                  <div class="coverage-type-options">
+                    <label class="radio-label">
+                      <input type="radio" name="coverage-type" value="4g" checked />
+                      <span>4G</span>
+                    </label>
+                    <label class="radio-label">
+                      <input type="radio" name="coverage-type" value="5g" />
+                      <span>5G</span>
+                    </label>
                   </div>
                 </div>
                 
-                <div class="map-legend-secondary">
+                <div class="control-group secondary-controls">
+                  <div class="map-options">
+                    <label class="checkbox-label">
+                      <input type="checkbox" id="show-towers" />
+                      <span><i class="fas fa-broadcast-tower"></i> Show Cell Towers</span>
+                    </label>
+                    <div class="radius-control">
+                      <label for="tower-radius">
+                        <i class="fas fa-circle-notch"></i> Coverage Radius: <span id="radius-value">5 km</span>
+                      </label>
+                      <input type="range" id="tower-radius" min="1" max="20" value="5" class="custom-range" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Map container with enhanced styling -->
+            <div class="map-window">
+              <div id="coverage-map"></div>
+              
+              <!-- Enhanced map user interface elements -->
+              <div class="map-tooltip" id="map-tooltip">
+                <div class="tooltip-header">
+                  <h5><i class="fas fa-info-circle"></i> Coverage Details</h5>
+                </div>
+                <div class="tooltip-content">
+                  <div class="tooltip-coverage">
+                    <span class="network-name">Network</span>
+                    <span class="coverage-level">Coverage</span>
+                  </div>
+                  <div class="tooltip-signal">
+                    <i class="fas fa-signal"></i> Signal Strength: <span>85%</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Moved map legend inside the map window -->
+              <div class="map-legend">
+                <h5><i class="fas fa-info-circle"></i> Coverage Legend</h5>
+                <div class="legend-items">
                   <div class="legend-item">
                     <div class="legend-color excellent-coverage"></div>
                     <div class="legend-text">Excellent</div>
@@ -307,31 +270,65 @@
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div class="map-tooltip" id="map-tooltip">
-            <div class="tooltip-header">
-              <h5>Coverage Details</h5>
-            </div>
-            <div class="tooltip-content">
-              <div class="tooltip-coverage">
-                <span class="network-name">Network</span>
-                <span class="coverage-level">Coverage</span>
+              
+              <div class="map-zoom-controls">
+                <button class="zoom-button" id="zoom-in" title="Zoom In">
+                  <i class="fas fa-plus"></i>
+                </button>
+                <button class="zoom-button" id="zoom-out" title="Zoom Out">
+                  <i class="fas fa-minus"></i>
+                </button>
               </div>
-              <div class="tooltip-signal">
-                Signal Strength: <span>85%</span>
+              
+              <div class="map-action-buttons">
+                <button class="map-action-button" id="recenter-map" title="Recenter Map">
+                  <i class="fas fa-crosshairs"></i>
+                </button>
+                <button class="map-action-button" id="toggle-fullscreen" title="Toggle Fullscreen">
+                  <i class="fas fa-expand"></i>
+                </button>
+              </div>
+              
+              <div class="location-badge" id="current-location-badge">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="map-location-display">Select a location</span>
               </div>
             </div>
-          </div>
-          
-          <div class="map-zoom-controls">
-            <button class="zoom-button" id="zoom-in">
-              <i class="fas fa-plus"></i>
-            </button>
-            <button class="zoom-button" id="zoom-out">
-              <i class="fas fa-minus"></i>
-            </button>
+            
+            <div class="coverage-metrics-summary">
+              <div class="metrics-header">
+                <h4><i class="fas fa-chart-bar"></i> Coverage Summary</h4>
+              </div>
+              <div class="metrics-grid">
+                <div class="metric-card jio">
+                  <div class="metric-icon">
+                    <img src="../images/jio.jpeg" alt="Jio" />
+                  </div>
+                  <div class="metric-data">
+                    <div class="metric-value">98%</div>
+                    <div class="metric-label">4G Coverage</div>
+                  </div>
+                </div>
+                <div class="metric-card airtel">
+                  <div class="metric-icon">
+                    <img src="../images/airtel.png" alt="Airtel" />
+                  </div>
+                  <div class="metric-data">
+                    <div class="metric-value">99%</div>
+                    <div class="metric-label">4G Coverage</div>
+                  </div>
+                </div>
+                <div class="metric-card vi">
+                  <div class="metric-icon">
+                    <img src="../images/vi.png" alt="Vi" />
+                  </div>
+                  <div class="metric-data">
+                    <div class="metric-value">92%</div>
+                    <div class="metric-label">4G Coverage</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -589,172 +586,5 @@
     <script src="../JS/api.js" type="module"></script>
     <script src="../JS/auth.js" type="module"></script>
     <script src="../JS/compare.js"></script>
-    <!-- Map initialization script -->
-    <script>
-      // Initialize Leaflet map
-      const coverageMap = L.map('coverage-map', {
-        center: [20.5937, 78.9629], // Center of India
-        zoom: 5,
-        zoomControl: false, // We'll use our custom zoom controls
-        attributionControl: true
-      });
-      
-      // Add tile layer (map background)
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18
-      }).addTo(coverageMap);
-      
-      // Sample city data
-      window.cities = [
-        { name: 'Delhi', coords: [28.7041, 77.1025] },
-        { name: 'Mumbai', coords: [19.0760, 72.8777] },
-        { name: 'Chennai', coords: [13.0827, 80.2707] },
-        { name: 'Kolkata', coords: [22.5726, 88.3639] },
-        { name: 'Bangalore', coords: [12.9716, 77.5946] },
-        { name: 'Hyderabad', coords: [17.3850, 78.4867] },
-        { name: 'Pune', coords: [18.5204, 73.8567] },
-        { name: 'Ahmedabad', coords: [23.0225, 72.5714] },
-        { name: 'Jaipur', coords: [26.9124, 75.7873] },
-        { name: 'Lucknow', coords: [26.8467, 80.9462] }
-      ];
-      
-      // Add major city markers to the map
-      window.cities.forEach(city => {
-        L.marker(city.coords, {
-          icon: L.divIcon({
-            className: 'city-marker',
-            html: `<div class="marker-pin"></div><span>${city.name}</span>`,
-            iconSize: [30, 42],
-            iconAnchor: [15, 42]
-          })
-        }).addTo(coverageMap).on('click', function() {
-          // When a city marker is clicked, update the location search and trigger search
-          const locationSearchInput = document.getElementById('location-search');
-          if (locationSearchInput) {
-            locationSearchInput.value = city.name;
-          }
-          
-          // We'll look for a global searchLocation function
-          if (typeof window.searchLocation === 'function') {
-            window.searchLocation(city.name);
-          } else {
-            // Fallback if the function isn't available yet
-            coverageMap.flyTo(city.coords, 9);
-            
-            L.popup()
-              .setLatLng(city.coords)
-              .setContent(`<h3>${city.name}</h3><p>Click to compare networks</p>`)
-              .openOn(coverageMap);
-          }
-        });
-      });
-      
-      // Make map accessible globally for modules
-      window.coverageMap = coverageMap;
-      
-      // Add custom zoom controls
-      const zoomControl = L.control.zoom({
-        position: 'bottomright'
-      });
-      zoomControl.addTo(coverageMap);
-      
-      // Initialize network layers (will be populated by compare.js)
-      window.networkLayers = {
-        jio: L.layerGroup().addTo(coverageMap),
-        airtel: L.layerGroup().addTo(coverageMap),
-        vi: L.layerGroup().addTo(coverageMap)
-      };
-      
-      // When coverage type changes, we'll update the map layers
-      window.updateMapLayers = function() {
-        const networkSelect = document.getElementById('network-select');
-        const selectedNetwork = networkSelect ? networkSelect.value : 'all';
-        
-        const coverageType = document.querySelector('input[name="coverage-type"]:checked')?.value || '4g';
-        
-        // Logic to show/hide layers based on selection will be implemented in compare.js
-        // This is just a placeholder function that will be overridden
-      };
-    </script>
-    
-    <!-- Script to ensure dark theme is applied to dropdown options -->
-    <script>
-      // Apply dark theme to select dropdowns when they're clicked/focused
-      document.addEventListener('DOMContentLoaded', function() {
-        const stateSelector = document.getElementById('state-selector');
-        const citySelector = document.getElementById('city-selector');
-        
-        // Function to apply dark theme to a select element's options
-        function applyDarkThemeToOptions(selectElement) {
-          if (!selectElement) return;
-          
-          // Apply initially
-          const initialOptions = selectElement.querySelectorAll('option');
-          initialOptions.forEach(option => {
-            option.style.backgroundColor = '#212529';
-            option.style.color = '#ffffff';
-            option.style.padding = '10px 15px';
-          });
-        }
-        
-        // Apply immediately on page load
-        applyDarkThemeToOptions(stateSelector);
-        applyDarkThemeToOptions(citySelector);
-        
-        // Ensure dark theme is applied when dropdown is opened
-        if (stateSelector) {
-          stateSelector.addEventListener('mousedown', function() {
-            // Force dark style on all options
-            setTimeout(() => {
-              const options = this.querySelectorAll('option');
-              options.forEach(option => {
-                option.style.backgroundColor = '#212529'; // Use hex instead of CSS var
-                option.style.color = '#ffffff';
-                option.style.padding = '10px 15px';
-              });
-            }, 0);
-          });
-          
-          // Also apply on focus
-          stateSelector.addEventListener('focus', function() {
-            setTimeout(() => {
-              const options = this.querySelectorAll('option');
-              options.forEach(option => {
-                option.style.backgroundColor = '#212529';
-                option.style.color = '#ffffff';
-                option.style.padding = '10px 15px';
-              });
-            }, 0);
-          });
-        }
-        
-        // Apply the same to the city selector
-        if (citySelector) {
-          citySelector.addEventListener('mousedown', function() {
-            setTimeout(() => {
-              const options = this.querySelectorAll('option');
-              options.forEach(option => {
-                option.style.backgroundColor = '#212529';
-                option.style.color = '#ffffff';
-                option.style.padding = '10px 15px';
-              });
-            }, 0);
-          });
-          
-          // Also apply on focus
-          citySelector.addEventListener('focus', function() {
-            setTimeout(() => {
-              const options = this.querySelectorAll('option');
-              options.forEach(option => {
-                option.style.backgroundColor = '#212529';
-                option.style.color = '#ffffff';
-                option.style.padding = '10px 15px';
-              });
-            }, 0);
-          });
-        }
-      });
-    </script>
   </body>
 </html> 

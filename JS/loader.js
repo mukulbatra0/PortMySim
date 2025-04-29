@@ -31,6 +31,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 !link.hasAttribute('data-no-loader') &&
                 !link.target) {
                 
+                // Skip loader for auth page transitions (login/signup)
+                const isAuthPageTransition = (
+                    (link.href.includes('/login.html') && window.location.href.includes('/signup.html')) ||
+                    (link.href.includes('/signup.html') && window.location.href.includes('/login.html'))
+                );
+                
+                if (isAuthPageTransition) {
+                    return; // Skip loader for auth transitions
+                }
+                
                 // Special handling for primary and hero buttons
                 const isPrimaryButton = link.classList.contains('btn-primary') || 
                                       (link.classList.contains('hero-btn') && link.classList.contains('primary'));
