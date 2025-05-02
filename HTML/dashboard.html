@@ -3,7 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Block infinite ping calls first -->
+    <script src="../JS/auto-init.js"></script>
     <title>Dashboard - PortMySim</title>
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+    
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+    
+
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../CSS/common.css">
@@ -897,7 +920,15 @@
                 
                 // Handle logout button
                 document.getElementById('logout-btn').addEventListener('click', function() {
-                    window.PortMySimAPI.auth.logout();
+                    if (window.PortMySimAPI && window.PortMySimAPI.auth) {
+                        window.PortMySimAPI.auth.logout();
+                    } else {
+                        console.error('Error: window.PortMySimAPI.auth is not available for logout');
+                        // Fallback logout approach
+                        localStorage.removeItem('portmysim_token');
+                        localStorage.removeItem('portmysim_user');
+                        window.location.href = '/HTML/login.html';
+                    }
                 });
             } else {
                 // Hide dashboard content and show not logged in message

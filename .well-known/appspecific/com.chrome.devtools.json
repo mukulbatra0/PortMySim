@@ -1,0 +1,9 @@
+{
+  "devtools_page": "devtools.html",
+  "version": "1.0",
+  "name": "PortMySim DevTools",
+  "description": "DevTools configuration for PortMySim application",
+  "stable_extension": true,
+  "is_extension": false,
+  "last_update": "2023-10-01"
+} 

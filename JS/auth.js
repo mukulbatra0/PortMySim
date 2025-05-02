@@ -501,7 +501,17 @@ function setupProfileDropdown() {
         if (logoutBtn) {
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.PortMySimAPI.auth.logout();
+                if (window.PortMySimAPI && window.PortMySimAPI.auth) {
+                    window.PortMySimAPI.auth.logout();
+                } else {
+                    console.error('Error: window.PortMySimAPI.auth is not available for logout');
+                    // Fallback logout approach - clear any auth tokens and redirect to login
+                    localStorage.removeItem('portmysim_token');
+                    localStorage.removeItem('portmysim_user');
+                    localStorage.removeItem(AUTH_TOKEN_KEY);
+                    localStorage.removeItem(AUTH_USER_KEY);
+                    window.location.href = '/HTML/login.html';
+                }
             });
         }
     } catch (error) {

@@ -3,7 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Block infinite ping calls first -->
+    <script src="../JS/auto-init.js"></script>
     <title>My Profile | PortMySim</title>
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+    
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+    
+
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
+     
+    <!-- Ping Blocker - Must be loaded first -->
+    <script src="../JS/ping-blocker.js"></script>
     <link rel="stylesheet" href="../CSS/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <link rel="stylesheet" href="../CSS/loader.css">
@@ -937,8 +960,16 @@
                 
                 if (response.success) {
                     // Logout and redirect to home
-                    window.PortMySimAPI.auth.logout();
-                    window.location.href = '/index.html';
+                    if (window.PortMySimAPI && window.PortMySimAPI.auth) {
+                        window.PortMySimAPI.auth.logout();
+                        window.location.href = '/index.html';
+                    } else {
+                        console.error('Error: window.PortMySimAPI.auth is not available for logout');
+                        // Fallback logout approach
+                        localStorage.removeItem('portmysim_token');
+                        localStorage.removeItem('portmysim_user');
+                        window.location.href = '/index.html';
+                    }
                 } else {
                     showError('deletePasswordError', response.message || 'Failed to delete account');
                 }
