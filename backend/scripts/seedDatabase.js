@@ -7,7 +7,7 @@ import TelecomCircle from '../models/TelecomCircle.model.js';
 import plans from '../data/plans.js';
 import faqs from '../data/faqs.js';
 import telecomCircles from '../data/telecomCircles.js';
-import planHelper from '../utils/planHelper.js';
+import * as planHelper from '../utils/planHelper.js';
 
 dotenv.config();
 

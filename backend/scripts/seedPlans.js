@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import connectDB from '../config/db.js';
 import Plan from '../models/Plan.js';
 import plans from '../data/plans.js';
-import planHelper from '../utils/planHelper.js';
+import * as planHelper from '../utils/planHelper.js';
 
 dotenv.config();
 
