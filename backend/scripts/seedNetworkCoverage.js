@@ -5,10 +5,12 @@
  * Run with: node scripts/seedNetworkCoverage.js
  */
 
-require('dotenv').config();
-const mongoose = require('mongoose');
-const NetworkCoverage = require('../models/NetworkCoverage.model');
-const connectDB = require('../config/db');
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import NetworkCoverage from '../models/NetworkCoverage.model.js';
+import connectDB from '../config/db.js';
+
+dotenv.config();
 
 // Sample locations with coordinates
 const locations = [

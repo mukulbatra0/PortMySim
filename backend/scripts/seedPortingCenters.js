@@ -1,9 +1,11 @@
-require('dotenv').config();
-const mongoose = require('mongoose');
-const PortingCenter = require('../models/PortingCenter.model');
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import PortingCenter from '../models/PortingCenter.model.js';
+
+dotenv.config();
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/portmysim')
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/portmysim')
   .then(() => console.log('MongoDB Connected...'))
   .catch(err => {
     console.error('MongoDB Connection Error:', err);

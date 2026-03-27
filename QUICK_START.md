@@ -61,9 +61,9 @@ git push -u origin main
 ```
 MONGODB_URI = <paste MONGO_URL from step 3>
 PORT = 5000
-NODE_ENV = production
-JWT_SECRET = <generate random string - see below>
-JWT_EXPIRE = 30d
+   NODE_ENV = production
+   JWT_SECRET = <generate random string - see below>
+   JWT_EXPIRE = 30d
 ```
 
 ### Generate JWT_SECRET:

@@ -1,8 +1,10 @@
-require('dotenv').config({ path: '../.env' });
-const mongoose = require('mongoose');
-const connectDB = require('../config/db');
-const FAQ = require('../models/FAQ.model');
-const faqs = require('../data/faqs');
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import connectDB from '../config/db.js';
+import FAQ from '../models/FAQ.model.js';
+import faqs from '../data/faqs.js';
+
+dotenv.config();
 
 // Connect to database
 connectDB()

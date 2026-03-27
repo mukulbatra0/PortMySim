@@ -1,6 +1,13 @@
-require('dotenv').config({ path: '../.env' });
-const { exec } = require('child_process');
-const path = require('path');
+import dotenv from 'dotenv';
+import { exec } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 console.log('Starting database seeding process...');
 

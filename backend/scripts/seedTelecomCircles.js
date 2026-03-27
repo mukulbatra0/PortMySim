@@ -1,8 +1,10 @@
-require('dotenv').config({ path: '../.env' });
-const mongoose = require('mongoose');
-const connectDB = require('../config/db');
-const TelecomCircle = require('../models/TelecomCircle.model');
-const telecomCircles = require('../data/telecomCircles');
+import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import connectDB from '../config/db.js';
+import TelecomCircle from '../models/TelecomCircle.model.js';
+import telecomCircles from '../data/telecomCircles.js';
+
+dotenv.config();
 
 // Connect to database
 connectDB()
