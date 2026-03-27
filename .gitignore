@@ -1,38 +1,38 @@
-# System Files
-.DS_Store
-Thumbs.db
-
-# IDE and Editor Files
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# Dependency directories
+# Dependencies
 node_modules/
-vendor/
+backend/node_modules/
 
-# Environment files
+# Environment variables
 .env
+backend/.env
 .env.local
-.env.*.local
+.env.production
 
-# Debug logs
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Build directories
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build outputs
 dist/
 build/
-out/
 
-# Cache directories
-.cache/
-.temp/
+# Railway
+.railway/
 
-# Misc
-*.log
-*.bak
-*.swp
-*~ 
+# Temporary files
+*.tmp
+temp/

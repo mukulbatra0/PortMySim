@@ -4,9 +4,20 @@
  */
 
 // Create global CONFIG object with default settings
+// Automatically detect environment and set API URL
+const getApiBaseUrl = () => {
+    // Check if we're in production (Railway or other hosting)
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // Use the same domain as the frontend (Railway serves both)
+        return `${window.location.protocol}//${window.location.host}/api`;
+    }
+    // Local development
+    return 'http://localhost:5000/api';
+};
+
 window.CONFIG = {
     // API settings
-    API_BASE_URL: 'http://localhost:5000/api',
+    API_BASE_URL: getApiBaseUrl(),
     
     // Map settings
     useOpenStreetMapAsFallback: true,
